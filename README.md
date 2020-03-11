@@ -4,25 +4,6 @@ This is an open API specification for issuing digital credentials based on stand
 
 The latest version can be viewed at https://w3c-ccg.github.io/vc-issuer-http-api/index.html.
 
-## Versioning
-
-This repo and specification use [Semantic Versioning 2.0.0](https://semver.org/#semantic-versioning-200).
-
-The API version is defined [api.yml](./api.yml).
-
-You can browse the [latest release of github](https://github.com/w3c-ccg/vc-issuer-http-api/releases).
-
-When implementing this specification servers must respect the `VC-API-Version` HTTP Header. 
-
-For example:
-
-```
-curl -s -X POST https://example.com/issuer/credentials \
--H 'Content-type: application/json' \
--H 'VC-API-Version: 0.0.1' \
--d @./payload.json  
-```
-
 ## Contact
 
 * https://www.w3.org/community/credentials/
