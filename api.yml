@@ -4,8 +4,8 @@ servers:
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/danubetech/credential-verifier/0.0.1
 info:
-  description: This is an open API specification for verifying digital credentials based on standards such as the Verifiable Credentials Data Model (https://www.w3.org/TR/vc-data-model/), JWT (https://tools.ietf.org/html/rfc7519), and Open Badges (https://openbadges.org/). Implementations of this API may differ in terms of which data formats or proof formats they do or do not support. Also, implementations may choose to not support certain parts of this API (e.g. optional parts include retrieving a verification status that has already been created).
-  version: "0.0.1"
+  description: This is an experimental open API specification for verifying digital credentials based on standards such as the Verifiable Credentials Data Model (https://www.w3.org/TR/vc-data-model/), JWT (https://tools.ietf.org/html/rfc7519), and Open Badges (https://openbadges.org/). Implementations are expected to change significantly and implementers that are not directly involved in the work are strongly urged to not implement this API. Implementations of this API may differ in terms of which data formats or proof formats they do or do not support. Implementations may choose to not support certain parts of this API (e.g. optional parts include retrieving a verification status that has already been created).
+  version: "0.0.3"
   title: Credential Verifier API
   contact:
     email: markus@danubetech.com
@@ -19,9 +19,97 @@ paths:
     post:
       tags:
         - internal
-      summary: Verifies a credential and returns its verification status.
+      summary: Verify a given credential.
       operationId: verifyCredential
-      description: Verifies a credential and returns its verification status. Support of this part of the API is REQUIRED for implementations.
+      description: Performs a series of verification checks on a provided Verifiable Credential and returns the overall status of the checks as well as the status of each individual check. Support of this part of the API is REQUIRED for implementations.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: The credential to be verified and a set of options to use when verifying the credential.
+              type: object
+              properties:
+                verifiableCredential:
+                  type: object
+                  additionalProperties: false
+                  description: The verifiable credential to check.
+                  example: {
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://www.w3.org/2018/credentials/examples/v1"
+  ],
+  "id": "http://example.edu/credentials/3732",
+  "type": [
+    "VerifiableCredential",
+    "UniversityDegreeCredential"
+  ],
+  "issuer": "did:example:c6f1c276e12ec21ebfeb1f712eb",
+  "issuanceDate": "2020-03-11",
+  "credentialSubject": {
+    "id": "did:example:ebfeb1f712ebc6f1c276e12ec21",
+    "degree": {
+      "type": "BachelorDegree",
+      "name": "Bachelor of Science and Arts"
+    }
+  },
+  "proof": [{
+    "type": "Ed25519Signature2018",
+    "created": "2020-03-11T23:09:06.803Z",
+    "jws": "eyJhbGciOiJFZERTQSIsImI2..hS5SPmWTFocjcDg",
+    "proofPurpose": "assertionMethod",
+    "verificationMethod": "did:example:c6f1c276e12ec21ebfeb1f712eb#jf893k"
+  }]
+}
+                options:
+                  type: object
+                  additionalProperties: false
+                  description: Options for specifying how the credential will be issued.
+                  properties:
+                    checks:
+                      type: array
+                      items:
+                        type: string
+                      description: An array of verification checks to be performed on the credential. WARNING - Implementers are cautioned that the list of checks is currently incomplete and other checks such as issuance, expiration, nonce, domain, and acceptable issuers are expected to be added in time. A default list is also expected to encapsulate all available checks. This option might be changed to a 'ignore' option where it lists the checks the developer would like to skip.
+                      example: ["proof"]
+      responses:
+        '200':
+          description: The verification was successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: A description of the checks that were performed.
+                properties:
+                  checks:
+                    type: array
+                    items:
+                      type: string
+                    description: An array of verification checks that were performed. WARNING - Implementers are cautioned that the list of checks is currently incomplete and other checks such as issuance, expiration, nonce, domain, and acceptable issuers are expected to be added in time.
+                    example: ["proof"]
+        '400':
+          description: The verification failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: A description of the checks that were performed.
+                properties:
+                  checks:
+                    type: array
+                    items:
+                      type: string
+                    description: An array of verification checks that were performed. WARNING - Implementers are cautioned that the list of checks is currently incomplete and other checks such as issuance, expiration, nonce, domain, and acceptable issuers are expected to be added in time.
+                    example: [{
+                      "check": "proof",
+                      "error": "The verificationMethod (public key) associated with the digital signature could not be retrieved due to a network error.",
+                      "verificationMethod": "did:example:c6f1c276e12ec21ebfeb1f712eb#jf893k",
+                    }]
+    put:
+      tags:
+        - internal
+      summary: Verifies a credential and returns its verification status.
+      operationId: verifyCredentialReference
+      description: Verifies a credential and returns its verification status. Support of this part of the API is OPTIONAL for implementations.
       requestBody:
         content:
           application/json:
