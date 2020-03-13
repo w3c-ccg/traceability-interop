@@ -4,8 +4,8 @@ servers:
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/danubetech/credential-issuer/0.0.1
 info:
-  description: This is an open API specification for issuing digital credentials based on standards such as the Verifiable Credentials Data Model (https://www.w3.org/TR/vc-data-model/), JWT (https://tools.ietf.org/html/rfc7519), and Open Badges (https://openbadges.org/). Implementations of this API may differ in terms of which data formats or proof formats they do or do not support. Also, implementations may choose to not support certain parts of this API (e.g. optional parts include changing and retrieving the status of a credential, or refreshing a credential).
-  version: "0.0.1"
+  description: This is an experimental open API specification for issuing digital credentials based on standards such as the Verifiable Credentials Data Model (https://www.w3.org/TR/vc-data-model/), JWT (https://tools.ietf.org/html/rfc7519), and Open Badges (https://openbadges.org/). Implementations are expected to change significantly and implementers that are not directly involved in the work are strongly urged to not implement this API. Implementations of this API may differ in terms of which data formats or proof formats they do or do not support. Implementations may choose to not support certain parts of this API (e.g. optional parts include changing and retrieving the status of a credential, or refreshing a credential). 
+  version: "0.0.2"
   title: Credential Issuer API
   contact:
     email: markus@danubetech.com
@@ -17,13 +17,38 @@ tags:
   - name: public
     description: Public APIs facing the Holder and Verifier.
 paths:
-  /credential:
+  /credentials/issueCredential:
     post:
       tags:
         - internal
       summary: Issues a credential and returns it in the response body.
       operationId: issueCredential
       description: Issues a credential and returns it in the response body. Support of this part of the API is REQUIRED for implementations.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCredentialRequest'
+        description: Parameters for issuing the credential.
+      responses:
+        '201':
+          description: Credential successfully issued!
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The issued credential. This SHOULD include a reference or ID that can be used later for other parts of the API, e.g. changing and retrieving the status of the credential, or refreshing the credential.
+        '400':
+          description: invalid input!
+        '500':
+          description: error!
+  /credentials/composeAndIssueCredential:
+    post:
+      tags:
+        - internal
+      summary: Composes and issues a credential and returns it in the response body.
+      operationId: composeAndIssueCredential
+      description: Composes and issues a credential and returns it in the response body. Support of this part of the API is OPTIONAL for implementations.
       parameters:
         - in: query
           required: false
@@ -43,7 +68,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/IssueRequest'
+              $ref: '#/components/schemas/ComposeAndIssueCredentialRequest'
         description: Parameters for issuing the credential.
       responses:
         '201':
@@ -57,7 +82,7 @@ paths:
           description: invalid input!
         '500':
           description: error!
-  /credential/{credentialReference}:
+  /credentials/{credentialReference}:
     get:
       tags:
         - internal
@@ -87,7 +112,7 @@ paths:
           description: error!
         '501':
           description: not supported by this implementation!
-  /credential/{credentialReference}/status:
+  /credentials/{credentialReference}/status:
     post:
       tags:
         - internal
@@ -147,7 +172,7 @@ paths:
           description: error!
         '501':
           description: not supported by this implementation!
-  /credential/{credentialReference}/refresh:
+  /credentials/{credentialReference}/refresh:
     post:
       tags:
         - public
@@ -185,7 +210,42 @@ paths:
           description: not supported by this implementation!
 components:
   schemas:
-    IssueRequest:
+    IssueCredentialRequest:
+      type: object
+      properties:
+        credential:
+          type: object
+          description: A JSON-LD Verifiable Credential without a proof.
+          example: {
+            "@context": [
+              "https://www.w3.org/2018/credentials/v1",
+              "https://www.w3.org/2018/credentials/examples/v1"
+            ],
+            "id": "http://example.gov/credentials/3732",
+            "type": [
+              "VerifiableCredential",
+              "UniversityDegreeCredential"
+            ],
+            "issuer": "https://example.edu",
+            "issuanceDate": "2020-03-11T23:09:06.803Z",
+            "credentialSubject": {
+              "id": "did:example:ebfeb1f712ebc6f1c276e12ec21",
+              "degree": {
+                "type": "BachelorDegree",
+                "name": "Bachelor of Science and Arts"
+              }
+            }
+          }
+        options:
+          type: object
+          additionalProperties: false
+          description: Options for specifying how the credential will be issued.
+          properties:
+            assertionMethod:
+              type: string
+              description: The URI of a key that will be used to issue the credential. If ommited a default assertionMethod will be used.
+              example: "did:web:example.com#z6MksHh7qHWvybLg5QTPPdG2DgEjjduBDArV9EF9mRiRzMBN"
+    ComposeAndIssueCredentialRequest:
       type: object
       properties:
         issuer:
