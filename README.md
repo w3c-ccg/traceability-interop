@@ -1,4 +1,4 @@
-# VC HTTP API
+# [VC HTTP API](https://transmute-industries.github.io/vc-http-api/)
 
 The following is a set of standard http api definitions for contructing and verifying objects which conform to the [VC Data Model](https://www.w3.org/TR/vc-data-model/).
 
