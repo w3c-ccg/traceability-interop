@@ -479,7 +479,7 @@ describe('Plugfest 2020', () => {
               // this logic needs to account for object and string variations...
               const test_vps = verifiablePresentations.filter(vp => {
                 return (
-                  vp.holder === vp.verifiableCredential[0].issuer &&
+                  vp.holder === vp.verifiableCredential[0].issuer || vp.verifiableCredential[0].issuer.id &&
                   vp.holder === vp.verifiableCredential[0].credentialSubject.id
                 );
               });

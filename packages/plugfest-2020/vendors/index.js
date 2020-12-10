@@ -6,6 +6,7 @@ const trustbloc = require('./trustbloc');
 const factom = require('./factom');
 const sicpa = require('./sicpa');
 const dock = require('./dock');
+const trybeid = require('./trybeid');
 
 const vendor_map = {
   transmute,
@@ -16,6 +17,7 @@ const vendor_map = {
   factom,
   sicpa,
   dock,
+  trybeid
 };
 
 let vendors = [];
