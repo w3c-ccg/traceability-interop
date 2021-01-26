@@ -1,10 +1,16 @@
 const fetch = require('node-fetch');
 
-const getJson = async url => {
+const getJson = async (url, requestAuthorization) => {
+  let headers = {
+    Accept: 'application/ld+json',
+  };
+
+  if (requestAuthorization && requestAuthorization.type === "oauth2-bearer-token") {
+    headers.Authorization = `Bearer ${requestAuthorization.accessToken}`
+  }
+
   const res = await fetch(url, {
-    headers: {
-      Accept: 'application/ld+json',
-    },
+    headers,
     method: 'get',
   });
 
@@ -16,21 +22,23 @@ const getJson = async url => {
   return res;
 };
 
-const postJson = async (url, body) => {
+const postJson = async (url, body, requestAuthorization) => {
+  let headers = {
+    Accept: 'application/ld+json,application/json',
+    'Content-Type': 'application/json',
+  };
+
+  if (requestAuthorization && requestAuthorization.type === "oauth2-bearer-token") {
+    headers.Authorization = `Bearer ${requestAuthorization.accessToken}`
+  }
+
   const res = await fetch(url, {
-    headers: {
-      Accept: 'application/ld+json,application/json',
-      'Content-Type': 'application/json',
-    },
+    headers,
     method: 'post',
     body: JSON.stringify(body),
   });
   const resBody = await res.json();
-  // if (res.status > 300) {
-  //   console.error("ERROR with POST: ", url);
-  //   console.error("BODY: ", JSON.stringify(body, null, 2));
-  //   console.error(resBody);
-  // }
+
   return {status: res.status, body: resBody};
 };
 
