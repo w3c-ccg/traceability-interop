@@ -1,5 +1,6 @@
 const uuid = require('uuid-random');
 const help = require('./help');
+const { getAccessTokenViaClientCredentials } = require('./utilities/oauth');
 const vendors = require('./vendors');
 
 // sometimes did resolution takes a long time...
@@ -10,6 +11,15 @@ jest.setTimeout(20 * 1000);
 describe('Plugfest 2020', () => {
   vendors.forEach(vendor => {
     describe(vendor.name, () => {
+      let requestAuthorization = {};
+
+      beforeAll(async () => {
+        if (vendor.request_authorization_config && vendor.request_authorization_config.type === "oauth2-client-credentials") {
+          requestAuthorization.type = "oauth2-bearer-token";
+          requestAuthorization.accessToken = await getAccessTokenViaClientCredentials(vendor.request_authorization_config);
+        }
+      })
+
       describe('Issuer', () => {
         describe('Issue Credential HTTP API', () => {
           let credentials;
@@ -27,7 +37,7 @@ describe('Plugfest 2020', () => {
                   const body = {
                     credential: credentials[0],
                   };
-                  const res = await help.postJson(issuer.endpoint, body);
+                  const res = await help.postJson(issuer.endpoint, body, requestAuthorization);
                   expect(res.status).toBe(201);
                   expect(res.body.proof).toBeDefined();
                 });
@@ -39,7 +49,7 @@ describe('Plugfest 2020', () => {
                   const body = {
                     credential: credentials[0],
                   };
-                  const res = await help.postJson(issuer.endpoint, body);
+                  const res = await help.postJson(issuer.endpoint, body, requestAuthorization);
                   expect(res.status).toBe(201);
                   expect(res.body.proof).toBeDefined();
                 });
@@ -53,7 +63,7 @@ describe('Plugfest 2020', () => {
                         credential: credentials[0],
                         options: {...issuer_options},
                       };
-                      const res = await help.postJson(issuer.endpoint, body);
+                      const res = await help.postJson(issuer.endpoint, body, requestAuthorization);
                       expect(res.status).toBe(201);
                       expect(res.body.proof).toBeDefined();
                       if(
@@ -78,7 +88,7 @@ describe('Plugfest 2020', () => {
                       '@context': 'force_error',
                     },
                   };
-                  const res = await help.postJson(issuer.endpoint, body);
+                  const res = await help.postJson(issuer.endpoint, body, requestAuthorization);
                   expect(res.status).toBe(400);
                 });
               });
@@ -89,7 +99,7 @@ describe('Plugfest 2020', () => {
                   const body = {
                     credential: credentials[0],
                   };
-                  const res = await help.postJson(issuer.endpoint, body);
+                  const res = await help.postJson(issuer.endpoint, body, requestAuthorization);
                   expect(res.status).toBe(201);
                   expect(res.body).toBeDefined();
                   expect(res.body.issuer).toBeDefined();
@@ -109,7 +119,7 @@ describe('Plugfest 2020', () => {
                       proofPurpose: 'foo',
                     },
                   };
-                  const res = await help.postJson(issuer.endpoint, body);
+                  const res = await help.postJson(issuer.endpoint, body, requestAuthorization);
                   expect(res.status).toBe(400);
                 });
               });
@@ -126,7 +136,7 @@ describe('Plugfest 2020', () => {
                       assertionMethod: 'foo',
                     },
                   };
-                  const res = await help.postJson(issuer.endpoint, body);
+                  const res = await help.postJson(issuer.endpoint, body, requestAuthorization);
                   expect(res.status).toBe(400);
                 });
               });
@@ -140,7 +150,7 @@ describe('Plugfest 2020', () => {
                     },
                   };
                   delete body.credential['@context'];
-                  const res = await help.postJson(issuer.endpoint, body);
+                  const res = await help.postJson(issuer.endpoint, body, requestAuthorization);
                   expect(res.status).toBe(400);
                 });
               });
@@ -157,7 +167,7 @@ describe('Plugfest 2020', () => {
                     'https://www.w3.org/2018/credentials/v1',
                     'broken',
                   ];
-                  const res = await help.postJson(issuer.endpoint, body);
+                  const res = await help.postJson(issuer.endpoint, body, requestAuthorization);
                   expect(res.status).toBe(400);
                 });
               });
@@ -168,7 +178,7 @@ describe('Plugfest 2020', () => {
                   const body = {
                     credential: credentials[0],
                   };
-                  const res = await help.postJson(issuer.endpoint, body);
+                  const res = await help.postJson(issuer.endpoint, body, requestAuthorization);
                   expect(res.status).toBe(201);
                   expect(res.body.proof).toBeDefined();
                 });
@@ -204,7 +214,7 @@ describe('Plugfest 2020', () => {
                   checks: ['proof'],
                 },
               };
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(200);
               expect(res.body.checks).toEqual(['proof']);
             });
@@ -217,7 +227,7 @@ describe('Plugfest 2020', () => {
                 },
               };
               body.verifiableCredential.proof.jws += 'bar';
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(400);
             });
           });
@@ -233,7 +243,7 @@ describe('Plugfest 2020', () => {
                 },
               };
               delete body.verifiableCredential.proof.created;
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(400);
             });
           });
@@ -249,7 +259,7 @@ describe('Plugfest 2020', () => {
                 },
               };
               body.verifiableCredential.proof.proofPurpose = 'bar';
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(400);
             });
           });
@@ -265,7 +275,7 @@ describe('Plugfest 2020', () => {
                 },
               };
               body.verifiableCredential.newProp = 'foo';
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(400);
             });
           });
@@ -281,7 +291,7 @@ describe('Plugfest 2020', () => {
                 },
               };
               delete body.verifiableCredential.issuer;
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(400);
             });
           });
@@ -297,7 +307,7 @@ describe('Plugfest 2020', () => {
                 },
               };
               body.verifiableCredential.issuer = 'bar';
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(400);
             });
           });
@@ -313,7 +323,7 @@ describe('Plugfest 2020', () => {
                 },
               };
               body.verifiableCredential.proof.newProp = 'bar';
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(400);
             });
           });
@@ -329,7 +339,7 @@ describe('Plugfest 2020', () => {
                 },
               };
               delete body.verifiableCredential.proof.proofPurpose;
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(400);
             });
           });
@@ -345,7 +355,7 @@ describe('Plugfest 2020', () => {
                 },
               };
               body.verifiableCredential.proof.created += 'bar';
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(400);
             });
           });
@@ -363,7 +373,7 @@ describe('Plugfest 2020', () => {
                       checks: ['proof'],
                     },
                   };
-                  const res = await help.postJson(endpoint, body);
+                  const res = await help.postJson(endpoint, body, requestAuthorization);
 
                   expect(res.status).toBe(200);
                   if(unique_issuers.indexOf(vc.issuer) === -1) {
@@ -385,7 +395,7 @@ describe('Plugfest 2020', () => {
                   checks: ['proof'],
                 },
               };
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(200);
               expect(res.body.checks).toEqual(['proof']);
             });
@@ -401,7 +411,7 @@ describe('Plugfest 2020', () => {
                   checks: ['proof'],
                 },
               };
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(400);
             });
           });
@@ -421,7 +431,7 @@ describe('Plugfest 2020', () => {
                   checks: ['proof'],
                 },
               };
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(200);
               expect(res.body.checks).toEqual(['proof']);
             });
@@ -463,7 +473,7 @@ describe('Plugfest 2020', () => {
                       checks: ['proof'],
                     },
                   };
-                  const res = await help.postJson(endpoint, body);
+                  const res = await help.postJson(endpoint, body, requestAuthorization);
                   expect(res.status).toBe(200);
                   solutions.push(vp);
                 })
@@ -494,7 +504,7 @@ describe('Plugfest 2020', () => {
                       checks: ['proof'],
                     },
                   };
-                  const res = await help.postJson(endpoint, body);
+                  const res = await help.postJson(endpoint, body, requestAuthorization);
                   expect(res.status).toBe(200);
                   solutions.push(vp);
                 })
@@ -515,7 +525,7 @@ describe('Plugfest 2020', () => {
                   checks: ['proof'],
                 },
               };
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(200);
               expect(res.body.checks).toEqual(['proof']);
             });
@@ -533,7 +543,7 @@ describe('Plugfest 2020', () => {
                   checks: ['proof'],
                 },
               };
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(400);
             });
           });
@@ -555,7 +565,7 @@ describe('Plugfest 2020', () => {
                   checks: ['proof'],
                 },
               };
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(200);
               expect(res.body.checks).toEqual(['proof']);
             });
@@ -568,7 +578,7 @@ describe('Plugfest 2020', () => {
               const body = {
                 verifiablePresentation: verifiablePresentations[0],
               };
-              const res = await help.postJson(endpoint, body);
+              const res = await help.postJson(endpoint, body, requestAuthorization);
               expect(res.status).toBe(400);
             });
           });
