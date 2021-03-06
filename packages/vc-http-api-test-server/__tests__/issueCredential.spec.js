@@ -69,7 +69,7 @@ if (suiteConfig.issueCredentialConfiguration) {
             expect(res.status).toBe(400);
         });
 
-        it(`6. The Issuer's Issue Credential HTTP API MUST reject if the value of "options.assertionMethod" in the body of the POST request does not exist.`, async () => {
+        it(`6. The Issuer's Issue Credential HTTP API MUST reject if the value of "options.verificationMethod" in the body of the POST request does not exist.`, async () => {
             const body = {
               credential: {
                 ...credentials[0].data,
@@ -77,7 +77,7 @@ if (suiteConfig.issueCredentialConfiguration) {
               },
               options: {
                 ...value.options[0],
-                assertionMethod: 'foo',
+                verificationMethod: 'foo',
               },
             };
             const res = await httpClient.postJson(value.endpoint, body, {});
