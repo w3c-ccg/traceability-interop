@@ -1,6 +1,6 @@
-# Traceability API
+# Traceability Interop Profile
 
-An enterprise grade HTTP API for leveraging [W3C Decentralized Identifiers](https://www.w3.org/TR/did-core/) and [W3C Verifiable Credentials](https://www.w3.org/TR/vc-data-model/) with [W3C CCG Traceability Vocabulary](https://w3c-ccg.github.io/traceability-vocab/).
+An Profile supporting interop through use of enterprise grade HTTP APIs for leveraging [W3C Decentralized Identifiers](https://www.w3.org/TR/did-core/) and [W3C Verifiable Credentials](https://www.w3.org/TR/vc-data-model/) with [W3C CCG Traceability Vocabulary](https://w3c-ccg.github.io/traceability-vocab/).
 
 ## [Open API Specification](https://or13.github.io/traceability-api/)
 
