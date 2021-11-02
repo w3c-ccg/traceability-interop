@@ -41,6 +41,9 @@ if (program.opts().dev) {
 
 var serviceCollection = require(program.opts().service);
 var serviceData = require(program.opts().servicedata);
+var referenceCollection = require(program.opts().reference)
+var referenceData = require(program.opts().referencedata)
+
 
 // TODO: set reporter templates for htmlextra
 
@@ -60,63 +63,71 @@ if (program.opts().tests.includes('all') || program.opts().tests.includes('servi
     });
 }
 
-async function testServiceProviderReference(didConfigURL, serv) {
-    https.get(didConfigURL, (res) => {
-        let body = "";
+async function testServiceProviderReference(serviceIdx, serviceData) {
+    return new Promise((resolve) => {
+        var serv = serviceData[serviceIdx];
+        if (program.opts().verbose) console.log(serv);
     
-        res.on("data", (chunk) => {
-            body += chunk;
+        //get did from .well-known
+        var didConfigURL = 'https://' + serv.serviceProvider.baseURL + '/.well-known/did-configuration.json';
+        if (program.opts().verbose) console.log('Testing did-config:', didConfigURL);
+    
+        https.get(didConfigURL, (res) => {
+            let body = "";
+        
+            res.on("data", (chunk) => {
+                body += chunk;
+            });
+        
+            res.on("end", () => {
+                try {
+                    let didConfig = JSON.parse(body);
+                    if (program.opts().verbose) console.log(didConfig);
+                    // loop each provided did
+                    for (didIdx in didConfig.linked_dids) {
+                        var did = didConfig.linked_dids[didIdx];
+                        var didMethod = did.issuer.split(':')[1];
+    
+                        var jsonReportFile = program.opts().reportdir+'/'+serv.serviceProvider.baseURL+'/'+didMethod+'-reference-credentials-report.json';
+                        var htmlReportFile = program.opts().reportdir+'/'+serv.serviceProvider.baseURL+'/'+didMethod+'-reference-credentials-report.html';
+    
+                        newman.run({
+                            collection: referenceCollection,
+                            iterationData: referenceData,
+                            reporters: outputReporters,
+                            reporter: {
+                                json: { export: jsonReportFile },
+                                htmlextra: { export: htmlReportFile }
+                            },
+                            envVar: [
+                                { "key": "name", "value": serv.name},
+                                { "key": "server", "value": serv.serviceProvider.baseURL},
+                                { "key": "prefix", "value": serv.serviceProvider.vcPrefix},
+                                { "key": "did", "value": did.issuer},
+                            ]
+                        }, function (err) {
+                            if (err) { throw err; }
+                            console.log('Traceability Interop: Reference Credential test complete:', serv.name, '  did:', didMethod);
+                        });    
+                    }
+                } catch (error) {
+                    console.error(error.message);
+                };
+                resolve();
+            });
+        
+        }).on("error", (error) => {
+            console.error(error.message);
         });
-    
-        res.on("end", () => {
-            try {
-                let didConfig = JSON.parse(body);
-                console.log(didConfig);
-                // loop each provided did
-                for (didIdx in didConfig.linked_dids) {
-                    var did = didConfig.linked_dids[didIdx];
-                    newman.run({
-                        collection: require(program.opts().reference),
-                        iterationData: require(program.opts().referencedata),
-                        reporters: outputReporters,
-                        reporter: {
-                            json: { export: program.opts().reportdir+'/'+serv.serviceProvider.baseURL+'-reference-credentials-report.json' },
-                            htmlextra: { export: program.opts().reportdir+'/'+serv.serviceProvider.baseURL+'-reference-credentials-report.html' }
-                        },
-                        envVar: [
-                            { "key": "name", "value": serv.name},
-                            { "key": "server", "value": serv.serviceProvider.baseURL},
-                            { "key": "prefix", "value": serv.serviceProvider.vcPrefix},
-                            { "key": "did", "value": did.issuer},
-                        ]
-                    }, function (err) {
-                        if (err) { throw err; }
-                        console.log('Traceability Interop: Reference Credential test complete:', serv.name);
-                    });    
-                }
-            } catch (error) {
-                console.error(error.message);
-            };
-        });
-    
-    }).on("error", (error) => {
-        console.error(error.message);
     });
 }
 
 // then run reference checks (this should loop each server from the service provider collection )
 if (program.opts().tests.includes('all') || program.opts().tests.includes('reference')) {
     // loop each service provider
-    for (serviceIdx in serviceData) {
-        var serv = serviceData[serviceIdx];
-        console.log(serv);
-
-        //get did from .well-known
-        var didConfigURL = 'https://' + serv.serviceProvider.baseURL + '/.well-known/did-configuration.json';
-        console.log('Testing did-config:', didConfigURL);
-        
-        (async function () {
-            await testServiceProviderReference(didConfigURL, serv);
+    for (serviceIdx in serviceData) {        
+        (async () => {
+            await testServiceProviderReference(serviceIdx, serviceData);
         })();
     }
 }
