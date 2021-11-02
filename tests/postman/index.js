@@ -62,8 +62,8 @@ if (program.opts().tests.includes('all') || program.opts().tests.includes('servi
 
 
 // then run reference checks (this should loop each server from the service provider collection )
-// TODO: also loop dids
 if (program.opts().tests.includes('all') || program.opts().tests.includes('reference')) {
+    // loop each service provider
     for (serviceIdx in serviceData) {
         var serv = serviceData[serviceIdx];
         console.log(serv);
@@ -81,6 +81,7 @@ if (program.opts().tests.includes('all') || program.opts().tests.includes('refer
                 try {
                     let didConfig = JSON.parse(body);
                     console.log(didConfig);
+                    // loop each provided did
                     for (didIdx in didConfig.linked_dids) {
                         var did = didConfig.linked_dids[didIdx];
                         newman.run({
