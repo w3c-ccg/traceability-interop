@@ -42,3 +42,8 @@ To execute the base service provider tests from CLI execute the following:
 ```shell
 newman run ./collections/service-providers.json -d ./data/service-providers.json
 ```
+
+
+## Importing Collections into Postman
+
+To import the collections into Postman, follow the guide on [importing Postman data](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/#importing-data-into-postman)
