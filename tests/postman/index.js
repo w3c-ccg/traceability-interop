@@ -25,8 +25,8 @@ program
     .addOption(new Option('-t, --tests <tests...>', 'use the specified tests, "none" is provided as an option for dev purposes', ['all']).choices([ 'all', 'service', 'reference', 'interop', 'none' ]));
 
 program
-    .option('-v, --verbose', 'verbose reporting', true)
-    .option('-d, --dev', 'dev mode for advanced options', false);
+    .option('-v, --verbose', 'verbose reporting')
+    .option('-d, --dev', 'dev mode for advanced options');
 
 program.parse();
 
@@ -60,6 +60,49 @@ if (program.opts().tests.includes('all') || program.opts().tests.includes('servi
     });
 }
 
+async function testServiceProviderReference(didConfigURL, serv) {
+    https.get(didConfigURL, (res) => {
+        let body = "";
+    
+        res.on("data", (chunk) => {
+            body += chunk;
+        });
+    
+        res.on("end", () => {
+            try {
+                let didConfig = JSON.parse(body);
+                console.log(didConfig);
+                // loop each provided did
+                for (didIdx in didConfig.linked_dids) {
+                    var did = didConfig.linked_dids[didIdx];
+                    newman.run({
+                        collection: require(program.opts().reference),
+                        iterationData: require(program.opts().referencedata),
+                        reporters: outputReporters,
+                        reporter: {
+                            json: { export: program.opts().reportdir+'/'+serv.serviceProvider.baseURL+'-reference-credentials-report.json' },
+                            htmlextra: { export: program.opts().reportdir+'/'+serv.serviceProvider.baseURL+'-reference-credentials-report.html' }
+                        },
+                        envVar: [
+                            { "key": "name", "value": serv.name},
+                            { "key": "server", "value": serv.serviceProvider.baseURL},
+                            { "key": "prefix", "value": serv.serviceProvider.vcPrefix},
+                            { "key": "did", "value": did.issuer},
+                        ]
+                    }, function (err) {
+                        if (err) { throw err; }
+                        console.log('Traceability Interop: Reference Credential test complete:', serv.name);
+                    });    
+                }
+            } catch (error) {
+                console.error(error.message);
+            };
+        });
+    
+    }).on("error", (error) => {
+        console.error(error.message);
+    });
+}
 
 // then run reference checks (this should loop each server from the service provider collection )
 if (program.opts().tests.includes('all') || program.opts().tests.includes('reference')) {
@@ -70,46 +113,10 @@ if (program.opts().tests.includes('all') || program.opts().tests.includes('refer
 
         //get did from .well-known
         var didConfigURL = 'https://' + serv.serviceProvider.baseURL + '/.well-known/did-configuration.json';
-        https.get(didConfigURL, (res) => {
-            let body = "";
+        console.log('Testing did-config:', didConfigURL);
         
-            res.on("data", (chunk) => {
-                body += chunk;
-            });
-        
-            res.on("end", () => {
-                try {
-                    let didConfig = JSON.parse(body);
-                    console.log(didConfig);
-                    // loop each provided did
-                    for (didIdx in didConfig.linked_dids) {
-                        var did = didConfig.linked_dids[didIdx];
-                        newman.run({
-                            collection: require(program.opts().reference),
-                            iterationData: require(program.opts().referencedata),
-                            reporters: outputReporters,
-                            reporter: {
-                                json: { export: program.opts().reportdir+'/'+serv.serviceProvider.baseURL+'reference-credentials-report.json' },
-                                htmlextra: { export: program.opts().reportdir+'/'+serv.serviceProvider.baseURL+'reference-credentials-report.html' }
-                            },
-                            envVar: [
-                                { "key": "name", "value": serv.name},
-                                { "key": "server", "value": serv.serviceProvider.baseURL},
-                                { "key": "prefix", "value": serv.serviceProvider.vcPrefix},
-                                { "key": "did", "value": did.issuer},
-                            ]
-                        }, function (err) {
-                            if (err) { throw err; }
-                            console.log('Traceability Interop: Reference Credential test complete');
-                        });    
-                    }
-                } catch (error) {
-                    console.error(error.message);
-                };
-            });
-        
-        }).on("error", (error) => {
-            console.error(error.message);
-        });
+        (async function () {
+            await testServiceProviderReference(didConfigURL, serv);
+        })();
     }
 }
