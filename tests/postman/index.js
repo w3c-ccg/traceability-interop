@@ -7,15 +7,15 @@ console.log('Traceability Interop Testing')
 program.version('0.0.1');
 
 program
-    .option('-s, --service <file>', 'use the specified service provider test collection', './collections/service-providers.json');
+    .option('-s, --service <file>', 'use the specified service provider test collection', './collections/service-providers.json')
+    .option('-r, --reference <file>', 'use the specified reference VC test collection', './collections/reference-credentials.json');
 // program
-//     .option('-r, --reference <file>', 'use the specified reference VC test collection', './collections/reference-credentials.json')
 //     .option('-s, --service <file>', 'use the specified interop test collection', './collections/interop-credentials.json');
 
 program
-    .option('-sd, --servicedata <file>', 'use the specified service provider data collection', './data/service-providers.json');
+    .option('-sd, --servicedata <file>', 'use the specified service provider data collection', './data/service-providers.json')
+    .option('-rd, --referencedata <file>', 'use the specified reference VC data collection', './data/reference-credentials.json');
 // program
-//     .option('-rd, --referencedata <file>', 'use the specified reference VC data collection', './data/reference-credentials.json')
 //     .option('-sd, --servicedata <file>', 'use the specified interop data collection', './data/interop-credentials.json');
 
 program
@@ -38,6 +38,7 @@ if (program.opts().dev) {
 }
 
 
+// first setup and run base service provider validation
 newman.run({
     collection: require(program.opts().service),
     iterationData: require(program.opts().servicedata),
@@ -48,5 +49,19 @@ newman.run({
     }
 }, function (err) {
     if (err) { throw err; }
-    console.log('Traceability Interop test run complete!');
+    console.log('Traceability Interop: Service Provider test complete');
+});
+
+// then run reference checks (this should loop each server from the service provider collection )
+newman.run({
+    collection: require(program.opts().reference),
+    iterationData: require(program.opts().referencedata),
+    reporters: outputReporters,
+    reporter: {
+        json: { export: program.opts().reportdir+'/reference-credentials-report.json' },
+        htmlextra: { export: program.opts().reportdir+'/reference-credentials-report.html' }
+    }
+}, function (err) {
+    if (err) { throw err; }
+    console.log('Traceability Interop: Reference Credential test complete');
 });

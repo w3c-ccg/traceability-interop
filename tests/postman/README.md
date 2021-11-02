@@ -20,6 +20,8 @@ This package may be executed with the following:
 node .
 ```
 
+Which will execute all configured tests via node
+
 ## Test folder structure
 
 ```
@@ -47,6 +49,14 @@ To execute the base service provider tests from CLI execute the following:
 
 ```shell
 newman run ./collections/service-providers.json -d ./data/service-providers.json -r html,json[,cli] --reporter-json-export ./newman/service-provider-report.json
+```
+
+## Reference Credential and baseline VC-API Tests
+
+To execute the baseline tests against the VC-API from CLI execute the following:
+
+```shell
+newman run ./collections/reference-credentials.json -d ./data/reference-credentials.json -r html,json[,cli] --reporter-json-export ./newman/reference-credentials-report.json
 ```
 
 
