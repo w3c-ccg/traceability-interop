@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-const { program, Option } = require('commander');
-const https = require('https');
-var newman = require('newman');
-const { exit } = require('process');
+import { program, Option } from 'commander';
+import https from 'https';
+import newman from 'newman';
+import isUrl from "is-url-superb";
+import ky from "ky-universal";
+import fs from 'fs';
 
 console.log('Traceability Interop Testing')
 
@@ -20,18 +22,26 @@ program
 // program
 //     .option('-sd, --servicedata <file>', 'use the specified interop data collection', './data/interop-credentials.json');
 
-program
-    .option('-rd, --reportdir <folder>', 'use the specified service provider data collection', './newman');
-program
-    .addOption(
-        new Option('-t, --tests <all...>', 'use the specified tests, "none" is provided as an option for dev purposes')
-            .choices(['all', 'service', 'reference', 'interop', 'none'])
-            .default(['all'])
-    );
+program.option('-rd, --reportdir <folder>', 'use the specified service provider data collection', './newman');
+program.addOption(
+    new Option('-t, --tests <all...>', 'use the specified tests, "none" is provided as an option for dev purposes')
+        .choices(['all', 'service', 'reference', 'interop', 'none'])
+        .default(['all'])
+);
+program.addOption(
+    new Option('-d, --dids <key, web, all...>', 'use the specified did methods')
+        //.choices(['key', 'web', 'all'])
+        .default(['key'])
+);
+program.addOption(
+    new Option('-n, --names <all...>', 'test only the service provider as identified by name')
+        .default(['all'])
+);
+
 
 program
     .option('-v, --verbose', 'verbose reporting')
-    .option('-d, --dev', 'dev mode for advanced options');
+    .option('-dev, --dev', 'dev mode for advanced options');
 
 program.parse();
 
@@ -44,15 +54,63 @@ if (program.opts().dev) {
     console.log('*** DEV MODE SET ***');
 }
 
-var serviceCollection = require(program.opts().service);
-var serviceData = require(program.opts().servicedata);
-var referenceCollection = require(program.opts().reference)
-var referenceData = require(program.opts().referencedata)
+var serviceCollection = JSON.parse(fs.readFileSync(program.opts().service, 'utf8'));
+var serviceData = JSON.parse(fs.readFileSync(program.opts().servicedata, 'utf8'));
+var referenceCollection = JSON.parse(fs.readFileSync(program.opts().reference, 'utf8'));
+var referenceData = JSON.parse(fs.readFileSync(program.opts().referencedata, 'utf8'));
 
+function getServiceIdx(name) {
+    return serviceData.findIndex((obj => obj.name == name));
+}
+
+const urlExist = async url => {
+	if (typeof url !== "string") {
+        // console.log(url, 'not string!');
+		throw new TypeError(`Expected a string, got ${typeof url}`)
+	}
+
+	if (!isUrl(url)) {
+        // console.log(url, 'not url!');
+		return false
+	}
+
+	const response = await ky.head(url, {
+		throwHttpErrors: false
+	});
+
+    // console.log(url, 'response:', response.status);
+    // return response !== undefined && (response.status < 400 || response.status >= 500)
+	return response !== undefined && response.status < 500 // using lt 500 to work around some issues on .well-known
+}
+
+
+//run a base sanity check...
+async function livenessCheck() {
+    console.log('Quick liveness tests on service providers...');
+    for (const serv of serviceData) {
+        if (program.opts().names.includes(serv.name) || program.opts().names.includes('all')) {
+            console.log('Checking', serv.name);
+            const spExists = await urlExist(serv.serviceProvider.provider.url);
+            const didExists = await urlExist('https://' + serv.serviceProvider.baseURL + '/.well-known/did-configuration.json');
+            console.log('\t', serv.serviceProvider.provider.url, spExists)
+            console.log('\t', 'https://' + serv.serviceProvider.baseURL + '/.well-known/did-configuration.json', didExists)
+            if (spExists && didExists) {
+                serviceData[getServiceIdx(serv.name)].live = true;
+                console.log(' *', serv.name, 'is alive.');
+            } else {
+                serviceData[getServiceIdx(serv.name)].live = false;
+                console.log(' * ERR:', serv.name, 'is not alive!');
+            }
+        } else {
+            console.log('Skipping', serv.name, 'due to config');
+        }
+    }
+}
 
 // TODO: set reporter templates for htmlextra
 
 // first setup and run base service provider validation
+// TODO: add collection check to skip iter data if server is not alive since we know it will fail
 async function spCheck() {
     if (program.opts().tests.includes('all') || program.opts().tests.includes('service')) {
         newman.run({
@@ -72,6 +130,10 @@ async function spCheck() {
 
 async function testServiceProviderReference(serv) {
     if (program.opts().verbose) console.log(serv);
+    if (!serviceData[getServiceIdx(serv.name)].live) {
+        console.log('Skipping', serv.name);
+        return;
+    }
 
     //get did from .well-known
     const didConfigURL = 'https://' + serv.serviceProvider.baseURL + '/.well-known/did-configuration.json';
@@ -89,9 +151,14 @@ async function testServiceProviderReference(serv) {
                 let didConfig = JSON.parse(body);
                 if (program.opts().verbose) console.log(didConfig);
                 // loop each provided did
-                for (didIdx in didConfig.linked_dids) {
-                    var did = didConfig.linked_dids[didIdx];
+                for (const did of didConfig.linked_dids) {
                     var didMethod = did.issuer.split(':')[1];
+
+                    if (!program.opts().dids.includes(didMethod)) {
+                        if (!program.opts().dids.includes('all')) {
+                            continue;
+                        }
+                    } 
 
                     var jsonReportFile = program.opts().reportdir + '/' + serv.serviceProvider.baseURL + '/' + didMethod + '-reference-credentials-report.json';
                     var htmlReportFile = program.opts().reportdir + '/' + serv.serviceProvider.baseURL + '/' + didMethod + '-reference-credentials-report.html';
@@ -117,11 +184,13 @@ async function testServiceProviderReference(serv) {
                 }
             } catch (error) {
                 console.error(error.message);
+                serviceData[getServiceIdx(serv.name)].live = false;
             };
         });
 
     }).on("error", (error) => {
         console.error(error.message);
+        serviceData[getServiceIdx(serv.name)].live = false;
     });
 }
 
@@ -138,8 +207,12 @@ async function refChecks() {
 
 //actually run the tests
 (async () => {
-    const spCheckResult = spCheck();
-    const refCheckResult = refChecks();
-    const result = await Promise.all([spCheckResult, refCheckResult])
+    console.log('Liveness check starting...');
+    livenessCheck().then(async () => {
+        console.log('Liveness check complete.\n');
+        const spCheckResult = spCheck();
+        const refCheckResult = refChecks();
+        const result = await Promise.all([spCheckResult, refCheckResult])
+    })
 })();
 
