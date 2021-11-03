@@ -8,7 +8,7 @@ to execute examples from CLI:
 newman run ./collections/reference/vc-http-api-supply-chain.json -d ./data/reference/vc-http-api-supply-chain-credentials.json 
 ```
 
-A variation of this test set will be generalized and extended out to be incorporated into CI / CD for the overal traceability specification objects
+A variation of this test set will be generalized and extended out to be incorporated into CI/CD for the overall traceability specification objects
 
 ## Core Profile and Interop Tests
 
