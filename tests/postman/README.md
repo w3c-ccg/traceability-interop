@@ -110,7 +110,7 @@ This test suite provides core postman collections for testing on interop. We wil
 
 ## Base Service Provider Config and Profile Tests
 
-To execute the base service provider tests from CLI execute the following:
+To execute the base service provider tests from CLI, execute the following:
 
 ```shell
 newman run ./collections/service-providers.json -d ./data/service-providers.json -r html,json[,cli] --reporter-json-export ./newman/service-provider-report.json
