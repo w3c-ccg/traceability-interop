@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-const { program , Option} = require('commander');
+const { program, Option } = require('commander');
 const https = require('https');
 var newman = require('newman');
+const { exit } = require('process');
 
 console.log('Traceability Interop Testing')
 
@@ -22,7 +23,11 @@ program
 program
     .option('-rd, --reportdir <folder>', 'use the specified service provider data collection', './newman');
 program
-    .addOption(new Option('-t, --tests <tests...>', 'use the specified tests, "none" is provided as an option for dev purposes', ['all']).choices([ 'all', 'service', 'reference', 'interop', 'none' ]));
+    .addOption(
+        new Option('-t, --tests <all...>', 'use the specified tests, "none" is provided as an option for dev purposes')
+            .choices(['all', 'service', 'reference', 'interop', 'none'])
+            .default(['all'])
+    );
 
 program
     .option('-v, --verbose', 'verbose reporting')
@@ -30,7 +35,7 @@ program
 
 program.parse();
 
-var outputReporters = [ 'json', 'htmlextra' ]
+var outputReporters = ['json', 'htmlextra']
 
 if (program.opts().verbose) {
     outputReporters.push('cli');
@@ -48,86 +53,93 @@ var referenceData = require(program.opts().referencedata)
 // TODO: set reporter templates for htmlextra
 
 // first setup and run base service provider validation
-if (program.opts().tests.includes('all') || program.opts().tests.includes('service')) {
-    newman.run({
-        collection: serviceCollection,
-        iterationData: serviceData,
-        reporters: outputReporters,
-        reporter: {
-            json: { export: program.opts().reportdir+'/service-provider-report.json' },
-            htmlextra: { export: program.opts().reportdir+'/service-provider-report.html' }
-        }
-    }, function (err) {
-        if (err) { throw err; }
-        console.log('Traceability Interop: Service Provider test complete');
-    });
+async function spCheck() {
+    if (program.opts().tests.includes('all') || program.opts().tests.includes('service')) {
+        newman.run({
+            collection: serviceCollection,
+            iterationData: serviceData,
+            reporters: outputReporters,
+            reporter: {
+                json: { export: program.opts().reportdir + '/service-provider-report.json' },
+                htmlextra: { export: program.opts().reportdir + '/service-provider-report.html' }
+            }
+        }, function (err) {
+            if (err) { throw err; }
+            console.log('Traceability Interop: Service Provider test complete');
+        });
+    }
 }
 
-async function testServiceProviderReference(serviceIdx, serviceData) {
-    return new Promise((resolve) => {
-        var serv = serviceData[serviceIdx];
-        if (program.opts().verbose) console.log(serv);
-    
-        //get did from .well-known
-        var didConfigURL = 'https://' + serv.serviceProvider.baseURL + '/.well-known/did-configuration.json';
-        if (program.opts().verbose) console.log('Testing did-config:', didConfigURL);
-    
-        https.get(didConfigURL, (res) => {
-            let body = "";
-        
-            res.on("data", (chunk) => {
-                body += chunk;
-            });
-        
-            res.on("end", () => {
-                try {
-                    let didConfig = JSON.parse(body);
-                    if (program.opts().verbose) console.log(didConfig);
-                    // loop each provided did
-                    for (didIdx in didConfig.linked_dids) {
-                        var did = didConfig.linked_dids[didIdx];
-                        var didMethod = did.issuer.split(':')[1];
-    
-                        var jsonReportFile = program.opts().reportdir+'/'+serv.serviceProvider.baseURL+'/'+didMethod+'-reference-credentials-report.json';
-                        var htmlReportFile = program.opts().reportdir+'/'+serv.serviceProvider.baseURL+'/'+didMethod+'-reference-credentials-report.html';
-    
-                        newman.run({
-                            collection: referenceCollection,
-                            iterationData: referenceData,
-                            reporters: outputReporters,
-                            reporter: {
-                                json: { export: jsonReportFile },
-                                htmlextra: { export: htmlReportFile }
-                            },
-                            envVar: [
-                                { "key": "name", "value": serv.name},
-                                { "key": "server", "value": serv.serviceProvider.baseURL},
-                                { "key": "prefix", "value": serv.serviceProvider.vcPrefix},
-                                { "key": "did", "value": did.issuer},
-                            ]
-                        }, function (err) {
-                            if (err) { throw err; }
-                            console.log('Traceability Interop: Reference Credential test complete:', serv.name, '  did:', didMethod);
-                        });    
-                    }
-                } catch (error) {
-                    console.error(error.message);
-                };
-                resolve();
-            });
-        
-        }).on("error", (error) => {
-            console.error(error.message);
+async function testServiceProviderReference(serv) {
+    if (program.opts().verbose) console.log(serv);
+
+    //get did from .well-known
+    const didConfigURL = 'https://' + serv.serviceProvider.baseURL + '/.well-known/did-configuration.json';
+    if (program.opts().verbose) console.log('Testing did-config:', didConfigURL);
+
+    https.get(didConfigURL, (res) => {
+        let body = "";
+
+        res.on("data", (chunk) => {
+            body += chunk;
         });
+
+        res.on("end", () => {
+            try {
+                let didConfig = JSON.parse(body);
+                if (program.opts().verbose) console.log(didConfig);
+                // loop each provided did
+                for (didIdx in didConfig.linked_dids) {
+                    var did = didConfig.linked_dids[didIdx];
+                    var didMethod = did.issuer.split(':')[1];
+
+                    var jsonReportFile = program.opts().reportdir + '/' + serv.serviceProvider.baseURL + '/' + didMethod + '-reference-credentials-report.json';
+                    var htmlReportFile = program.opts().reportdir + '/' + serv.serviceProvider.baseURL + '/' + didMethod + '-reference-credentials-report.html';
+
+                    newman.run({
+                        collection: referenceCollection,
+                        iterationData: referenceData,
+                        reporters: outputReporters,
+                        reporter: {
+                            json: { export: jsonReportFile },
+                            htmlextra: { export: htmlReportFile }
+                        },
+                        envVar: [
+                            { "key": "name", "value": serv.name },
+                            { "key": "server", "value": serv.serviceProvider.baseURL },
+                            { "key": "prefix", "value": serv.serviceProvider.vcPrefix },
+                            { "key": "did", "value": did.issuer },
+                        ]
+                    }, function (err) {
+                        if (err) { throw err; }
+                    });
+                    console.log('Traceability Interop: Reference Credential test complete:', serv.name, '  did:', didMethod);
+                }
+            } catch (error) {
+                console.error(error.message);
+            };
+        });
+
+    }).on("error", (error) => {
+        console.error(error.message);
     });
 }
 
 // then run reference checks (this should loop each server from the service provider collection )
-if (program.opts().tests.includes('all') || program.opts().tests.includes('reference')) {
-    // loop each service provider
-    for (serviceIdx in serviceData) {        
-        (async () => {
-            await testServiceProviderReference(serviceIdx, serviceData);
-        })();
+async function refChecks() {
+    if (program.opts().tests.includes('all') || program.opts().tests.includes('reference')) {
+        // loop each service provider
+        for (const serv of serviceData) {
+            await testServiceProviderReference(serv);
+        }
+        console.log('Traceability Interop: Reference Credential tests complete');
     }
 }
+
+//actually run the tests
+(async () => {
+    const spCheckResult = spCheck();
+    const refCheckResult = refChecks();
+    const result = await Promise.all([spCheckResult, refCheckResult])
+})();
+
