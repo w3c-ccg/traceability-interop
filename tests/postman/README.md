@@ -105,8 +105,8 @@ The basic test flow is outlined in the diagram below:
 This test suite provides core postman collections for testing on interop. We will begin with the following:
 
 - `service-providers.json` : does the service provider meet baseline functionality
-- `reference-credentials.json` : can the service provider issue, verify, etc with a known set of good credentials
-- `interop-credentials.json` : can the service provider act in all required roles; 1) issuer, 2) verifier, 3) holder, with a known set of credentials from the trace vocab
+- `reference-credentials.json` : can the service provider issue, verify, etc., with a known set of good credentials
+- `interop-credentials.json` : can the service provider act in all required roles -- 1) issuer, 2) verifier, 3) holder -- with a known set of credentials from the trace vocab
 
 ## Base Service Provider Config and Profile Tests
 
