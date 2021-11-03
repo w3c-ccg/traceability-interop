@@ -102,7 +102,7 @@ JSON output is available for all tests and may be combined for analytics individ
 The basic test flow is outlined in the diagram below:
 ![Trace Interop Test Flow](./interop-test-flow.png)
 
-This test suite provides core postman collections for testing on interop that we will begin with are:
+This test suite provides core postman collections for testing on interop. We will begin with the following:
 
 - `service-providers.json` : does the service provider meet baseline functionality
 - `reference-credentials.json` : can the service provider issue, verify, etc with a known set of good credentials
