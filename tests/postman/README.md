@@ -12,7 +12,7 @@ A variation of this test set will be generalized and extended out to be incorpor
 
 ## Core Profile and Interop Tests
 
-All APIs and configs will be tested with Newman/Postman, and additional settings (security, etc) may be tested with other core system utilities and or JS
+All APIs and configs will be tested with Newman/Postman, and additional settings (security, etc.) may be tested with other core system utilities and/or JS
 
 This package may be executed with the following:
 
