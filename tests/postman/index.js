@@ -9,6 +9,7 @@ import fs from 'fs';
 console.log('Traceability Interop Testing')
 
 program.version('0.0.1');
+program.name('trace-interop-test');
 
 program
     .option('-s, --service <file>', 'use the specified service provider test collection', './collections/service-providers.json')
