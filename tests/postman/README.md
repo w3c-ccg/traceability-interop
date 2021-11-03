@@ -10,7 +10,7 @@ newman run ./collections/reference/vc-http-api-supply-chain.json -d ./data/refer
 
 A variation of this test set will be generalized and extended out to be incorporated into CI / CD for the overal traceability specification objects
 
-# Core Profile and Interop Tests
+## Core Profile and Interop Tests
 
 All APIs and configs will be tested with Newman/Postman, and additional settings (security, etc) may be tested with other core system utilities and or JS
 
@@ -22,9 +22,76 @@ node .
 
 Which will execute all configured tests via node
 
+To get help on running the tests, execute:
+
+```bash
+bash$ node . -h
+Traceability Interop Testing
+Usage: trace-interop-test [options]
+
+Options:
+  -V, --version                  output the version number
+  -s, --service <file>           use the specified service provider test collection (default: "./collections/service-providers.json")
+  -r, --reference <file>         use the specified reference VC test collection (default: "./collections/reference-credentials.json")
+  -sd, --servicedata <file>      use the specified service provider data collection (default: "./data/service-providers.json")
+  -rd, --referencedata <file>    use the specified reference VC data collection (default: "./data/reference-credentials.json")
+  -rd, --reportdir <folder>      use the specified service provider data collection (default: "./newman")
+  -t, --tests <all...>           use the specified tests, "none" is provided as an option for dev purposes (choices: "all", "service", "reference", "interop", "none", default: ["all"])
+  -d, --dids <key, web, all...>  use the specified did methods (default: ["key"])
+  -n, --names <all...>           test only the service provider as identified by name (default: ["all"])
+  -v, --verbose                  verbose reporting
+  -dev, --dev                    dev mode for advanced options
+  -h, --help                     display help for command
+```
+
+### Some options of note
+
+To just run your tests against a specific did method, specify only your "name" from the `./data/service-providers.json` along with the desired did method, such as `key`
+
+```bash
+bash$ node . -n "mesur.io" -d key
+Traceability Interop Testing
+Liveness check starting...
+Quick liveness tests on service providers...
+Checking mesur.io
+    https://mesur.io true
+    https://vc.mesur.io/.well-known/did-configuration.json true
+ * mesur.io is alive.
+Skipping Transmute due to config
+Skipping Mavennet due to config
+Liveness check complete.
+
+Skipping Transmute
+Skipping Mavennet
+Traceability Interop: Reference Credential tests complete
+Using htmlextra version 1.22.3
+Traceability Interop: Reference Credential test complete: mesur.io   did: key
+Using htmlextra version 1.22.3
+Traceability Interop: Service Provider test complete
+```
+
+This will generate test files in the specified output directory (defaults to `./newman`) like so:
+
+```bash
+$ tree -L 3 newman/
+newman/
+├── service-provider-report.html
+├── service-provider-report.json
+└── vc.mesur.io
+    ├── key-reference-credentials-report.html
+    └── key-reference-credentials-report.json
+```
+
+Note that the baseline tests are summarized at the top level across providers in `service-provider-report.[html|json]` and that there is 
+a directory created for each tested provider which contains test results against that provider.
+
+JSON output is available for all tests and may be combined for analytics individually or across providers.
+
+`-v` will not only provide additional command line logging, but will also turn on the `CLI` reporter for newman so that you can view test execution in real time as well as summaries at the end of test iteration. 
+
 ## Test folder structure
 
-```
+```bash
 ├── bin - binary folder for cli test execution and integration into CI
 ├── collections - postman collections
 │   └── reference - postman examples related to this test suite
@@ -35,13 +102,11 @@ Which will execute all configured tests via node
 The basic test flow is outlined in the below diagram:
 ![Trace Interop Test Flow](./interop-test-flow.png)
 
-
 This test suite provides core postman collections for testing on interop that we will begin with are:
 
 - `service-providers.json` : does the service provider meet baseline functionality
 - `reference-credentials.json` : can the service provider issue, verify, etc with a known set of good credentials
 - `interop-credentials.json` : can the service provider act in all required roles; 1) issuer, 2) verifier, 3) holder, with a known set of credentials from the trace vocab
-
 
 ## Base Service Provider Config and Profile Tests
 
@@ -58,7 +123,6 @@ To execute the baseline tests against the VC-API from CLI execute the following:
 ```shell
 newman run ./collections/reference-credentials.json -d ./data/reference-credentials.json -r html,json[,cli] --reporter-json-export ./newman/reference-credentials-report.json
 ```
-
 
 ## Importing Collections into Postman
 
