@@ -99,7 +99,7 @@ JSON output is available for all tests and may be combined for analytics individ
     └── reference - examples
 ```
 
-The basic test flow is outlined in the below diagram:
+The basic test flow is outlined in the diagram below:
 ![Trace Interop Test Flow](./interop-test-flow.png)
 
 This test suite provides core postman collections for testing on interop that we will begin with are:
