@@ -5,7 +5,7 @@ This folder contains a newman/postman collection and sample input data required 
 to execute examples from CLI:
 
 ```shell
-newman run ./collections/reference/vc-http-api-supply-chain.json -d ./data/reference/vc-http-api-supply-chain-credentials.json 
+newman run ./collections/reference/vc-http-api-supply-chain.json -d ./data/reference/vc-http-api-supply-chain-credentials.json
 ```
 
 A variation of this test set will be generalized and extended out to be incorporated into CI/CD for the overall traceability specification objects
@@ -82,12 +82,12 @@ newman/
     └── key-reference-credentials-report.json
 ```
 
-Note that the baseline tests are summarized at the top level across providers in `service-provider-report.[html|json]` and that there is 
+Note that the baseline tests are summarized at the top level across providers in `service-provider-report.[html|json]` and that there is
 a directory created for each tested provider which contains test results against that provider.
 
 JSON output is available for all tests and may be combined for analytics individually or across providers.
 
-`-v` will not only provide additional command line logging, but will also turn on the `CLI` reporter for newman so that you can view test execution in real time as well as summaries at the end of test iteration. 
+`-v` will not only provide additional command line logging, but will also turn on the `CLI` reporter for newman so that you can view test execution in real time as well as summaries at the end of test iteration.
 
 ## Test folder structure
 
@@ -129,6 +129,8 @@ newman run ./collections/reference-credentials.json -d ./data/reference-credenti
 To import the collections into Postman, follow the guide on [importing Postman data](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/#importing-data-into-postman)
 
 ## OAuth 2.0 Configuration
+
+Postman tests make use of OAuth 2.0 client credentials flow for authentication, which may result in a billable event for configured authentication providers.
 
 ### Client Credentials Grant
 
