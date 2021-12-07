@@ -5,6 +5,7 @@ import newman from 'newman';
 import isUrl from "is-url-superb";
 import ky from "ky-universal";
 import fs from 'fs';
+import md5 from 'md5';
 
 console.log('Traceability Interop Testing')
 
@@ -60,6 +61,72 @@ var serviceData = JSON.parse(fs.readFileSync(program.opts().servicedata, 'utf8')
 var referenceCollection = JSON.parse(fs.readFileSync(program.opts().reference, 'utf8'));
 var referenceData = JSON.parse(fs.readFileSync(program.opts().referencedata, 'utf8'));
 
+/**
+ * Convenience definition documents the contents of an OAuth2Config object
+ * @typedef {Object} OAuth2Config
+ * @property {string} access_token_url    - Oauth2 token URL
+ * @property {string} client_id           - Oauth2 client ID
+ * @property {string} client_secret       - Oauth2 client secret
+ * @property {Object} [custom_parameters] - Oauth2 optional custom parameters, e.g., scope, audience, etc.
+ */
+
+/**
+ * Retrieve OAuth 2.0 configuration parameters for the named provider
+ *
+ * The `client_id` and `access_token_url` are read from the provider config. The
+ * `client_secret` is read from the runtime environment and is expected to be
+ * set in a variable named `CLIENT_SECRET_<key>` where `<key>` is the MD5 hash
+ * of the `client_id`.
+ *
+ * @param {string} name - service provider name
+ * @return {OAuth2Config} an OAuth2Config instance
+ * @throws if service provider name is invalid
+ * @throws if service provider oauth2 config is incomplete
+ */
+function getOAuth2Config(name) {
+    var serv = serviceData[getServiceIdx(name)];
+    if (typeof serv === 'undefined') {
+        throw `"${name}" is not a valid service name`;
+    }
+    const {access_token_url, client_id} = serv.oauth2 || {};
+    if (typeof access_token_url === 'undefined') {
+        throw `"${name}" oauth2 configuration is missing "access_token_url" value`;
+    }
+    if (typeof client_id === 'undefined') {
+        throw `"${name}" oauth2 configuration is missing "client_id" value`;
+    }
+    const key = md5(client_id)
+    serv.oauth2.client_secret = process.env[`CLIENT_SECRET_${key}`];
+    if (typeof serv.oauth2.client_secret === 'undefined') {
+        throw `"client_secret" is missing from runtime environment for "${name}"`;
+    }
+    return serv.oauth2;
+}
+
+/**
+ * Retrieve an Oauth 2.0 bearer token
+ *
+ * Token is retrieved using client credentials grant type.
+ *
+ * @param {string} name service provider name
+ * @return {Promise<string>} an opaque access token
+ * @throws if oauth2 parameters are not available
+ * @throws if there is an error retrieving the bearer token
+ */
+async function getBearerToken(name) {
+    var params = getOAuth2Config(name);
+    var res = await ky.post(params.access_token_url, {json: {
+        grant_type: 'client_credentials',
+        client_id: params.client_id,
+        client_secret: params.client_secret,
+        ...params.custom_parameters
+    }}).json();
+    if (!res.access_token) {
+        throw `unable to retrieve oauth2 access token for provider "${name}"`;
+    }
+    return res.access_token;
+}
+
 function getServiceIdx(name) {
     return serviceData.findIndex((obj => obj.name == name));
 }
@@ -102,6 +169,14 @@ async function livenessCheck() {
                 serviceData[getServiceIdx(serv.name)].live = false;
                 console.log(' * ERR:', serv.name, 'is not alive!');
             }
+            console.log(`obtaining oauth2 client_credentials token for ${serv.name}`);
+            try {
+                var token = await getBearerToken(serv.name);
+                serviceData[getServiceIdx(serv.name)].oauth2.token = token
+
+            } catch (err) {
+                console.error(`unable to obtain token for ${serv.name}:`, err)
+            };
         } else {
             console.log('Skipping', serv.name, 'due to config');
         }
