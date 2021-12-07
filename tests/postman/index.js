@@ -5,7 +5,7 @@ import newman from 'newman';
 import isUrl from "is-url-superb";
 import ky from "ky-universal";
 import fs from 'fs';
-import md5 from 'md5';
+import sha256 from 'crypto-js/sha256.js';
 
 console.log('Traceability Interop Testing')
 
@@ -75,8 +75,8 @@ var referenceData = JSON.parse(fs.readFileSync(program.opts().referencedata, 'ut
  *
  * The `client_id` and `access_token_url` are read from the provider config. The
  * `client_secret` is read from the runtime environment and is expected to be
- * set in a variable named `CLIENT_SECRET_<key>` where `<key>` is the MD5 hash
- * of the `client_id`.
+ * set in a variable named `CLIENT_SECRET_<key>` where `<key>` is the SHA256
+ * hash of the `client_id`.
  *
  * @param {string} name - service provider name
  * @return {OAuth2Config} an OAuth2Config instance
@@ -95,7 +95,7 @@ function getOAuth2Config(name) {
     if (typeof client_id === 'undefined') {
         throw `"${name}" oauth2 configuration is missing "client_id" value`;
     }
-    const key = md5(client_id)
+    const key = sha256(client_id);
     serv.oauth2.client_secret = process.env[`CLIENT_SECRET_${key}`];
     if (typeof serv.oauth2.client_secret === 'undefined') {
         throw `"client_secret" is missing from runtime environment for "${name}"`;
