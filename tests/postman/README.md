@@ -130,7 +130,7 @@ To import the collections into Postman, follow the guide on [importing Postman d
 
 ## OAuth 2.0 Configuration
 
-Postman tests make use of OAuth 2.0 client credentials flow for authentication, which may result in a billable event for configured authentication providers.
+_**NOTE:** Postman tests make use of OAuth 2.0 client credentials flow for authentication, which **may result in a billable event** for configured authentication providers._
 
 ### Client Credentials Grant
 
