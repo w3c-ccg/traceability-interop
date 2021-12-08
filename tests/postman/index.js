@@ -239,7 +239,7 @@ async function testServiceProviderReference(serv) {
                     var jsonReportFile = program.opts().reportdir + '/' + serv.serviceProvider.baseURL + '/' + didMethod + '-reference-credentials-report.json';
                     var htmlReportFile = program.opts().reportdir + '/' + serv.serviceProvider.baseURL + '/' + didMethod + '-reference-credentials-report.html';
 
-                    newman.run({
+                    const run = newman.run({
                         collection: referenceCollection,
                         iterationData: referenceData,
                         reporters: outputReporters,
@@ -252,9 +252,28 @@ async function testServiceProviderReference(serv) {
                             { "key": "server", "value": serv.serviceProvider.baseURL },
                             { "key": "prefix", "value": serv.serviceProvider.vcPrefix },
                             { "key": "did", "value": did.issuer },
+                            { "key": "token", "value": serv.oauth2?.token },
                         ]
                     }, function (err) {
                         if (err) { throw err; }
+                    })
+
+                    // Summary must be sanitized before reporters listening for `beforeDone`
+                    // events run.
+                    run.on('beforeDone', function (err, o) {
+                        if (err) { return; }
+
+                        // Access token must be redacted from environment
+                        if (o.summary.environment.has('token')) {
+                            o.summary.environment.set('token', '**REDACTED**');
+                        }
+
+                        // Access token must be redacted from request headers
+                        o.summary.run.executions.forEach((pm) => {
+                            if (pm.request.headers.has('Authorization')) {
+                                pm.request.headers.upsert({key: 'Authorization', value: '**REDACTED**'});
+                            }
+                        });
                     });
                     console.log('Traceability Interop: Reference Credential test complete:', serv.name, '  did:', didMethod);
                 }
