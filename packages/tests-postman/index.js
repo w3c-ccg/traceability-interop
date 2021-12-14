@@ -2,11 +2,11 @@
 import { program, Option } from 'commander';
 import https from 'https';
 import newman from 'newman';
-import isUrl from "is-url-superb";
-import ky from "ky-universal";
+import isUrl from 'is-url-superb';
+import ky from 'ky-universal';
 import fs from 'fs';
 
-console.log('Traceability Interop Testing')
+console.log('Traceability Interop Testing');
 
 program.version('0.0.1');
 program.name('trace-interop-test');
@@ -31,7 +31,7 @@ program.addOption(
 );
 program.addOption(
     new Option('-d, --dids <key, web, all...>', 'use the specified did methods')
-        //.choices(['key', 'web', 'all'])
+        // .choices(['key', 'web', 'all'])
         .default(['key'])
 );
 program.addOption(
@@ -39,14 +39,13 @@ program.addOption(
         .default(['all'])
 );
 
-
 program
     .option('-v, --verbose', 'verbose reporting')
     .option('-dev, --dev', 'dev mode for advanced options');
 
 program.parse();
 
-var outputReporters = ['json', 'htmlextra']
+const outputReporters = ['json', 'htmlextra'];
 
 if (program.opts().verbose) {
     outputReporters.push('cli');
@@ -55,24 +54,24 @@ if (program.opts().dev) {
     console.log('*** DEV MODE SET ***');
 }
 
-var serviceCollection = JSON.parse(fs.readFileSync(program.opts().service, 'utf8'));
-var serviceData = JSON.parse(fs.readFileSync(program.opts().servicedata, 'utf8'));
-var referenceCollection = JSON.parse(fs.readFileSync(program.opts().reference, 'utf8'));
-var referenceData = JSON.parse(fs.readFileSync(program.opts().referencedata, 'utf8'));
+const serviceCollection = JSON.parse(fs.readFileSync(program.opts().service, 'utf8'));
+const serviceData = JSON.parse(fs.readFileSync(program.opts().servicedata, 'utf8'));
+const referenceCollection = JSON.parse(fs.readFileSync(program.opts().reference, 'utf8'));
+const referenceData = JSON.parse(fs.readFileSync(program.opts().referencedata, 'utf8'));
 
 function getServiceIdx(name) {
-    return serviceData.findIndex((obj => obj.name == name));
+    return serviceData.findIndex(((obj) => obj.name == name));
 }
 
-const urlExist = async url => {
-	if (typeof url !== "string") {
+const urlExist = async (url) => {
+	if (typeof url !== 'string') {
         // console.log(url, 'not string!');
-		throw new TypeError(`Expected a string, got ${typeof url}`)
+		throw new TypeError(`Expected a string, got ${typeof url}`);
 	}
 
 	if (!isUrl(url)) {
         // console.log(url, 'not url!');
-		return false
+		return false;
 	}
 
 	const response = await ky.head(url, {
@@ -81,20 +80,19 @@ const urlExist = async url => {
 
     // console.log(url, 'response:', response.status);
     // return response !== undefined && (response.status < 400 || response.status >= 500)
-	return response !== undefined && response.status < 500 // using lt 500 to work around some issues on .well-known
-}
+	return response !== undefined && response.status < 500; // using lt 500 to work around some issues on .well-known
+};
 
-
-//run a base sanity check...
+// run a base sanity check...
 async function livenessCheck() {
     console.log('Quick liveness tests on service providers...');
     for (const serv of serviceData) {
         if (program.opts().names.includes(serv.name) || program.opts().names.includes('all')) {
             console.log('Checking', serv.name);
             const spExists = await urlExist(serv.serviceProvider.provider.url);
-            const didExists = await urlExist('https://' + serv.serviceProvider.baseURL + '/.well-known/did-configuration.json');
-            console.log('\t', serv.serviceProvider.provider.url, spExists)
-            console.log('\t', 'https://' + serv.serviceProvider.baseURL + '/.well-known/did-configuration.json', didExists)
+            const didExists = await urlExist(`https://${serv.serviceProvider.baseURL}/.well-known/did-configuration.json`);
+            console.log('\t', serv.serviceProvider.provider.url, spExists);
+            console.log('\t', `https://${serv.serviceProvider.baseURL}/.well-known/did-configuration.json`, didExists);
             if (spExists && didExists) {
                 serviceData[getServiceIdx(serv.name)].live = true;
                 console.log(' *', serv.name, 'is alive.');
@@ -119,10 +117,10 @@ async function spCheck() {
             iterationData: serviceData,
             reporters: outputReporters,
             reporter: {
-                json: { export: program.opts().reportdir + '/service-provider-report.json' },
-                htmlextra: { export: program.opts().reportdir + '/service-provider-report.html' }
+                json: { export: `${program.opts().reportdir}/service-provider-report.json` },
+                htmlextra: { export: `${program.opts().reportdir}/service-provider-report.html` }
             }
-        }, function (err) {
+        }, (err) => {
             if (err) { throw err; }
             console.log('Traceability Interop: Service Provider test complete');
         });
@@ -136,33 +134,33 @@ async function testServiceProviderReference(serv) {
         return;
     }
 
-    //get did from .well-known
-    const didConfigURL = 'https://' + serv.serviceProvider.baseURL + '/.well-known/did-configuration.json';
+    // get did from .well-known
+    const didConfigURL = `https://${serv.serviceProvider.baseURL}/.well-known/did-configuration.json`;
     if (program.opts().verbose) console.log('Testing did-config:', didConfigURL);
 
     https.get(didConfigURL, (res) => {
-        let body = "";
+        let body = '';
 
-        res.on("data", (chunk) => {
+        res.on('data', (chunk) => {
             body += chunk;
         });
 
-        res.on("end", () => {
+        res.on('end', () => {
             try {
-                let didConfig = JSON.parse(body);
+                const didConfig = JSON.parse(body);
                 if (program.opts().verbose) console.log(didConfig);
                 // loop each provided did
                 for (const did of didConfig.linked_dids) {
-                    var didMethod = did.issuer.split(':')[1];
+                    const didMethod = did.issuer.split(':')[1];
 
                     if (!program.opts().dids.includes(didMethod)) {
                         if (!program.opts().dids.includes('all')) {
                             continue;
                         }
-                    } 
+                    }
 
-                    var jsonReportFile = program.opts().reportdir + '/' + serv.serviceProvider.baseURL + '/' + didMethod + '-reference-credentials-report.json';
-                    var htmlReportFile = program.opts().reportdir + '/' + serv.serviceProvider.baseURL + '/' + didMethod + '-reference-credentials-report.html';
+                    const jsonReportFile = `${program.opts().reportdir}/${serv.serviceProvider.baseURL}/${didMethod}-reference-credentials-report.json`;
+                    const htmlReportFile = `${program.opts().reportdir}/${serv.serviceProvider.baseURL}/${didMethod}-reference-credentials-report.html`;
 
                     newman.run({
                         collection: referenceCollection,
@@ -173,12 +171,12 @@ async function testServiceProviderReference(serv) {
                             htmlextra: { export: htmlReportFile }
                         },
                         envVar: [
-                            { "key": "name", "value": serv.name },
-                            { "key": "server", "value": serv.serviceProvider.baseURL },
-                            { "key": "prefix", "value": serv.serviceProvider.vcPrefix },
-                            { "key": "did", "value": did.issuer },
+                            { key: 'name', value: serv.name },
+                            { key: 'server', value: serv.serviceProvider.baseURL },
+                            { key: 'prefix', value: serv.serviceProvider.vcPrefix },
+                            { key: 'did', value: did.issuer },
                         ]
-                    }, function (err) {
+                    }, (err) => {
                         if (err) { throw err; }
                     });
                     console.log('Traceability Interop: Reference Credential test complete:', serv.name, '  did:', didMethod);
@@ -186,10 +184,9 @@ async function testServiceProviderReference(serv) {
             } catch (error) {
                 console.error(error.message);
                 serviceData[getServiceIdx(serv.name)].live = false;
-            };
+            }
         });
-
-    }).on("error", (error) => {
+    }).on('error', (error) => {
         console.error(error.message);
         serviceData[getServiceIdx(serv.name)].live = false;
     });
@@ -206,14 +203,13 @@ async function refChecks() {
     }
 }
 
-//actually run the tests
+// actually run the tests
 (async () => {
     console.log('Liveness check starting...');
     livenessCheck().then(async () => {
         console.log('Liveness check complete.\n');
         const spCheckResult = spCheck();
         const refCheckResult = refChecks();
-        const result = await Promise.all([spCheckResult, refCheckResult])
-    })
+        const result = await Promise.all([spCheckResult, refCheckResult]);
+    });
 })();
-

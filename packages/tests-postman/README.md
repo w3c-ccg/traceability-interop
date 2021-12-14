@@ -20,6 +20,12 @@ This package may be executed with the following:
 node .
 ```
 
+or
+
+```bash
+npm run test:all
+```
+
 Which will execute all configured tests via node
 
 To get help on running the tests, execute:
