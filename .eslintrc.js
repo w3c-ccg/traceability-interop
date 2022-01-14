@@ -5,7 +5,7 @@ module.exports = {
     es2021: true,
     'jest/globals': true,
   },
-  plugins: ['jest','@html-eslint'],
+  plugins: ['jest', '@html-eslint'],
   extends: ['airbnb-base'],
   parserOptions: {
     ecmaVersion: 12,
@@ -25,7 +25,7 @@ module.exports = {
     indent: 0,
     '@html-eslint/indent': ['error', 2],
     'no-restricted-syntax': [0, 'ForOfStatement'],
-    'max-len': [2, 120],
+    'max-len': [2, 140],
     'global-require': 0,
     'no-console': 0,
     'no-unused-vars': 0,
