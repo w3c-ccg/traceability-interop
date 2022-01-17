@@ -64,18 +64,6 @@ All `JsonWebKey2020` types support `JsonWebSignature2020` AND `VC-JWT`.
 }
 ```
 
-<!-- or
-
-```json
-{
-  "id": "#hub",
-  "type": "IdentityHub",
-  "serviceEndpoint": {
-    "instances": ["https://hub.example.com", "https://example.org/hub"]
-  }
-}
-``` -->
-
 This definition implies the following endpoints:
 
 ```
