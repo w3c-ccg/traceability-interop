@@ -54,7 +54,7 @@ See [assertionMethod](https://www.w3.org/TR/did-core/#assertion).
 The set of supported `authentication` DID URLs for the organization.
 See [authentication](https://www.w3.org/TR/did-core/#authentication).
 
-The `didDocument` MAY contain a `verificatonMethod` section, which MAY be used to support `did:web` based verification relationships.
+The `didDocument` MAY contain a `verificationMethod` section, which MAY be used to support `did:web` based verification relationships.
 
 The `didDocument` MUST NOT contain `verificatonMethod`'s where the controller is different from the DID Subject.
 
