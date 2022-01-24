@@ -32,7 +32,7 @@ This is trivial, simply do:
 HTTP GET https://platform.example/organization/123/did.json => didDocument.json
 ```
 
-2. Review the `alsoKnownAs`, `assertionMethod` and `authentication` sections of the did document.
+2. Review the `alsoKnownAs`, `assertionMethod`, and `authentication` sections of the DID document.
 
 #### `alsoKnownAs`
 
