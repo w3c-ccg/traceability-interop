@@ -56,7 +56,7 @@ See [authentication](https://www.w3.org/TR/did-core/#authentication).
 
 The `didDocument` MAY contain a `verificationMethod` section, which MAY be used to support `did:web` based verification relationships.
 
-The `didDocument` MUST NOT contain `verificatonMethod`'s where the controller is different from the DID Subject.
+The `didDocument` MUST NOT contain `verificationMethods` where the controller is different from the DID Subject.
 
 All `Ed25519VerificationKey2018` types support `Ed25519Siganture2018`
 
