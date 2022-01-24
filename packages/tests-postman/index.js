@@ -5,6 +5,9 @@ import newman from 'newman';
 import isUrl from 'is-url-superb';
 import ky from 'ky-universal';
 import fs from 'fs';
+
+// Default specifier resolution of "explicit" will not properly locate the
+// SHA 256 module unless `.js` extension is specified here.
 import sha256 from 'crypto-js/sha256.js'; // eslint-disable-line import/extensions
 
 console.log('Traceability Interop Testing');
@@ -24,7 +27,6 @@ program
     './collections/reference-credentials.json'
   );
 
-// disable-eslint-next-line program
 //     .option('-s, --service <file>', 'use the specified interop test collection', './collections/interop-credentials.json');
 
 program
@@ -38,8 +40,8 @@ program
     'use the specified reference VC data collection',
     './data/reference-credentials.json'
   );
-// program
-//     .option('-sd, --servicedata <file>', 'use the specified interop data collection', './data/interop-credentials.json');
+
+  //     .option('-sd, --servicedata <file>', 'use the specified interop data collection', './data/interop-credentials.json');
 
 program.option('-rd, --reportdir <folder>', 'use the specified service provider data collection', './newman');
 program.addOption(
@@ -74,6 +76,10 @@ const serviceData = JSON.parse(fs.readFileSync(program.opts().servicedata, 'utf8
 const referenceCollection = JSON.parse(fs.readFileSync(program.opts().reference, 'utf8'));
 const referenceData = JSON.parse(fs.readFileSync(program.opts().referencedata, 'utf8'));
 
+function getServiceIdx(name) {
+  return serviceData.findIndex((obj) => obj.name === name);
+}
+
 /**
  * Convenience definition documents the contents of an OAuth2Config object
  * @typedef {Object} OAuth2Config
@@ -97,18 +103,18 @@ const referenceData = JSON.parse(fs.readFileSync(program.opts().referencedata, '
  * @throws if service provider oauth2 config is incomplete
  */
 function getOAuth2Config(name) {
-  const serv = serviceData[getServiceIdx(name)]; // eslint-disable-line no-use-before-define
+  const serv = serviceData[getServiceIdx(name)];
   if (typeof serv === 'undefined') {
     throw Error(`"${name}" is not a valid service name`);
   }
-  const { access_token_url, client_id } = serv.oauth2 || {}; // eslint-disable-line camelcase
-  if (typeof access_token_url === 'undefined') { // eslint-disable-line camelcase
+  const { access_token_url: tokenURL, client_id: clientID } = serv.oauth2 || {};
+  if (typeof tokenURL === 'undefined') {
     throw Error(`"${name}" oauth2 configuration is missing "access_token_url" value`);
   }
-  if (typeof client_id === 'undefined') { // eslint-disable-line camelcase
+  if (typeof clientID === 'undefined') {
     throw Error(`"${name}" oauth2 configuration is missing "client_id" value`);
   }
-  const key = sha256(client_id);
+  const key = sha256(clientID);
   serv.oauth2.client_secret = process.env[`CLIENT_SECRET_${key}`];
   if (typeof serv.oauth2.client_secret === 'undefined') {
     throw Error(`"client_secret" is missing from runtime environment for "${name}"`);
@@ -128,7 +134,7 @@ function getOAuth2Config(name) {
  */
 async function getBearerToken(name) {
   const params = getOAuth2Config(name);
-  const res = await ky
+  return ky
     .post(params.access_token_url, {
       json: {
         grant_type: 'client_credentials',
@@ -137,15 +143,8 @@ async function getBearerToken(name) {
         ...params.custom_parameters,
       },
     })
-    .json();
-  if (!res.access_token) {
-    throw Error(`unable to retrieve oauth2 access token for provider "${name}"`);
-  }
-  return res.access_token;
-}
-
-function getServiceIdx(name) {
-  return serviceData.findIndex((obj) => obj.name === name);
+    .json()
+    .then((res) => res.access_token);
 }
 
 const urlExist = async (url) => {
@@ -171,31 +170,43 @@ const urlExist = async (url) => {
 // run a base sanity check...
 async function livenessCheck() {
   console.log('Quick liveness tests on service providers...');
-  for (const serv of serviceData) {
-    if (program.opts().names.includes(serv.name) || program.opts().names.includes('all')) {
-      console.log('Checking', serv.name);
-      const spExists = await urlExist(serv.serviceProvider.provider.url); // eslint-disable-line no-await-in-loop
-      const didExists = await urlExist(`https://${serv.serviceProvider.baseURL}/.well-known/did-configuration.json`); // eslint-disable-line
-      console.log('\t', serv.serviceProvider.provider.url, spExists);
+
+  const { names } = program.opts();
+  const services = serviceData.filter((serv) => names.includes('all') || names.includes(serv.name));
+
+  const results = [];
+
+  for (const serv of services) {
+    console.log('Checking', serv.name);
+
+    const urlSVC = serv.serviceProvider.provider.url;
+    const urlDID = `https://${serv.serviceProvider.baseURL}/.well-known/did-configuration.json`;
+
+    results.push(Promise.all([urlExist(urlSVC), urlExist(urlDID)])
+    .then(([svcExists, didExists]) => {
+      console.log('\t', serv.serviceProvider.provider.url, svcExists);
       console.log('\t', `https://${serv.serviceProvider.baseURL}/.well-known/did-configuration.json`, didExists);
-      if (spExists && didExists) {
+      if (svcExists && didExists) {
         serviceData[getServiceIdx(serv.name)].live = true;
         console.log(' *', serv.name, 'is alive.');
       } else {
         serviceData[getServiceIdx(serv.name)].live = false;
         console.log(' * ERR:', serv.name, 'is not alive!');
       }
+    })
+    .then(() => {
       console.log(`obtaining oauth2 client_credentials token for ${serv.name}`);
-      try {
-        const token = await getBearerToken(serv.name); // eslint-disable-line no-await-in-loop
-        serviceData[getServiceIdx(serv.name)].oauth2.token = token;
-      } catch (err) {
-        console.error(`unable to obtain token for ${serv.name}:`, err);
-      }
-    } else {
-      console.log('Skipping', serv.name, 'due to config');
-    }
+      return getBearerToken(serv.name);
+    })
+    .then((token) => {
+      serviceData[getServiceIdx(serv.name)].oauth2.token = token;
+    })
+    .catch((err) => {
+      console.error(`unable to obtain token for ${serv.name}:`, err.message);
+    }));
   }
+
+  return Promise.all(results);
 }
 
 // TODO: set reporter templates for htmlextra
@@ -247,15 +258,18 @@ async function testServiceProviderReference(serv) {
         try {
           const didConfig = JSON.parse(body);
           if (program.opts().verbose) console.log(didConfig);
-          // loop each provided did
-          for (const did of didConfig.linked_dids) {
-            const didMethod = did.issuer.split(':')[1];
 
-            if (!program.opts().dids.includes(didMethod)) {
-              if (!program.opts().dids.includes('all')) {
-                continue; // eslint-disable-line no-continue
-              }
-            }
+          // Unless options specify that all dids are to be used, only those
+          // specified did methods should be in play.
+          const didOpts = program.opts().dids;
+          const dids = didConfig.linked_dids.filter((did) => {
+            const didMethod = did.issuer.split(':')[1];
+            return didOpts.includes('all') || didOpts.includes(didMethod);
+          });
+
+          // loop each provided did
+          for (const did of dids) {
+            const didMethod = did.issuer.split(':')[1];
 
             const jsonReportFile = `${program.opts().reportdir}/${
               serv.serviceProvider.baseURL
@@ -323,22 +337,22 @@ async function testServiceProviderReference(serv) {
 
 // then run reference checks (this should loop each server from the service provider collection )
 async function refChecks() {
+  const results = [];
   if (program.opts().tests.includes('all') || program.opts().tests.includes('reference')) {
     // loop each service provider
     for (const serv of serviceData) {
-      await testServiceProviderReference(serv); // eslint-disable-line no-await-in-loop
+      results.push(testServiceProviderReference(serv));
     }
     console.log('Traceability Interop: Reference Credential tests complete');
   }
+  return Promise.all(results);
 }
 
 // actually run the tests
-(async () => {
-  console.log('Liveness check starting...');
-  livenessCheck().then(async () => {
+console.log('Liveness check starting...');
+livenessCheck()
+  .then(() => {
     console.log('Liveness check complete.\n');
-    const spCheckResult = spCheck();
-    const refCheckResult = refChecks();
-    const result = await Promise.all([spCheckResult, refCheckResult]);
-  });
-})();
+    return Promise.all([spCheck(), refChecks()]);
+  })
+  .catch((err) => console.log(err));
