@@ -96,7 +96,7 @@ For example:
 }
 ```
 
-In this example, the organization suports authentication and credential issuance with the same 2 keys, identified via the DID URLs in the relationships.
+In this example, the organization suports authentication and credential issuance with the same two keys, identified via the DID URLs in the relationships.
 
 3. Review the `service` section of the did document.
 
