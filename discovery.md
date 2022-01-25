@@ -32,27 +32,71 @@ This is trivial, simply do:
 HTTP GET https://platform.example/organization/123/did.json => didDocument.json
 ```
 
-2. Review the `alsoKnownAs` section of the did document.
+2. Review the `alsoKnownAs`, `assertionMethod`, and `authentication` sections of the DID document.
 
-```json
-{
-  "alsoKnownAs": [
-    "did:example:123",
-    "did:key:z6Mk...",
-    "did:web:another.platform.example:organization:456"
-  ]
-}
-```
+#### `alsoKnownAs`
 
-Resolve each of these DIDs.
+> This relationship is a statement that the subject of this identifier is also identified by one or more other identifiers.
 
-The set of supported `assertionMethod` DID URLs for the organization is the aggregation of the `assertionMethod` for each listed DID.
+See [alsoKnownAs](https://www.w3.org/TR/did-core/#dfn-alsoknownas).
 
-The set of supported `authentication` DID URLs for the organization is the aggregation of the `authentication` for each listed DID.
+This entry MUST be present.
+This entry MUST have a first element that is the base URL for a VC-API that supports presentation exchange.
+
+#### `assertionMethod`
+
+The set of supported `assertionMethod` DID URLs for the organization.
+See [assertionMethod](https://www.w3.org/TR/did-core/#assertion).
+
+
+#### `authentication`
+
+The set of supported `authentication` DID URLs for the organization.
+See [authentication](https://www.w3.org/TR/did-core/#authentication).
+
+The `didDocument` MAY contain a `verificationMethod` section, which MAY be used to support `did:web` based verification relationships.
+
+The `didDocument` MUST NOT contain `verificationMethods` where the controller is different from the DID Subject.
 
 All `Ed25519VerificationKey2018` types support `Ed25519Siganture2018`
 
 All `JsonWebKey2020` types support `JsonWebSignature2020` AND `VC-JWT`.
+
+For example:
+
+```json
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    {
+      "@vocab": "https://www.w3.org/ns/did/#"
+    }
+  ],
+  "id": "did:web:platform.example:organization:123",
+  "alsoKnownAs": [
+    "https://platform.example/organization/123",
+    "did:key:z6MksSdhqJH3VvzcX8WP6VbdB85e6T7aaL5yLLYeJLJrto8V",
+    "did:key:z82LkpR3sPw87xdgs72J3EzGXChciBmhV6ukkbeAGFtCpauXHiEwtM2tyDcphRnLmKsB1fi"
+  ],
+  "assertionMethod": [
+    "did:key:z6MksSdhqJH3VvzcX8WP6VbdB85e6T7aaL5yLLYeJLJrto8V#z6MksSdhqJH3VvzcX8WP6VbdB85e6T7aaL5yLLYeJLJrto8V",
+    "did:key:z82LkpR3sPw87xdgs72J3EzGXChciBmhV6ukkbeAGFtCpauXHiEwtM2tyDcphRnLmKsB1fi#z82LkpR3sPw87xdgs72J3EzGXChciBmhV6ukkbeAGFtCpauXHiEwtM2tyDcphRnLmKsB1fi"
+  ],
+   "authentication": [
+    "did:key:z6MksSdhqJH3VvzcX8WP6VbdB85e6T7aaL5yLLYeJLJrto8V#z6MksSdhqJH3VvzcX8WP6VbdB85e6T7aaL5yLLYeJLJrto8V",
+    "did:key:z82LkpR3sPw87xdgs72J3EzGXChciBmhV6ukkbeAGFtCpauXHiEwtM2tyDcphRnLmKsB1fi#z82LkpR3sPw87xdgs72J3EzGXChciBmhV6ukkbeAGFtCpauXHiEwtM2tyDcphRnLmKsB1fi"
+  ],
+  "services": [
+    {
+      "id": "did:web:platform.example:organization:123#traceability-api",
+      "type": "TraceabilityAPI",
+      "serviceEndpoint": "https://platform.example/organization/123"
+    }
+  ]
+}
+```
+
+In this example, the organization suports authentication and credential issuance with the same two keys, identified via the DID URLs in the relationships.
 
 3. Review the `service` section of the did document.
 
