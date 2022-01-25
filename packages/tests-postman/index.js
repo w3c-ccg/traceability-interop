@@ -27,8 +27,6 @@ program
     './collections/reference-credentials.json'
   );
 
-//     .option('-s, --service <file>', 'use the specified interop test collection', './collections/interop-credentials.json');
-
 program
   .option(
     '-sd, --servicedata <file>',
@@ -40,8 +38,6 @@ program
     'use the specified reference VC data collection',
     './data/reference-credentials.json'
   );
-
-  //     .option('-sd, --servicedata <file>', 'use the specified interop data collection', './data/interop-credentials.json');
 
 program.option('-rd, --reportdir <folder>', 'use the specified service provider data collection', './newman');
 program.addOption(
