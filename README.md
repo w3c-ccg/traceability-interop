@@ -24,6 +24,7 @@ channel automatically.
    log, audio, and video). If you want to clean up the minutes, it takes about
    5-10 minutes to clean up the transcription and publish it.
 
+ 
 ## [Open API Specification](https://w3c-ccg.github.io/traceability-interop/)
 
 The spec contains documentation on use cases as well are required and optional API operations.
@@ -39,3 +40,13 @@ This implementation will cover all required AND optional APIs and will be used t
 In order to ensure interoperability tests are conducted in a manner consistent with production environments, we will be maintaining postman collections and client credential configuration in github actons.
 
 This will allow us to test implementations in production with the appropriate security and authorizaton policies in place.
+
+
+## Development
+
+```
+git clone git@github.com:w3c-ccg/traceability-interop.git
+cd traceability-interop
+npm i
+npm run serve
+```
