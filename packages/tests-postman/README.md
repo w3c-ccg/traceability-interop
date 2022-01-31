@@ -16,7 +16,7 @@ All APIs and configs will be tested with Newman/Postman, and additional settings
 
 Install package with:
 ```bash
-npm i
+npm ci
 ```
 
 This package may be executed with the following:
@@ -105,9 +105,9 @@ JSON output is available for all tests and may be combined for analytics individ
 ```bash
 ├── bin - binary folder for cli test execution and integration into CI
 ├── collections - postman collections
-│   └── reference - postman examples related to this test suite
+│   └── reference - postman examples related to this test suite
 └── data - data packages for use with the postman collections
-    └── reference - examples
+    └── reference - examples
 ```
 
 The basic test flow is outlined in the diagram below:
