@@ -6,10 +6,6 @@ import isUrl from 'is-url-superb';
 import ky from 'ky-universal';
 import fs from 'fs';
 
-// Default specifier resolution of "explicit" will not properly locate the
-// SHA 256 module unless `.js` extension is specified here.
-import sha256 from 'crypto-js/sha256.js'; // eslint-disable-line import/extensions
-
 console.log('Traceability Interop Testing');
 
 program.version('0.0.1');
@@ -103,15 +99,17 @@ function getOAuth2Config(name) {
   if (typeof serv === 'undefined') {
     throw Error(`"${name}" is not a valid service name`);
   }
-  const { access_token_url: tokenURL, client_id: clientID } = serv.oauth2 || {};
+  const { access_token_url: tokenURL, client_id: clientID, client_secret_envvar: key } = serv.oauth2 || {};
   if (typeof tokenURL === 'undefined') {
     throw Error(`"${name}" oauth2 configuration is missing "access_token_url" value`);
   }
   if (typeof clientID === 'undefined') {
     throw Error(`"${name}" oauth2 configuration is missing "client_id" value`);
   }
-  const key = sha256(clientID);
-  serv.oauth2.client_secret = process.env[`CLIENT_SECRET_${key}`];
+  if (typeof key === 'undefined') {
+    throw Error(`"${name}" oauth2 configuration is missing "client_secret_envvar" value`);
+  }
+  serv.oauth2.client_secret = process.env[key];
   if (typeof serv.oauth2.client_secret === 'undefined') {
     throw Error(`"client_secret" is missing from runtime environment for "${name}"`);
   }
