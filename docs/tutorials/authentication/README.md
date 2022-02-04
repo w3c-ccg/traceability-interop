@@ -205,4 +205,7 @@ newman run ./authentication-tutorial.collection.json \
 
 This should produce a JSON test suite report in the same directory.
 
-As a final step, if you are an active contributor to this repo, you may register your api to be automatically tested via GitHub actions.
+As a final step, if you are an active contributor to this repo,
+you may register your api to be automatically tested via GitHub actions.
+
+See [authentication-tutorial.yml](../../../.github/workflows/authentication-tutorial.yml).
