@@ -1,5 +1,6 @@
 In this tutorial, you will learn:
 
+1. obtain an issuer id for an organization identified via a did:web
 1. issue revocable credentials
 1. verify a credential has not been revoked
 1. revoke a credential
