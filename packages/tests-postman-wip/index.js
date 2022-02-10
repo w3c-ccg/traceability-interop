@@ -4,8 +4,9 @@ import 'dotenv/config';
 import newman from 'newman';
 import { readFileSync } from 'fs';
 
-const providers = JSON.parse(readFileSync('./data/service-providers.json'));
 const collection = JSON.parse(readFileSync('./data/Traceability Interoperability.postman_collection.json'));
+const credentials = JSON.parse(readFileSync('./data/reference-credentials.json'));
+const providers = JSON.parse(readFileSync('./data/service-providers.json'));
 
 const globalNewmanConfig = {
   collection,
@@ -102,7 +103,7 @@ function LoadTestDIDConfigurationEnvironment(provider) {
  * TestDIDConfiguration runs the "DID Configuration" test suite and returns a
  * promise that resolves when the test is complete.
  * @param {Object} provider - Provider configuration
- * @return {Promise<void>} - A promise that resolves when the test is complete
+ * @return {Promise<Object>} - A promise that resolves when the test is complete
  */
  function TestDIDConfiguration(provider) {
   const newmanConfig = {
@@ -112,21 +113,89 @@ function LoadTestDIDConfigurationEnvironment(provider) {
   };
   newmanConfig.collection.info.name = `DID Configuration [${provider.name}]`;
   return new Promise((resolve, reject) => {
-    newman.run(newmanConfig, (err, sum) => {
+    let didConfiguration; // local storage for response value, see below.
+    const run = newman.run(newmanConfig, (err, o) => {
+      if (err) return reject(err);
+      return resolve(didConfiguration);
+    });
+    run.on('beforeDone', (err, o) => {
+      if (err) { reject(err); return; }
+      // There should not be iterations for this test, but if there are, they
+      // are gracefully handled by taking the last value.
+      o.summary.run.executions.forEach((pm) => {
+        didConfiguration = pm.response?.json(); // copy to local scope
+      });
+    });
+  });
+}
+
+/**
+ * LoadTestIssueCredentialsEnvironment returns a PostmanEnvironment for the
+ * given provider suitable for use with TestIssueCredentials(), with the
+ * following variables set:
+ *
+ *   - PROVIDER_BASE_URL
+ *   - VC_URL_PREFIX
+ *
+ * @param {Object} provider - Provider configuration
+ * @return {PostmanEnvironment}
+ */
+ function LoadTestIssueCredentialsEnvironment(provider) {
+  return [
+    { key: 'PROVIDER_BASE_URL', value: provider.serviceProvider?.baseURL },
+    { key: 'VC_URL_PREFIX', value: provider.serviceProvider?.vcUrlPrefix }
+  ];
+}
+
+function TestIssueCredentials(provider, issuer) {
+  const envVar = LoadTestIssueCredentialsEnvironment(provider);
+  envVar.push({ key: 'issuer', value: issuer });
+  const newmanConfig = {
+    ...globalNewmanConfig,
+    envVar,
+    folder: 'Issue Credentials',
+    iterationData: credentials
+  };
+  return new Promise((resolve, reject) => {
+    newman.run(newmanConfig, (err, _) => {
       if (err) return reject(err);
       return resolve();
     });
   });
 }
 
-// Temporarily run synchronously
+//
+// Testing Follows
+//
+
 Promise.resolve()
+
+  // Retrieve DID configuration
   .then(() => TestDIDConfiguration(providers[0]))
-  .then(() => TestDIDConfiguration(providers[1]))
-  .then(() => TestDIDConfiguration(providers[2]))
-  .then(() => TestDIDConfiguration(providers[3]))
-  .then(() => TestAccessToken(providers[0]))
-  .then(() => TestAccessToken(providers[1]))
-  .then(() => TestAccessToken(providers[2]))
-  .then(() => TestAccessToken(providers[3]))
-  .catch((err) => console.log('there was an error'));
+
+  // Issue credentials using each of the linked DIDs in the DID configuration
+  .then((didConfig) => {
+    const promises = [];
+    didConfig.linked_dids.map((did) => did.issuer).forEach((issuer) => {
+      promises.push(TestIssueCredentials(providers[0], issuer));
+    });
+    return Promise.all(promises);
+  })
+
+  .catch((err) => console.log('there was an error', err));
+
+// Temporarily run synchronously
+// Promise.resolve()
+  // .then(() => TestDIDConfiguration(providers[0]))
+  // .then(() => TestDIDConfiguration(providers[1]))
+  // .then(() => TestDIDConfiguration(providers[2]))
+  // .then(() => TestDIDConfiguration(providers[3]))
+  // .then(() => TestAccessToken(providers[0]))
+  // .then(() => TestAccessToken(providers[1]))
+  // .then(() => TestAccessToken(providers[2]))
+  // .then(() => TestAccessToken(providers[3]))
+  // .then(() => TestIssueCredentials(providers[0]))
+  // .then(() => TestIssueCredentials(providers[1]))
+  // .then(() => TestIssueCredentials(providers[2]))
+  // .then(() => TestIssueCredentials(providers[3]))
+  // .catch((err) => console.log('there was an error'));
