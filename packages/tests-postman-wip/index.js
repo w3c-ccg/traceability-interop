@@ -5,7 +5,7 @@ import { program, Option } from 'commander';
 import { readFileSync } from 'fs';
 import suite from './lib/index.mjs'; // eslint-disable-line import/extensions
 
-const credentials = JSON.parse(readFileSync('./data/reference-credentials.json'));
+let credentials = JSON.parse(readFileSync('./data/reference-credentials.json'));
 let providers = JSON.parse(readFileSync('./data/service-providers.json'));
 
 program
@@ -19,12 +19,25 @@ program
     'all'
     ).choices([...(providers.map((p) => p.name)), 'all']).default('all'));
 
+program
+  .addOption(new Option(
+    '-c, --credential <name...>',
+    'limit tests to specific credentials, can be used more than once',
+    'all'
+    ).choices([...(credentials.map((p) => p.name)), 'all']).default('all'));
+
 program.parse();
 
 // Testing can be limited to specific providers via command-line options.
 const activeProviders = program.opts().provider;
 if (!activeProviders.includes('all')) {
   providers = providers.filter((p) => activeProviders.includes(p.name));
+}
+
+// Testing can be limited to specific credentials via command-line options.
+const activeCredentials = program.opts().credential;
+if (!activeCredentials.includes('all')) {
+  credentials = credentials.filter((p) => activeCredentials.includes(p.name));
 }
 
 const globalNewmanConfig = {
