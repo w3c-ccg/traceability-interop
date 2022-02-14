@@ -15,45 +15,22 @@ const globalNewmanConfig = {
 };
 
 /**
- * Convenience definition for postman environment variables
- * @typedef {Array<{ key: string, value: string }>} PostmanEnvironment
- */
-
-/**
- * LoadTestAccessTokenEnvironment returns a PostmanEnvironment for the given
- * provider suitable for use with TestAccessToken(), with the following
- * variables set:
- *
- *   - CLIENT_ID
- *   - CLIENT_SECRET
- *   - TOKEN_AUDIENCE
- *   - TOKEN_ENDPOINT
- *
- * @param {Object} provider - Provider configuration
- * @return {PostmanEnvironment}
- */
-function LoadTestAccessTokenEnvironment(provider) {
-  return [
-    { key: 'CLIENT_ID', value: provider.oauth2?.clientId },
-    { key: 'CLIENT_SECRET', value: process.env[provider.oauth2?.clientSecret] },
-    { key: 'TOKEN_AUDIENCE', value: provider.oauth2?.tokenAudience },
-    { key: 'TOKEN_ENDPOINT', value: provider.oauth2?.tokenEndpoint },
-  ];
-}
-
-/**
  * TestAccessToken runs the "Access Token" test suite and returns a promise that
  * resolves to the retrieved access token value.
  * @param {Object} provider - Provider configuration
  * @return {Promise<string>} - A promise that resolves to an access token
  */
-function TestAccessToken(provider) {
+function TestAccessToken(clientId, clientSecret, tokenAudience, tokenEndpoint) {
   const newmanConfig = {
     ...globalNewmanConfig,
-    envVar: LoadTestAccessTokenEnvironment(provider),
+    envVar: [
+      { key: 'CLIENT_ID', value: clientId },
+      { key: 'CLIENT_SECRET', value: clientSecret },
+      { key: 'TOKEN_AUDIENCE', value: tokenAudience },
+      { key: 'TOKEN_ENDPOINT', value: tokenEndpoint },
+    ],
     folder: 'Access Token',
   };
-  newmanConfig.collection.info.name = `Access Token [${provider.name}]`;
   return new Promise((resolve, reject) => {
     let accessToken; // local storage for sensitive value, see below.
     const run = newman.run(newmanConfig, (err, _) => {
@@ -86,32 +63,19 @@ function TestAccessToken(provider) {
 }
 
 /**
- * LoadTestDIDConfigurationEnvironment returns a PostmanEnvironment for the
- * given provider suitable for use with TestDIDConfiguration(), with the
- * following variables set:
- *
- *   - PROVIDER_BASE_URL
- *
- * @param {Object} provider - Provider configuration
- * @return {PostmanEnvironment}
- */
-function LoadTestDIDConfigurationEnvironment(provider) {
-  return [{ key: 'PROVIDER_BASE_URL', value: provider.serviceProvider?.baseURL }];
-}
-
-/**
  * TestDIDConfiguration runs the "DID Configuration" test suite and returns a
  * promise that resolves when the test is complete.
- * @param {Object} provider - Provider configuration
+ * @param {string} server - Provider server, e.g., 'vc.mesur.io'
  * @return {Promise<Object>} - A promise that resolves when the test is complete
  */
- function TestDIDConfiguration(provider) {
+ function TestDIDConfiguration(server) {
   const newmanConfig = {
     ...globalNewmanConfig,
-    envVar: LoadTestDIDConfigurationEnvironment(provider),
+    envVar: [
+      { key: 'server', value: server }
+    ],
     folder: 'DID Configuration',
   };
-  newmanConfig.collection.info.name = `DID Configuration [${provider.name}]`;
   return new Promise((resolve, reject) => {
     let didConfiguration; // local storage for response value, see below.
     const run = newman.run(newmanConfig, (err, o) => {
@@ -130,72 +94,114 @@ function LoadTestDIDConfigurationEnvironment(provider) {
 }
 
 /**
- * LoadTestIssueCredentialsEnvironment returns a PostmanEnvironment for the
- * given provider suitable for use with TestIssueCredentials(), with the
- * following variables set:
+ * Note that this currently runs over a set of iteration data to provide the
+ * credentials values.
  *
- *   - PROVIDER_BASE_URL
- *   - VC_URL_PREFIX
- *
- * @param {Object} provider - Provider configuration
- * @return {PostmanEnvironment}
+ * @param {string} accessToken - An OAuth2 bearer token for the provider
+ * @param {string} server - Provider base URL, e.g., 'vc.mesur.io'
+ * @param {string} pathPrefix - URL path prefix for verifiable credentials, e.g., '/next'
+ * @param {string} did - A provider-supported did, e.g., `did:key:XXXXX`
  */
- function LoadTestIssueCredentialsEnvironment(provider) {
-  return [
-    { key: 'PROVIDER_BASE_URL', value: provider.serviceProvider?.baseURL },
-    { key: 'VC_URL_PREFIX', value: provider.serviceProvider?.vcUrlPrefix }
-  ];
-}
-
-function TestIssueCredentials(provider, issuer) {
-  const envVar = LoadTestIssueCredentialsEnvironment(provider);
-  envVar.push({ key: 'issuer', value: issuer });
+function TestIssueCredentials(accessToken, server, pathPrefix, did) {
   const newmanConfig = {
     ...globalNewmanConfig,
-    envVar,
-    folder: 'Issue Credentials',
+    envVar: [
+      { key: 'accessToken', value: accessToken },
+      { key: 'server', value: server },
+      { key: 'pathPrefix', value: pathPrefix },
+      { key: 'did', value: did }
+    ],
+    folder: 'Issuance',
     iterationData: credentials
   };
   return new Promise((resolve, reject) => {
-    newman.run(newmanConfig, (err, _) => {
+    let vc; // local storage for response value, see below.
+    const run = newman.run(newmanConfig, (err, _) => {
+      if (err) console.log(err);
+      if (err) return reject(err);
+      return resolve(vc);
+    });
+    run.on('beforeDone', (err, o) => {
+      if (err) { reject(err); return; }
+      // Access token must be redacted from request headers
+      o.summary.run.executions.forEach((pm) => {
+        if (pm.request.headers.has('Authorization')) {
+          pm.request.headers.upsert({ key: 'Authorization', value: '**REDACTED**' });
+        }
+        vc = pm.response?.json(); // copy to local scope
+      });
+    });
+  });
+}
+
+/**
+ *
+ * @param {string} accessToken - An OAuth2 bearer token for the provider
+ * @param {string} server - Provider base URL, e.g., 'vc.mesur.io'
+ * @param {string} pathPrefix - URL path prefix for verifiable credentials, e.g., '/next'
+ * @param {string} did - A provider-supported did, e.g., `did:key:XXXXX`
+ * @param {string} vc - A verifiable credential
+ */
+function TestProvePresentations(accessToken, server, pathPrefix, did, vc) {
+  const newmanConfig = {
+    ...globalNewmanConfig,
+    envVar: [
+      { key: 'accessToken', value: accessToken },
+      { key: 'server', value: server },
+      { key: 'pathPrefix', value: pathPrefix },
+      { key: 'did', value: did },
+      { key: 'verifiableCredential', value: vc },
+    ],
+    folder: 'Signing'
+  };
+  return new Promise((resolve, reject) => {
+    const run = newman.run(newmanConfig, (err, _) => {
       if (err) return reject(err);
       return resolve();
+    });
+    run.on('beforeDone', (err, o) => {
+      if (err) { reject(err); return; }
+      // Access token must be redacted from request headers
+      o.summary.run.executions.forEach((pm) => {
+        if (pm.request.headers.has('Authorization')) {
+          pm.request.headers.upsert({ key: 'Authorization', value: '**REDACTED**' });
+        }
+      });
     });
   });
 }
 
 //
 // Testing Follows
+// TODO: currently one failure halts the whole suite
 //
+providers.forEach((provider) => {
+  const server = provider.serviceProvider?.server;
+  const pathPrefix = provider.serviceProvider?.pathPrefix;
 
-Promise.resolve()
+  // Tests grouped by provider can run async
+  Promise.resolve()
+    .then(async () => {
+      // Perform DID Configuration test suite and store `did-configuration.json`
+      const didConfig = await TestDIDConfiguration(server);
 
-  // Retrieve DID configuration
-  .then(() => TestDIDConfiguration(providers[0]))
+      // Perform Access Token test suite and store access token
+      const clientId = provider.oauth2?.clientId;
+      const clientSecret = process.env[provider.oauth2?.clientSecret];
+      const tokenAudience = provider.oauth2?.tokenAudience;
+      const tokenEndpoint = provider.oauth2?.tokenEndpoint;
+      const token = await TestAccessToken(clientId, clientSecret, tokenAudience, tokenEndpoint);
 
-  // Issue credentials using each of the linked DIDs in the DID configuration
-  .then((didConfig) => {
-    const promises = [];
-    didConfig.linked_dids.map((did) => did.issuer).forEach((issuer) => {
-      promises.push(TestIssueCredentials(providers[0], issuer));
-    });
-    return Promise.all(promises);
-  })
-
-  .catch((err) => console.log('there was an error', err));
-
-// Temporarily run synchronously
-// Promise.resolve()
-  // .then(() => TestDIDConfiguration(providers[0]))
-  // .then(() => TestDIDConfiguration(providers[1]))
-  // .then(() => TestDIDConfiguration(providers[2]))
-  // .then(() => TestDIDConfiguration(providers[3]))
-  // .then(() => TestAccessToken(providers[0]))
-  // .then(() => TestAccessToken(providers[1]))
-  // .then(() => TestAccessToken(providers[2]))
-  // .then(() => TestAccessToken(providers[3]))
-  // .then(() => TestIssueCredentials(providers[0]))
-  // .then(() => TestIssueCredentials(providers[1]))
-  // .then(() => TestIssueCredentials(providers[2]))
-  // .then(() => TestIssueCredentials(providers[3]))
-  // .catch((err) => console.log('there was an error'));
+      // Issuance, signing, and verification tests are run for each did type
+      const promises = [];
+      didConfig.linked_dids.map((did) => did.issuer).forEach((did) => {
+        // Wrap synchronous test sets in a promise so that sets can run async
+        promises.push(Promise.resolve().then(async () => {
+          const vc = await TestIssueCredentials(token, server, pathPrefix, did);
+          await TestProvePresentations(token, server, pathPrefix, did, vc);
+        }));
+      });
+      return Promise.all(promises);
+    })
+    .catch((err) => console.log('there was an error', err));
+});
