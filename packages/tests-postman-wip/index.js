@@ -5,7 +5,6 @@ import { program, Option } from 'commander';
 import { readFileSync } from 'fs';
 import suite from './lib/index.mjs'; // eslint-disable-line import/extensions
 
-const collection = JSON.parse(readFileSync('./data/Traceability Interoperability.postman_collection.json'));
 const credentials = JSON.parse(readFileSync('./data/reference-credentials.json'));
 let providers = JSON.parse(readFileSync('./data/service-providers.json'));
 
@@ -29,7 +28,6 @@ if (!activeProviders.includes('all')) {
 }
 
 const globalNewmanConfig = {
-  collection,
   timeoutRequest: 5000,
   reporters: ['cli', 'htmlextra', 'json']
 };
@@ -61,7 +59,7 @@ providers.forEach((provider) => {
         // Wrap synchronous test sets in a promise so that sets can run async
         promises.push(Promise.resolve().then(async () => {
           const vc = await suite.TestCredentialsIssue(globalNewmanConfig, token, server, pathPrefix, did, credentials);
-          await suite.TestProvePresentations(globalNewmanConfig, token, server, pathPrefix, did, vc);
+          await suite.TestPresentationsProve(globalNewmanConfig, token, server, pathPrefix, did, vc);
         }));
       });
       return Promise.all(promises);

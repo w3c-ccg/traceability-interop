@@ -1,4 +1,15 @@
+import { readFileSync } from 'fs';
 import newman from 'newman';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// __dirname is not defined in ES module scope
+/* eslint-disable no-underscore-dangle */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+/* eslint-enable no-underscore-dangle */
+
+const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json')));
 
 /**
  *
@@ -12,6 +23,7 @@ import newman from 'newman';
  function Test(options, accessToken, server, pathPrefix, did, vc) {
   const newmanConfig = {
     ...options,
+    collection,
     envVar: [
       { key: 'accessToken', value: accessToken },
       { key: 'server', value: server },
@@ -19,7 +31,6 @@ import newman from 'newman';
       { key: 'did', value: did },
       { key: 'verifiableCredential', value: vc },
     ],
-    folder: 'Signing'
   };
   return new Promise((resolve, reject) => {
     const run = newman.run(newmanConfig, (err, _) => {

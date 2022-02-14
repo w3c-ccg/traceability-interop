@@ -1,4 +1,15 @@
+import { readFileSync } from 'fs';
 import newman from 'newman';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// __dirname is not defined in ES module scope
+/* eslint-disable no-underscore-dangle */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+/* eslint-enable no-underscore-dangle */
+
+const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json')));
 
 /**
  * Note that this currently runs over a set of iteration data to provide the
@@ -18,13 +29,13 @@ import newman from 'newman';
  function Test(options, accessToken, server, pathPrefix, did, data) {
   const newmanConfig = {
     ...options,
+    collection,
     envVar: [
       { key: 'accessToken', value: accessToken },
       { key: 'server', value: server },
       { key: 'pathPrefix', value: pathPrefix },
       { key: 'did', value: did }
     ],
-    folder: 'Issuance',
     iterationData: data
   };
   return new Promise((resolve, reject) => {

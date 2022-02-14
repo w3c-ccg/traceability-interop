@@ -1,4 +1,15 @@
+import { readFileSync } from 'fs';
 import newman from 'newman';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// __dirname is not defined in ES module scope
+/* eslint-disable no-underscore-dangle */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+/* eslint-enable no-underscore-dangle */
+
+const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json')));
 
 /**
  * TestAccessToken runs the "Access Token" test suite and returns a promise that
@@ -14,13 +25,13 @@ import newman from 'newman';
 function Test(options, clientId, clientSecret, tokenAudience, tokenEndpoint) {
   const newmanConfig = {
     ...options,
+    collection,
     envVar: [
       { key: 'CLIENT_ID', value: clientId },
       { key: 'CLIENT_SECRET', value: clientSecret },
       { key: 'TOKEN_AUDIENCE', value: tokenAudience },
       { key: 'TOKEN_ENDPOINT', value: tokenEndpoint },
     ],
-    folder: 'Access Token',
   };
   return new Promise((resolve, reject) => {
     let accessToken; // local storage for sensitive value, see below.
