@@ -18,9 +18,9 @@ const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json
  * @param {string} server - Provider base URL, e.g., 'vc.mesur.io'
  * @param {string} pathPrefix - URL path prefix for verifiable credentials, e.g., '/next'
  * @param {string} did - A provider-supported did, e.g., `did:key:XXXXX`
- * @param {string} vc - A verifiable credential
+ * @param {Object} jsonData - A verifiable credential
  */
- function Test(options, accessToken, server, pathPrefix, did, vc) {
+ function Test(options, accessToken, server, pathPrefix, did, jsonData) {
   const newmanConfig = {
     ...options,
     collection,
@@ -29,7 +29,7 @@ const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json
       { key: 'server', value: server },
       { key: 'pathPrefix', value: pathPrefix },
       { key: 'did', value: did },
-      { key: 'verifiableCredential', value: vc },
+      { key: 'verifiableCredential', value: JSON.stringify(jsonData) },
     ],
   };
   return new Promise((resolve, reject) => {

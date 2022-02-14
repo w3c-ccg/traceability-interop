@@ -18,13 +18,13 @@ const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json
  * @param {string} accessToken - An OAuth2 bearer token for the provider
  * @param {string} server - Provider base URL, e.g., 'vc.mesur.io'
  * @param {string} pathPrefix - URL path prefix for verifiable credentials, e.g., '/next'
- * @param {Object} payload - Verifiable presentation as JSON string
+ * @param {Object} jsonData - Verifiable presentation
  * @return {Promise<void>} - A promise that resolves when test is complete
  *
  * @TODO Should this return stringified JSON?
  * @TODO This should not use iteration data, only one credential should be provided
  */
- function Test(options, accessToken, server, pathPrefix, payload) {
+ function Test(options, accessToken, server, pathPrefix, jsonData) {
   const newmanConfig = {
     ...options,
     collection,
@@ -32,7 +32,7 @@ const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json
       { key: 'accessToken', value: accessToken },
       { key: 'server', value: server },
       { key: 'pathPrefix', value: pathPrefix },
-      { key: 'verifiablePresentation', value: payload }
+      { key: 'verifiablePresentation', value: JSON.stringify(jsonData) }
     ],
   };
   return new Promise((resolve, reject) => {

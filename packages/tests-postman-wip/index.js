@@ -29,8 +29,24 @@ if (!activeProviders.includes('all')) {
 
 const globalNewmanConfig = {
   timeoutRequest: 5000,
-  reporters: ['cli', 'htmlextra', 'json']
+  reporters: ['htmlextra']
 };
+
+/**
+ * createMatrix is a helper function that maps all possible combinations of the
+ * input arrays `a` and `b` for use as a test matrix.
+ * @param {Array} a
+ * @param {Array} b
+ */
+function createMatrix(a, b) {
+  const result = [];
+  a.forEach((elA) => {
+      b.forEach((elB) => {
+           result.push([elA, elB]);
+      });
+  });
+  return result;
+}
 
 //
 // Testing Follows
@@ -55,15 +71,21 @@ providers.forEach((provider) => {
 
       // Issuance, signing, and verification tests are run for each did type
       const promises = [];
-      didConfig.linked_dids.map((did) => did.issuer).forEach((did) => {
+
+      const matrix = createMatrix(didConfig.linked_dids.map((did) => did.issuer), credentials);
+
+      matrix.forEach(([did, data]) => {
         // Wrap synchronous test sets in a promise so that sets can run async
         promises.push(Promise.resolve().then(async () => {
-          const vc = await suite.TestCredentialsIssue(globalNewmanConfig, token, server, pathPrefix, did, credentials);
-          await suite.TestCredentialsVerify(globalNewmanConfig, token, server, pathPrefix, JSON.stringify(vc));
+          const { credential } = data;
+          credential.issuer = did;
+          const vc = await suite.TestCredentialsIssue(globalNewmanConfig, token, server, pathPrefix, credential);
+          await suite.TestCredentialsVerify(globalNewmanConfig, token, server, pathPrefix, vc);
           const vp = await suite.TestPresentationsProve(globalNewmanConfig, token, server, pathPrefix, did, vc);
-          await suite.TestPresentationsVerify(globalNewmanConfig, token, server, pathPrefix, JSON.stringify(vp));
+          await suite.TestPresentationsVerify(globalNewmanConfig, token, server, pathPrefix, vp);
         }));
       });
+
       return Promise.all(promises);
     })
     .catch((err) => console.log('there was an error', err));
