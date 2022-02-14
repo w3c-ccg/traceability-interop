@@ -12,15 +12,19 @@ const __dirname = path.dirname(__filename);
 const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json')));
 
 /**
+ * Test `presentations/verify` functionality.
  *
  * @param {newman.NewmanRunOptions} options Newman run options
  * @param {string} accessToken - An OAuth2 bearer token for the provider
  * @param {string} server - Provider base URL, e.g., 'vc.mesur.io'
  * @param {string} pathPrefix - URL path prefix for verifiable credentials, e.g., '/next'
- * @param {string} did - A provider-supported did, e.g., `did:key:XXXXX`
- * @param {string} vc - A verifiable credential
+ * @param {Object} payload - Verifiable presentation as JSON string
+ * @return {Promise<void>} - A promise that resolves when test is complete
+ *
+ * @TODO Should this return stringified JSON?
+ * @TODO This should not use iteration data, only one credential should be provided
  */
- function Test(options, accessToken, server, pathPrefix, did, vc) {
+ function Test(options, accessToken, server, pathPrefix, payload) {
   const newmanConfig = {
     ...options,
     collection,
@@ -28,15 +32,13 @@ const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json
       { key: 'accessToken', value: accessToken },
       { key: 'server', value: server },
       { key: 'pathPrefix', value: pathPrefix },
-      { key: 'did', value: did },
-      { key: 'verifiableCredential', value: vc },
+      { key: 'verifiablePresentation', value: payload }
     ],
   };
   return new Promise((resolve, reject) => {
-    let vp; // local storage for response value, see below.
     const run = newman.run(newmanConfig, (err, _) => {
       if (err) return reject(err);
-      return resolve(vp);
+      return resolve();
     });
     run.on('beforeDone', (err, o) => {
       if (err) { reject(err); return; }
@@ -45,7 +47,6 @@ const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json
         if (pm.request.headers.has('Authorization')) {
           pm.request.headers.upsert({ key: 'Authorization', value: '**REDACTED**' });
         }
-        vp = pm.response?.json(); // copy to local scope
       });
     });
   });

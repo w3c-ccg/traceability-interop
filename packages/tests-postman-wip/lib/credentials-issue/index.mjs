@@ -41,7 +41,6 @@ const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json
   return new Promise((resolve, reject) => {
     let vc; // local storage for response value, see below.
     const run = newman.run(newmanConfig, (err, _) => {
-      if (err) console.log(err);
       if (err) return reject(err);
       return resolve(vc);
     });

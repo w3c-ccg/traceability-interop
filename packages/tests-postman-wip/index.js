@@ -59,7 +59,9 @@ providers.forEach((provider) => {
         // Wrap synchronous test sets in a promise so that sets can run async
         promises.push(Promise.resolve().then(async () => {
           const vc = await suite.TestCredentialsIssue(globalNewmanConfig, token, server, pathPrefix, did, credentials);
-          await suite.TestPresentationsProve(globalNewmanConfig, token, server, pathPrefix, did, vc);
+          await suite.TestCredentialsVerify(globalNewmanConfig, token, server, pathPrefix, JSON.stringify(vc));
+          const vp = await suite.TestPresentationsProve(globalNewmanConfig, token, server, pathPrefix, did, vc);
+          await suite.TestPresentationsVerify(globalNewmanConfig, token, server, pathPrefix, JSON.stringify(vp));
         }));
       });
       return Promise.all(promises);
