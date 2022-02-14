@@ -2,11 +2,31 @@
 
 import 'dotenv/config';
 import newman from 'newman';
+import { program, Option } from 'commander';
 import { readFileSync } from 'fs';
 
 const collection = JSON.parse(readFileSync('./data/Traceability Interoperability.postman_collection.json'));
 const credentials = JSON.parse(readFileSync('./data/reference-credentials.json'));
-const providers = JSON.parse(readFileSync('./data/service-providers.json'));
+let providers = JSON.parse(readFileSync('./data/service-providers.json'));
+
+program
+  .name('npm run test:all')
+  .description('Traceability Interoperability Test Runner');
+
+program
+  .addOption(new Option(
+    '-p, --provider <name...>',
+    'limit tests to specific providers, can be used more than once',
+    'all'
+    ).choices([...(providers.map((p) => p.name)), 'all']).default('all'));
+
+program.parse();
+
+// Testing can be limited to specific providers via command-line options.
+const activeProviders = program.opts().provider;
+if (!activeProviders.includes('all')) {
+  providers = providers.filter((p) => activeProviders.includes(p.name));
+}
 
 const globalNewmanConfig = {
   collection,
