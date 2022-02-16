@@ -1,0 +1,332 @@
+{
+  "info": {
+    "_postman_id": "9a63f5d5-fbab-473e-ad4e-0f0d7de6f3a0",
+    "name": "VC API - Verifiable Business Cards",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Access Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": ["pm.environment.set(\"access_token\", pm.response.json().access_token);"],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"audience\": \"{{TOKEN_AUDIENCE}}\",\n    \"client_id\": \"{{CLIENT_ID}}\",\n    \"client_secret\": \"{{CLIENT_SECRET}}\",\n    \"grant_type\": \"client_credentials\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{TOKEN_ENDPOINT}}",
+          "host": ["{{TOKEN_ENDPOINT}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Organization DIDs",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const { didDocument } = pm.response.json()",
+              "pm.environment.set(\"credential_issuer_id\", didDocument.alsoKnownAs[1]);",
+              "pm.environment.set(\"vc_api_base_url\", didDocument.services[0].serviceEndpoint);",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{API_BASE_URL}}/identifiers/{{ORGANIZATION_DID_WEB}}",
+          "host": ["{{API_BASE_URL}}"],
+          "path": ["identifiers", "{{ORGANIZATION_DID_WEB}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Issue with VBC",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"should confirm credential was issued with Ed25519Signature2018\", function () {",
+              "    const responseJson = pm.response.json();",
+              "",
+              "    pm.environment.set(\"verifiable_credential\", JSON.stringify(responseJson));",
+              "",
+              "    pm.expect(responseJson.proof.type).to.eql('Ed25519Signature2018');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const credentialId = 'urn:uuid:' + _.random(0, 1024);",
+              "",
+              "pm.environment.set(\"credential_id\", credentialId);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"credential\": {\n  \"@context\": [\n    \"https://www.w3.org/2018/credentials/v1\",\n    \"https://w3id.org/traceability/v1\"\n  ],\n  \"id\": \"{{credential_id}}\",\n  \"name\": \"Verifiable Business Card\",\n  \"description\": \"This credential helps you receive verifiable data\",\n  \"type\": [\n    \"VerifiableCredential\",\n    \"VerifiableBusinessCard\"\n  ],\n  \"relatedLink\": [\n    {\n      \"type\": \"LinkRole\",\n      \"target\": \"{{vc_api_base_url}}/presentations/available\",\n      \"linkRelationship\": \"OrganizationSecureShareEndpoint\"\n    }\n  ],\n  \"issuer\": {\n    \"id\": \"{{credential_issuer_id}}\",\n    \"name\": \"Test Organization Issuer\"\n  },\n  \"issuanceDate\": \"2020-04-02T18:48:36Z\",\n  \"credentialSubject\": {\n    \"id\": \"{{credential_issuer_id}}\",\n    \"type\": [\n      \"Organization\",\n      \"Brand\"\n    ],\n    \"name\": \"Test Organization Subject\"\n    \n  }\n},\n  \"options\": {\n    \"type\": \"Ed25519Signature2018\",\n    \"created\": \"2020-04-02T18:48:36Z\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{API_BASE_URL}}/credentials/issue",
+          "host": ["{{API_BASE_URL}}"],
+          "path": ["credentials", "issue"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Domain and Challenge",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const responseJson = pm.response.json();",
+              "pm.environment.set(\"domain\", responseJson.domain);",
+              "pm.environment.set(\"challenge\", responseJson.challenge);",
+              "",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [""],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": [\n    {\n      \"type\": \"QueryByExample\",\n      \"credentialQuery\": [\n        {\n          \"type\": [\n            \"VerifiableCredential\"\n          ],\n          \"reason\": \"We want to present credentials.\"\n        }\n      ]\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{vc_api_base_url}}/presentations/available",
+          "host": ["{{vc_api_base_url}}"],
+          "path": ["presentations", "available"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Sign Presentation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const responseJson = pm.response.json();",
+              "pm.environment.set(\"verifiable_presentation\", JSON.stringify(responseJson));",
+              "",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [""],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"presentation\": {\n    \"@context\": [\n      \"https://www.w3.org/2018/credentials/v1\"\n    ],\n    \"type\": [\n      \"VerifiablePresentation\"\n    ],\n    \"holder\": \"{{credential_issuer_id}}\",\n    \"verifiableCredential\": [{{verifiable_credential}}]\n  },\n  \"options\": {\n    \"domain\": \"{{domain}}\",\n    \"challenge\": \"{{challenge}}\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{API_BASE_URL}}/presentations/prove",
+          "host": ["{{API_BASE_URL}}"],
+          "path": ["presentations", "prove"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Submit Presenstation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"should confirm the submission is accepted\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    pm.expect(responseJson.verified).to.eql(true);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [""],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{{verifiable_presentation}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{vc_api_base_url}}/presentations/submissions",
+          "host": ["{{vc_api_base_url}}"],
+          "path": ["presentations", "submissions"]
+        }
+      },
+      "response": []
+    }
+  ]
+}
