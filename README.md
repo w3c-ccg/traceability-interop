@@ -27,7 +27,11 @@ channel automatically.
  
 ## [Open API Specification](https://w3c-ccg.github.io/traceability-interop/)
 
-The spec contains documentation on use cases as well as required and optional API operations. You can validate that they conform to the OpenAPI spec by running `npm run validate-spec`.
+The spec contains documentation on use cases as well as required and optional API operations. 
+
+### Included scripts for managing OpenAPI Specification
+1. `npm run validate-spec`: This command can be used to validate the `openapi.yml` spec, ensuring there are no issues.
+2. `npm run preserve`: This command is used to bundle our `openapi.yml` file into an `openapi.json` file that can be used to import the collection/spec.
 
 ## Importing the OpenAPI Specification Into Postman
 
