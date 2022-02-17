@@ -33,6 +33,8 @@ The spec contains documentation on use cases as well as required and optional AP
 1. `npm run validate-spec`: This command can be used to validate the `openapi.yml` spec, ensuring there are no issues.
 2. `npm run preserve`: This command is used to bundle our `openapi.yml` file into an `openapi.json` file that can be used to import the collection/spec.
 
+For additional documentation on how the `swagger-cli` can be used, visit [here](https://www.npmjs.com/package/swagger-cli).
+
 ## Importing the OpenAPI Specification Into Postman
 
 If you are using Postman, you can import all of the available API endpoints into an easy to use collection by following the instructions below:
