@@ -12,26 +12,26 @@ const __dirname = path.dirname(__filename);
 const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json')));
 
 /**
- * TestDIDConfiguration runs the "DID Configuration" test suite and returns a
- * promise that resolves when the test is complete.
+ * Test runs the "DID Web Discovery" test suite and returns a promise that
+ * resolves when the test is complete.
  *
  * @param {newman.NewmanRunOptions} options Newman run options
- * @param {string} server - Provider server, e.g., 'vc.mesur.io'
+ * @param {string} didWeb - Provider didWeb, e.g., 'did:web:vc.mesur.io'
  * @return {Promise<Object>} - A promise that resolves when the test is complete
  */
- function Test(options, server) {
+ function Test(options, didWeb) {
   const newmanConfig = {
     ...options,
     collection,
     envVar: [
-      { key: 'server', value: server }
+      { key: 'ORGANIZATION_DID_WEB', value: didWeb }
     ],
   };
   return new Promise((resolve, reject) => {
-    let didConfiguration; // local storage for response value, see below.
+    let didDocument; // local storage for response value, see below.
     const run = newman.run(newmanConfig, (err, o) => {
       if (err) return reject(err);
-      return resolve(didConfiguration);
+      return resolve(didDocument);
     });
     run.on('beforeDone', (err, o) => {
       if (err) { reject(err); return; }
@@ -41,7 +41,7 @@ const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json
         // This callback is NOT part of the promise chain, and exceptions must
         // be properly handled here.
         try {
-          didConfiguration = pm.response?.json(); // copy to local scope
+          didDocument = pm.response?.json()?.didDocument; // copy to local scope
         } catch (e) {
           reject(new Error('unable to parse json response'));
         }

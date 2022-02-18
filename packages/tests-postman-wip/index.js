@@ -63,21 +63,22 @@ function createMatrix(a, b) {
   return result;
 }
 
-//
 // Testing Follows
-// TODO: currently one failure halts the whole suite
 //
+// TODO: the tests wired up below are primarily useful for development purposes,
+//       we will likely want to do this differently for the final product.
+
 providers.forEach((provider) => {
-  const server = provider.serviceProvider?.server;
-  const pathPrefix = provider.serviceProvider?.pathPrefix;
+  const { didWeb, pathPrefix, server } = provider.serviceProvider;
 
   // Tests grouped by provider can run async
   Promise.resolve()
     .then(async () => {
       // Perform DID Configuration test suite and store `did-configuration.json`
-      let didConfig;
+      let didDocument;
       try {
-        didConfig = await suite.TestDidConfiguration(globalNewmanConfig, server);
+        console.log(didWeb);
+        didDocument = await suite.TestDidWebDiscovery(globalNewmanConfig, didWeb);
       } catch (e) {
         console.log(`did configuration failed for ${provider.name}`);
       }
@@ -98,7 +99,7 @@ providers.forEach((provider) => {
       // Issuance, signing, and verification tests are run for each did type
       const promises = [];
 
-      const matrix = createMatrix(didConfig?.linked_dids.map((did) => did.issuer), credentials);
+      const matrix = createMatrix(didDocument.assertionMethod, credentials);
 
       matrix.forEach(([did, data]) => {
         // Log messages need additional data to be relevant.
