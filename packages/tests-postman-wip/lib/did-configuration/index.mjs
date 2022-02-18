@@ -38,7 +38,13 @@ const collection = JSON.parse(readFileSync(path.resolve(__dirname, 'postman.json
       // There should not be iterations for this test, but if there are, they
       // are gracefully handled by taking the last value.
       o.summary.run.executions.forEach((pm) => {
-        didConfiguration = pm.response?.json(); // copy to local scope
+        // This callback is NOT part of the promise chain, and exceptions must
+        // be properly handled here.
+        try {
+          didConfiguration = pm.response?.json(); // copy to local scope
+        } catch (e) {
+          reject(new Error('unable to parse json response'));
+        }
       });
     });
   });
