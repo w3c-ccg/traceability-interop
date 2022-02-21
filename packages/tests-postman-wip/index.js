@@ -99,7 +99,7 @@ providers.forEach((provider) => {
       // Issuance, signing, and verification tests are run for each did type
       const promises = [];
 
-      const matrix = createMatrix(didDocument.assertionMethod, credentials);
+      const matrix = createMatrix([...didDocument.alsoKnownAs, didDocument.id], credentials);
 
       matrix.forEach(([did, data]) => {
         // Log messages need additional data to be relevant.
