@@ -17,7 +17,7 @@ Example: pass command-line options to the test runner
 ```
 $ npm run test:all -- --help
 
-> trace-interop-tests-wip@1.0.0 test:all
+> trace-interop-tests@1.0.0 test:all
 > rimraf newman; node . "--help"
 
 Usage: npm run test:all [options]
