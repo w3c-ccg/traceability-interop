@@ -158,7 +158,6 @@ Next test the test to confirm that the credential was verified successfully:
 pm.test('The response confirms the credential was verified successfully', () => {
   // parse the response JSON and test two properties
   const responseJson = pm.response.json();
-  pm.expect(responseJson.checks).to.eql(['proof']);
   pm.expect(responseJson.errors).to.eql([]);
 });
 ```
