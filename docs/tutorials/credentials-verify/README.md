@@ -15,7 +15,7 @@ This tutorial will be picking up where the Credentials Issue Tutorial left off; 
 1. Duplicate the Credentials Issue Tutorial and rename it to Credentials Verify Tutorial.
 1. Duplicate the Credentials Issue Environment and rename it to Credentials Verify Environment.
 
-Be sure to activate the select the new Credentials Issue Environment by selecting it in the drop-down menu at the top-right of the Postman interface.
+Be sure to activate the new Credentials Issue Environment by selecting it in the drop-down menu at the top-right of the Postman interface.
 
 <img src="./resources/select-environment.png"/>
 
