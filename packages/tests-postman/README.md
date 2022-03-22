@@ -1,5 +1,7 @@
 # Traceability Interoperability Test Suite
 
+# THIS PACKAGE IS DEPRECATED AND SHOULD NOT BE USED
+
 ## Running the Test Suite
 
 The test suite has an `npm` task definition that will remove previous test suite output and re-run the suite.
