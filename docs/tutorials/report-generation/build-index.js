@@ -2,7 +2,7 @@
 /* eslint-disable function-paren-newline */
 const path = require('path');
 const fs = require('fs');
-
+const reportCleaner = require('./newman-json-sanitizer');
 const readFilesSync = (dir) => {
   const files = [];
   fs.readdirSync(dir).forEach((filename) => {
@@ -36,7 +36,11 @@ const readFilesSync = (dir) => {
 const cleanAndMoveReports = (relativePath) => {
   readFilesSync(path.join(process.cwd(), relativePath)).map((f) => {
     const cleanerName = (f.name + f.ext).replace('newman-run-report-', '');
-    fs.writeFileSync(path.join(__dirname, `../../reports/${cleanerName}`), f.content);
+    let { content } = f;
+    if (f.ext === '.json') {
+      content = JSON.stringify(reportCleaner(JSON.parse(content)), null, 2);
+    }
+    fs.writeFileSync(path.join(__dirname, `../../reports/${cleanerName}`), content);
     return cleanerName;
   });
 };
@@ -54,4 +58,5 @@ const buildReportsIndex = () => {
 (() => {
   cleanAndMoveReports('./newman');
   buildReportsIndex();
+  // consider removing reports older than 1 month / 1 year...
 })();
