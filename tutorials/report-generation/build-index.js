@@ -1,0 +1,54 @@
+/* eslint-disable no-unused-expressions */
+/* eslint-disable function-paren-newline */
+const path = require('path');
+const fs = require('fs');
+
+const readFilesSync = (dir) => {
+  const files = [];
+  fs.readdirSync(dir).forEach((filename) => {
+    const { name, ext } = path.parse(filename);
+
+    const filepath = path.resolve(dir, filename);
+    const stat = fs.statSync(filepath);
+    const isFile = stat.isFile();
+    if (isFile) {
+      files.push({
+        filepath,
+        name,
+        ext,
+        stat,
+        content: fs.readFileSync(filepath).toString(),
+      });
+    }
+  });
+
+  files.sort((a, b) =>
+    // eslint-disable-next-line implicit-arrow-linebreak
+    a.name.localeCompare(b.name, undefined, {
+      numeric: true,
+      sensitivity: 'base',
+    })
+  );
+
+  return files;
+};
+
+const cleanAndMoveReports = (relativePath) => {
+  readFilesSync(path.join(process.cwd(), relativePath)).map((f) => {
+    const cleanerName = (f.name + f.ext).replace('newman-run-report-', '');
+    fs.writeFileSync(path.join(__dirname, `../../reports/${cleanerName}`), f.content);
+    return cleanerName;
+  });
+};
+
+const buildReportsIndex = () => {
+  const reports = readFilesSync(path.join(__dirname, '../../reports'))
+    .filter((f) => f.name !== 'index' && ['.json', '.html'].includes(f.ext))
+    .map((f) => `https://w3id.org/traceability/interoperability/reports/${f.name + f.ext}`);
+  fs.writeFileSync(path.join(__dirname, '../../reports/index.json'), JSON.stringify({ items: reports }, null, 2));
+};
+
+(() => {
+  cleanAndMoveReports('./newman');
+  buildReportsIndex();
+})();
