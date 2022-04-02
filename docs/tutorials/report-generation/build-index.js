@@ -44,7 +44,10 @@ const cleanAndMoveReports = (relativePath) => {
 const buildReportsIndex = () => {
   const reports = readFilesSync(path.join(__dirname, '../../reports'))
     .filter((f) => f.name !== 'index' && ['.json', '.html'].includes(f.ext))
-    .map((f) => `https://w3id.org/traceability/interoperability/reports/${f.name + f.ext}`);
+    // blocked by https://github.com/perma-id/w3id.org/pull/2620
+    // .map((f) => `https://w3id.org/traceability/interoperability/reports/${f.name + f.ext}`);
+    .map((f) => `https://w3c-ccg.github.io/traceability-interop/reports/${f.name + f.ext}`);
+
   fs.writeFileSync(path.join(__dirname, '../../reports/index.json'), JSON.stringify({ items: reports }, null, 2));
 };
 
