@@ -1,0 +1,64 @@
+name: Exchange
+
+on: ["push"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      # Matrix paths are independent, and failure for one provider should not
+      # halt the running jobs testing another provider.
+      fail-fast: false
+      # See matrix of secrets...
+      # https://sbulav.github.io/terraform/github-actions-matrix-secrets/
+      matrix:
+        include:
+          - org_1_did_web: TRANSMUTE_PRODUCTION_TENANT_1_ORGANIZATION_DID_WEB
+            org_1_client_id: TRANSMUTE_PRODUCTION_TENANT_1_CLIENT_ID
+            org_1_client_secret: TRANSMUTE_PRODUCTION_TENANT_1_CLIENT_SECRET
+            org_2_did_web: TRANSMUTE_PRODUCTION_TENANT_2_ORGANIZATION_DID_WEB
+            org_2_client_id: TRANSMUTE_PRODUCTION_TENANT_2_CLIENT_ID
+            org_2_client_secret: TRANSMUTE_PRODUCTION_TENANT_2_CLIENT_SECRET
+            org_3_did_web: TRANSMUTE_PRODUCTION_TENANT_3_ORGANIZATION_DID_WEB
+            org_3_client_id: TRANSMUTE_PRODUCTION_TENANT_3_CLIENT_ID
+            org_3_client_secret: TRANSMUTE_PRODUCTION_TENANT_3_CLIENT_SECRET
+            token_audience: TRANSMUTE_PRODUCTION_TOKEN_AUDIENCE
+            token_endpoint: TRANSMUTE_PRODUCTION_TOKEN_ENDPOINT
+            api_base_url: TRANSMUTE_PRODUCTION_API_BASE_URL
+
+    steps:
+      - name: Begin CI...
+        uses: actions/checkout@v2
+      - name: Use Node 16
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+      - name: Workflow Join
+        env:
+          org_1_did_web: ${{secrets[matrix.org_1_did_web]}}
+          org_1_client_id: ${{secrets[matrix.org_1_client_id]}}
+          org_1_client_secret: ${{secrets[matrix.org_1_client_secret]}}
+          org_2_did_web: ${{secrets[matrix.org_2_did_web]}}
+          org_2_client_id: ${{secrets[matrix.org_2_client_id]}}
+          org_2_client_secret: ${{secrets[matrix.org_2_client_secret]}}
+          org_3_did_web: ${{secrets[matrix.org_3_did_web]}}
+          org_3_client_id: ${{secrets[matrix.org_3_client_id]}}
+          org_3_client_secret: ${{secrets[matrix.org_3_client_secret]}}
+          token_audience: ${{secrets[matrix.token_audience]}}
+          token_endpoint: ${{secrets[matrix.token_endpoint]}}
+          api_base_url: ${{secrets[matrix.api_base_url]}}
+        run: |
+          npx newman run ./docs/tutorials/ecommerce-workflow-instance-join.collection.json \
+          --env-var ORG_1_DID_WEB=$org_1_did_web \
+          --env-var ORG_1_CLIENT_ID=$org_1_client_id \
+          --env-var ORG_1_CLIENT_SECRET=$org_1_client_secret \
+          --env-var ORG_2_DID_WEB=$org_2_did_web \
+          --env-var ORG_2_CLIENT_ID=$org_2_client_id \
+          --env-var ORG_2_CLIENT_SECRET=$org_2_client_secret \
+          --env-var ORG_3_DID_WEB=$org_3_did_web \
+          --env-var ORG_3_CLIENT_ID=$org_3_client_id \
+          --env-var ORG_3_CLIENT_SECRET=$org_3_client_secret \
+          --env-var TOKEN_AUDIENCE=$token_audience \
+          --env-var TOKEN_ENDPOINT=$token_endpoint \
+          --env-var API_BASE_URL=$api_base_url \
+          --reporters cli,json
