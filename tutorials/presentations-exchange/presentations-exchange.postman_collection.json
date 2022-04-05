@@ -6,7 +6,7 @@
 	},
 	"item": [
 		{
-			"name": "Get Access Token",
+			"name": "Get Access Token (Alice)",
 			"event": [
 				{
 					"listen": "test",
@@ -34,7 +34,7 @@
 							"// Access token must be made available to later requests",
 							"pm.test(\"`access_token` persisted to collectionVariables\", function() {",
 							"    const { access_token } = pm.response.json()",
-							"    pm.collectionVariables.set(\"access_token\", access_token);",
+							"    pm.collectionVariables.set(\"alice_access_token\", access_token);",
 							"})"
 						],
 						"type": "text/javascript"
@@ -42,11 +42,14 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "noauth"
+				},
 				"method": "POST",
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"audience\": \"{{TOKEN_AUDIENCE}}\",\n    \"client_id\": \"{{CLIENT_ID}}\",\n    \"client_secret\": \"{{CLIENT_SECRET}}\",\n    \"grant_type\": \"client_credentials\"\n}",
+					"raw": "{\n    \"audience\": \"{{ALICE_TOKEN_AUDIENCE}}\",\n    \"client_id\": \"{{ALICE_CLIENT_ID}}\",\n    \"client_secret\": \"{{ALICE_CLIENT_SECRET}}\",\n    \"grant_type\": \"client_credentials\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -54,9 +57,69 @@
 					}
 				},
 				"url": {
-					"raw": "{{TOKEN_ENDPOINT}}",
+					"raw": "{{ALICE_TOKEN_ENDPOINT}}",
 					"host": [
-						"{{TOKEN_ENDPOINT}}"
+						"{{ALICE_TOKEN_ENDPOINT}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Access Token (Bob)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"must return `200 Success` status\", function() {",
+							"    pm.response.to.have.status(200);",
+							"})",
+							"",
+							"pm.test(\"response body must include non-empty access_token\", function () {",
+							"    const { access_token } = pm.response.json()",
+							"    pm.expect(access_token).to.not.be.empty;",
+							"});",
+							"",
+							"pm.test(\"response body must represent `Bearer` token\", function() {",
+							"    const { token_type } = pm.response.json()",
+							"    pm.expect(token_type).to.equal(\"Bearer\");",
+							"});",
+							"",
+							"pm.test(\"returned token must expire in the future\", function() {",
+							"    const { expires_in } = pm.response.json()",
+							"    pm.expect(expires_in).to.be.above(0);",
+							"})",
+							"",
+							"// Access token must be made available to later requests",
+							"pm.test(\"`access_token` persisted to collectionVariables\", function() {",
+							"    const { access_token } = pm.response.json()",
+							"    pm.collectionVariables.set(\"bob_access_token\", access_token);",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"audience\": \"{{BOB_TOKEN_AUDIENCE}}\",\n    \"client_id\": \"{{BOB_CLIENT_ID}}\",\n    \"client_secret\": \"{{BOB_CLIENT_SECRET}}\",\n    \"grant_type\": \"client_credentials\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BOB_TOKEN_ENDPOINT}}",
+					"host": [
+						"{{BOB_TOKEN_ENDPOINT}}"
 					]
 				}
 			},
@@ -78,8 +141,8 @@
 							"var whenHasAlsoKnownAs = pm.test.skip;",
 							"var whenAlsoKnownAsIsArray = pm.test.skip;",
 							"",
-							"pm.test(\"`access_token` collection variable must be set\", function () {",
-							"    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+							"pm.test(\"`alice_access_token` collection variable must be set\", function () {",
+							"    pm.expect(pm.collectionVariables.get(\"alice_access_token\")).to.not.be.undefined;",
 							"    whenHaveAccessToken = pm.test;",
 							"});",
 							"",
@@ -152,7 +215,7 @@
 					"bearer": [
 						{
 							"key": "token",
-							"value": "{{access_token}}",
+							"value": "{{alice_access_token}}",
 							"type": "string"
 						}
 					]
@@ -166,13 +229,13 @@
 					}
 				],
 				"url": {
-					"raw": "{{API_BASE_URL}}/identifiers/{{ORGANIZATION_DID_WEB}}",
+					"raw": "{{ALICE_API_BASE_URL}}/identifiers/{{ALICE_ORGANIZATION_DID_WEB}}",
 					"host": [
-						"{{API_BASE_URL}}"
+						"{{ALICE_API_BASE_URL}}"
 					],
 					"path": [
 						"identifiers",
-						"{{ORGANIZATION_DID_WEB}}"
+						"{{ALICE_ORGANIZATION_DID_WEB}}"
 					]
 				}
 			},
@@ -185,8 +248,8 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"`access_token` collection variable must be set\", function () {",
-							"    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+							"pm.test(\"`alice_access_token` collection variable must be set\", function () {",
+							"    pm.expect(pm.collectionVariables.get(\"alice_access_token\")).to.not.be.undefined;",
 							"});",
 							"",
 							"pm.test(\"`credential_issuer_id` collection variable must be set\", function () {",
@@ -222,7 +285,7 @@
 					"bearer": [
 						{
 							"key": "token",
-							"value": "{{access_token}}",
+							"value": "{{alice_access_token}}",
 							"type": "string"
 						}
 					]
@@ -245,9 +308,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{API_BASE_URL}}/credentials/issue",
+					"raw": "{{ALICE_API_BASE_URL}}/credentials/issue",
 					"host": [
-						"{{API_BASE_URL}}"
+						"{{ALICE_API_BASE_URL}}"
 					],
 					"path": [
 						"credentials",
@@ -268,8 +331,8 @@
 							"// prevent the request from running when the `access_token` collection variable",
 							"// is missing, but it will give an indication of why the request failed in that",
 							"// scenario.",
-							"pm.test(\"`access_token` collection variable must be set\", function () {",
-							"    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+							"pm.test(\"`bob_access_token` collection variable must be set\", function () {",
+							"    pm.expect(pm.collectionVariables.get(\"bob_access_token\")).to.not.be.undefined;",
 							"});",
 							"",
 							"// The expected response code for a \"Presentations Available\" request is",
@@ -305,7 +368,7 @@
 					"bearer": [
 						{
 							"key": "token",
-							"value": "{{access_token}}",
+							"value": "{{bob_access_token}}",
 							"type": "string"
 						}
 					]
@@ -328,9 +391,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{API_BASE_URL}}/presentations/available",
+					"raw": "{{BOB_API_BASE_URL}}/presentations/available",
 					"host": [
-						"{{API_BASE_URL}}"
+						"{{BOB_API_BASE_URL}}"
 					],
 					"path": [
 						"presentations",
@@ -351,8 +414,8 @@
 							"// prevent the request from running when the `access_token` collection variable",
 							"// is missing, but it will give an indication of why the request failed in that",
 							"// scenario.",
-							"pm.test(\"`access_token` collection variable must be set\", function () {",
-							"    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+							"pm.test(\"`alice_access_token` collection variable must be set\", function () {",
+							"    pm.expect(pm.collectionVariables.get(\"alice_access_token\")).to.not.be.undefined;",
 							"});",
 							"",
 							"// Credential issuer id is a required element item used in the request body",
@@ -401,7 +464,7 @@
 					"bearer": [
 						{
 							"key": "token",
-							"value": "{{access_token}}",
+							"value": "{{alice_access_token}}",
 							"type": "string"
 						}
 					]
@@ -424,9 +487,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{API_BASE_URL}}/presentations/prove",
+					"raw": "{{ALICE_API_BASE_URL}}/presentations/prove",
 					"host": [
-						"{{API_BASE_URL}}"
+						"{{ALICE_API_BASE_URL}}"
 					],
 					"path": [
 						"presentations",
@@ -447,8 +510,8 @@
 							"// not prevent the request from running when the `access_token` collection",
 							"// variable is missing, but it will give an indication of why the request failed",
 							"// in that scenario.",
-							"pm.test(\"`access_token` collection variable must be set\", function () {",
-							"    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+							"pm.test(\"`bob_access_token` collection variable must be set\", function () {",
+							"    pm.expect(pm.collectionVariables.get(\"bob_access_token\")).to.not.be.undefined;",
 							"});",
 							"",
 							"// The expected response code for a \"Complete Exchange\" request is",
@@ -473,7 +536,7 @@
 					"bearer": [
 						{
 							"key": "token",
-							"value": "{{access_token}}",
+							"value": "{{bob_access_token}}",
 							"type": "string"
 						}
 					]
@@ -496,9 +559,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{API_BASE_URL}}/presentations/submissions",
+					"raw": "{{BOB_API_BASE_URL}}/presentations/submissions",
 					"host": [
-						"{{API_BASE_URL}}"
+						"{{BOB_API_BASE_URL}}"
 					],
 					"path": [
 						"presentations",
@@ -552,6 +615,14 @@
 		},
 		{
 			"key": "verifiable_presentation",
+			"value": ""
+		},
+		{
+			"key": "alice_access_token",
+			"value": ""
+		},
+		{
+			"key": "bob_access_token",
 			"value": ""
 		}
 	]
