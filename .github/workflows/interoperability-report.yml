@@ -3,34 +3,12 @@ name: Interoperability Report
 on: workflow_dispatch
 
 jobs:
-  build:
+  install:
+    name: Install
     runs-on: ubuntu-latest
-    strategy:
-      # Matrix paths are independent, and failure for one provider should not
-      # halt the running jobs testing another provider.
-      fail-fast: false
-      # See matrix of secrets...
-      # https://sbulav.github.io/terraform/github-actions-matrix-secrets/
-      matrix:
-        include:
-          - organization_did_web: MAVENNET_STAGING_ORGANIZATION_DID_WEB
-            client_id: MAVENNET_STAGING_CLIENT_ID
-            client_secret: MAVENNET_STAGING_CLIENT_SECRET
-            token_audience: MAVENNET_STAGING_TOKEN_AUDIENCE
-            token_endpoint: MAVENNET_STAGING_TOKEN_ENDPOINT
-            api_base_url: MAVENNET_STAGING_API_BASE_URL
-          - organization_did_web: MESUR_IO_PRODUCTION_ORGANIZATION_DID_WEB
-            client_id: MESUR_IO_PRODUCTION_CLIENT_ID
-            client_secret: MESUR_IO_PRODUCTION_CLIENT_SECRET
-            token_audience: MESUR_IO_PRODUCTION_TOKEN_AUDIENCE
-            token_endpoint: MESUR_IO_PRODUCTION_TOKEN_ENDPOINT
-            api_base_url: MESUR_IO_PRODUCTION_API_BASE_URL
-          - organization_did_web: TRANSMUTE_STAGING_ORGANIZATION_DID_WEB
-            client_id: TRANSMUTE_STAGING_CLIENT_ID
-            client_secret: TRANSMUTE_STAGING_CLIENT_SECRET
-            token_audience: TRANSMUTE_STAGING_TOKEN_AUDIENCE
-            token_endpoint: TRANSMUTE_STAGING_TOKEN_ENDPOINT
-            api_base_url: TRANSMUTE_STAGING_API_BASE_URL
+    # With the exception of GITHUB_TOKEN, secrets are not passed to the runner
+    # when a workflow is triggered from a forked repository.
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.repository == github.event.repository.full_name"
 
     steps:
       - name: Check out git repository
@@ -39,45 +17,124 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 16.x
-
       - name: Install
-        run: npm i # required because of html reporter.
-
-      - name: Run Tests
-        env:
-          organization_did_web: ${{secrets[matrix.organization_did_web]}}
-          client_id: ${{secrets[matrix.client_id]}}
-          client_secret: ${{secrets[matrix.client_secret]}}
-          token_audience: ${{secrets[matrix.token_audience]}}
-          token_endpoint: ${{secrets[matrix.token_endpoint]}}
-          api_base_url: ${{secrets[matrix.api_base_url]}}
-        run: |
-          npm run report:generate ./docs/tutorials/did-web-discovery/did-web-discovery.postman_collection.json \
-          --env-var ORGANIZATION_DID_WEB=$organization_did_web \
-          --env-var CLIENT_ID=$client_id \
-          --env-var CLIENT_SECRET=$client_secret \
-          --env-var TOKEN_AUDIENCE=$token_audience \
-          --env-var TOKEN_ENDPOINT=$token_endpoint \
-          --env-var API_BASE_URL=$api_base_url \
+        run: npm i
+      - uses: actions/cache@v2
+        id: cache-restore
+        with:
+          path: |
+            ./*
+          key: ${{ github.sha }}
+  sanity:
+    name: Test
+    needs:
+      - install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/cache@v2
+        id: cache-restore
+        with:
+          path: |
+            ./*
+          key: ${{ github.sha }}
+      - name: Test Report
+        run: |-
+          npm run report:generate ./docs/tutorials/report-generation/report-tester.collection.json \
           --reporters cli,html,json
+      - uses: actions/cache@v2
+        id: cache-restore
+        with:
+          path: |
+            ./*
+          key: ${{ github.sha }}
 
-      # TODO: add your other tests here....
-      # - name: Test Report
-      #   run: |-
-      #     npm run report:generate ./docs/tutorials/report-generation/report-tester.collection.json \
-      #     --reporters cli,html,json
-
+  report:
+    name: Submit Report
+    needs:
+      - sanity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - uses: actions/cache@v2
+        id: cache-restore
+        with:
+          path: |
+            ./*
+          key: ${{ github.sha }}
       - name: Compile Reports
         run: |-
           npm run report:prepare
-
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          branch: main
-          commit_message: Updated Interoperability Reports
-
       - name: Publish Reports
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs
+
+  # build:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     # Matrix paths are independent, and failure for one provider should not
+  #     # halt the running jobs testing another provider.
+  #     fail-fast: false
+  #     # See matrix of secrets...
+  #     # https://sbulav.github.io/terraform/github-actions-matrix-secrets/
+  #     matrix:
+  #       include:
+  #         - organization_did_web: MAVENNET_STAGING_ORGANIZATION_DID_WEB
+  #           client_id: MAVENNET_STAGING_CLIENT_ID
+  #           client_secret: MAVENNET_STAGING_CLIENT_SECRET
+  #           token_audience: MAVENNET_STAGING_TOKEN_AUDIENCE
+  #           token_endpoint: MAVENNET_STAGING_TOKEN_ENDPOINT
+  #           api_base_url: MAVENNET_STAGING_API_BASE_URL
+  #         - organization_did_web: MESUR_IO_PRODUCTION_ORGANIZATION_DID_WEB
+  #           client_id: MESUR_IO_PRODUCTION_CLIENT_ID
+  #           client_secret: MESUR_IO_PRODUCTION_CLIENT_SECRET
+  #           token_audience: MESUR_IO_PRODUCTION_TOKEN_AUDIENCE
+  #           token_endpoint: MESUR_IO_PRODUCTION_TOKEN_ENDPOINT
+  #           api_base_url: MESUR_IO_PRODUCTION_API_BASE_URL
+  #         - organization_did_web: TRANSMUTE_STAGING_ORGANIZATION_DID_WEB
+  #           client_id: TRANSMUTE_STAGING_CLIENT_ID
+  #           client_secret: TRANSMUTE_STAGING_CLIENT_SECRET
+  #           token_audience: TRANSMUTE_STAGING_TOKEN_AUDIENCE
+  #           token_endpoint: TRANSMUTE_STAGING_TOKEN_ENDPOINT
+  #           api_base_url: TRANSMUTE_STAGING_API_BASE_URL
+
+  #   steps:
+  #     - name: Check out git repository
+  #       uses: actions/checkout@v2
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v1
+  #       with:
+  #         node-version: 16.x
+
+  #     - name: Install
+  #       run: npm i # required because of html reporter.
+
+  #     - name: Run Tests
+  #       env:
+  #         organization_did_web: ${{secrets[matrix.organization_did_web]}}
+  #         client_id: ${{secrets[matrix.client_id]}}
+  #         client_secret: ${{secrets[matrix.client_secret]}}
+  #         token_audience: ${{secrets[matrix.token_audience]}}
+  #         token_endpoint: ${{secrets[matrix.token_endpoint]}}
+  #         api_base_url: ${{secrets[matrix.api_base_url]}}
+  #       run: |
+  #         npm run report:generate ./docs/tutorials/did-web-discovery/did-web-discovery.postman_collection.json \
+  #         --env-var ORGANIZATION_DID_WEB=$organization_did_web \
+  #         --env-var CLIENT_ID=$client_id \
+  #         --env-var CLIENT_SECRET=$client_secret \
+  #         --env-var TOKEN_AUDIENCE=$token_audience \
+  #         --env-var TOKEN_ENDPOINT=$token_endpoint \
+  #         --env-var API_BASE_URL=$api_base_url \
+  #         --reporters cli,html,json
+
+  #     # TODO: add your other tests here....
+  #     # - name: Test Report
+  #     #   run: |-
+  #     #     npm run report:generate ./docs/tutorials/report-generation/report-tester.collection.json \
+  #     #     --reporters cli,html,json
