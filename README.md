@@ -1,5 +1,13 @@
 # Traceability Interoperability
 
+[![Interoperability Report](https://github.com/w3c-ccg/traceability-interop/actions/workflows/interoperability-report.yml/badge.svg)](https://github.com/w3c-ccg/traceability-interop/actions/workflows/interoperability-report.yml)
+
+## Latest Reports
+
+- [https://w3id.org/traceability/interoperability/reports](https://w3id.org/traceability/interoperability/reports)
+
+## About
+
 An enterprise grade HTTP API for leveraging [W3C Decentralized Identifiers](https://www.w3.org/TR/did-core/) and [W3C Verifiable Credentials](https://www.w3.org/TR/vc-data-model/) with [W3C CCG Traceability Vocabulary](https://w3c-ccg.github.io/traceability-vocab/) and the [VC API](https://w3c-ccg.github.io/vc-api/) when possible.
 
 ## Meetings
@@ -24,12 +32,12 @@ channel automatically.
    log, audio, and video). If you want to clean up the minutes, it takes about
    5-10 minutes to clean up the transcription and publish it.
 
- 
 ## [Open API Specification](https://w3c-ccg.github.io/traceability-interop/)
 
-The spec contains documentation on use cases as well as required and optional API operations. 
+The spec contains documentation on use cases as well as required and optional API operations.
 
 ### Included scripts for managing OpenAPI Specification
+
 1. `npm run validate-spec`: This command can be used to validate the `openapi.yml` spec, ensuring there are no issues.
 2. `npm run preserve`: This command is used to bundle our `openapi.yml` file into an `openapi.json` file that can be used to import the collection/spec.
 
@@ -45,6 +53,7 @@ If you are using Postman, you can import all of the available API endpoints into
 You should see something like this in your collections once you have succesffuly imported the spec:
 
 ![Postman collection](./docs/imported-collection.png)
+
 ## Reference Implementation
 
 In order to simplify the creation of test vectors for the spec, we intend to provide a reference implementation.
@@ -56,7 +65,6 @@ This implementation will cover all required AND optional APIs and will be used t
 In order to ensure interoperability tests are conducted in a manner consistent with production environments, we will be maintaining postman collections and client credential configuration in github actons.
 
 This will allow us to test implementations in production with the appropriate security and authorizaton policies in place.
-
 
 ## Development
 
