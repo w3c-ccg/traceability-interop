@@ -3,54 +3,59 @@ name: Interoperability Report
 on: workflow_dispatch
 
 jobs:
-  credentials_exchange:
+  build:
     runs-on: ubuntu-latest
     strategy:
-      # Hard-coding a single test entry, this will change to include all
-      # permutations of alice/bob actors.
+      # Matrix paths are independent, and failure for one provider should not
+      # halt the running jobs testing another provider.
+      fail-fast: false
+      # See matrix of secrets...
+      # https://sbulav.github.io/terraform/github-actions-matrix-secrets/
       matrix:
-        alice: ["MESUR_PRODUCTION"]
-        bob: ["TRANSMUTE_STAGING"]
+        include:
+          - organization_did_web: MAVENNET_STAGING_ORGANIZATION_DID_WEB
+            client_id: MAVENNET_STAGING_CLIENT_ID
+            client_secret: MAVENNET_STAGING_CLIENT_SECRET
+            token_audience: MAVENNET_STAGING_TOKEN_AUDIENCE
+            token_endpoint: MAVENNET_STAGING_TOKEN_ENDPOINT
+            api_base_url: MAVENNET_STAGING_API_BASE_URL
+          - organization_did_web: MESUR_IO_PRODUCTION_ORGANIZATION_DID_WEB
+            client_id: MESUR_IO_PRODUCTION_CLIENT_ID
+            client_secret: MESUR_IO_PRODUCTION_CLIENT_SECRET
+            token_audience: MESUR_IO_PRODUCTION_TOKEN_AUDIENCE
+            token_endpoint: MESUR_IO_PRODUCTION_TOKEN_ENDPOINT
+            api_base_url: MESUR_IO_PRODUCTION_API_BASE_URL
+          - organization_did_web: TRANSMUTE_STAGING_ORGANIZATION_DID_WEB
+            client_id: TRANSMUTE_STAGING_CLIENT_ID
+            client_secret: TRANSMUTE_STAGING_CLIENT_SECRET
+            token_audience: TRANSMUTE_STAGING_TOKEN_AUDIENCE
+            token_endpoint: TRANSMUTE_STAGING_TOKEN_ENDPOINT
+            api_base_url: TRANSMUTE_STAGING_API_BASE_URL
+
     steps:
-      - name: Begin CI...
+      - name: Check out git repository
         uses: actions/checkout@v2
-      - name: Use Node 16
+      - name: Set up Node.js
         uses: actions/setup-node@v1
         with:
           node-version: 16.x
-      - name: Install Node Dependencies
-        run: npm ci
       - name: Run Tests
         env:
-          alice_organization_did_web: ${{secrets[format('{0}_ORGANIZATION_DID_WEB', matrix.alice)]}}
-          alice_client_id: ${{secrets[format('{0}_CLIENT_ID', matrix.alice)]}}
-          alice_client_secret: ${{secrets[format('{0}_CLIENT_SECRET', matrix.alice)]}}
-          alice_token_audience: ${{secrets[format('{0}_TOKEN_AUDIENCE', matrix.alice)]}}
-          alice_token_endpoint: ${{secrets[format('{0}_TOKEN_ENDPOINT', matrix.alice)]}}
-          alice_api_base_url: ${{secrets[format('{0}_API_BASE_URL', matrix.alice)]}}
-          bob_organization_did_web: ${{secrets[format('{0}_ORGANIZATION_DID_WEB', matrix.bob)]}}
-          bob_client_id: ${{secrets[format('{0}_CLIENT_ID', matrix.bob)]}}
-          bob_client_secret: ${{secrets[format('{0}_CLIENT_SECRET', matrix.bob)]}}
-          bob_token_audience: ${{secrets[format('{0}_TOKEN_AUDIENCE', matrix.bob)]}}
-          bob_token_endpoint: ${{secrets[format('{0}_TOKEN_ENDPOINT', matrix.bob)]}}
-          bob_api_base_url: ${{secrets[format('{0}_API_BASE_URL', matrix.bob)]}}
+          organization_did_web: ${{secrets[matrix.organization_did_web]}}
+          client_id: ${{secrets[matrix.client_id]}}
+          client_secret: ${{secrets[matrix.client_secret]}}
+          token_audience: ${{secrets[matrix.token_audience]}}
+          token_endpoint: ${{secrets[matrix.token_endpoint]}}
+          api_base_url: ${{secrets[matrix.api_base_url]}}
         run: |
-          echo npx newman run ./docs/tutorials/presentations-exchange/presentations-exchange.postman_collection.json \
-          --env-var ALICE_ORGANIZATION_DID_WEB=$alice_organization_did_web \
-          --env-var ALICE_CLIENT_ID=$alice_client_id \
-          --env-var ALICE_CLIENT_SECRET=$alice_client_secret \
-          --env-var ALICE_TOKEN_AUDIENCE=$alice_token_audience \
-          --env-var ALICE_TOKEN_ENDPOINT=$alice_token_endpoint \
-          --env-var ALICE_API_BASE_URL=$alice_api_base_url \
-          --env-var BOB_ORGANIZATION_DID_WEB=$bob_organization_did_web \
-          --env-var BOB_CLIENT_ID=$bob_client_id \
-          --env-var BOB_CLIENT_SECRET=$bob_client_secret \
-          --env-var BOB_TOKEN_AUDIENCE=$bob_token_audience \
-          --env-var BOB_TOKEN_ENDPOINT=$bob_token_endpoint \
-          --env-var BOB_API_BASE_URL=$bob_api_base_url \
-          --reporters cli,html,json \
-          --reporter-json-export ${{format('newman/{0}-{1}.json', matrix.alice, matrix.bob)}} \
-          --reporter-html-export ${{format('newman/{0}-{1}.html', matrix.alice, matrix.bob)}}
+          npx newman run ./docs/tutorials/did-web-discovery/did-web-discovery.postman_collection.json \
+          --env-var ORGANIZATION_DID_WEB=$organization_did_web \
+          --env-var CLIENT_ID=$client_id \
+          --env-var CLIENT_SECRET=$client_secret \
+          --env-var TOKEN_AUDIENCE=$token_audience \
+          --env-var TOKEN_ENDPOINT=$token_endpoint \
+          --env-var API_BASE_URL=$api_base_url \
+          --reporters cli,html,json
       - name: Compile Reports
         run: |-
           node ./docs/tutorials/report-generation/build-index.js
