@@ -19,7 +19,7 @@ const cleanExecutions = (executions) => {
         id: execution.item.id,
         name: execution.item.name,
       },
-      // 🔥 we opt to not event include any details of the request and only status and timeing from the response
+      // 🔥 we opt to not include any details of the request, and only status and timing from the response
       // request details can be inferred from collection data.
       response: {
         id: execution.response.id,
