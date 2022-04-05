@@ -1,18 +1,35 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  workflow_dispatch:
 
 jobs:
-  ci:
+  postman:
     runs-on: ubuntu-latest
+    # With the exception of GITHUB_TOKEN, secrets are not passed to the runner
+    # when a workflow is triggered from a forked repository.
+    if: github.repository == github.event.repository.full_name
     steps:
-      - name: Begin CI...
+      - name: Check out git repository
         uses: actions/checkout@v2
-      - name: Use Node 16
+      - name: Set up Node.js
         uses: actions/setup-node@v1
         with:
           node-version: 16.x
       - name: Install
-        run: npm ci
+        run: npm i
       - name: Lint
         run: npm run lint
+      - name: Run Report
+        run: |-
+          npx newman run ./docs/tutorials/report-generation/report-tester.collection.json \
+          --reporters cli,html,json
+      - name: Compile Reports
+        run: |-
+          node ./docs/tutorials/report-generation/build-index.js
+
+      - name: Publish Reports
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
