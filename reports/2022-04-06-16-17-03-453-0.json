@@ -1,0 +1,495 @@
+{
+  "collection": {
+    "info": {
+      "_postman_id": "a5159284-61bd-4327-aef6-c953ade4b078",
+      "name": "Credentials Issue Tutorial",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "id": "ae52998a-ae74-478d-ab7e-794c65c3fe5d",
+        "name": "Get Access Token",
+        "request": {
+          "url": {
+            "host": [
+              "{{TOKEN_ENDPOINT}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"audience\": \"{{TOKEN_AUDIENCE}}\",\n    \"client_id\": \"{{CLIENT_ID}}\",\n    \"client_secret\": \"{{CLIENT_SECRET}}\",\n    \"grant_type\": \"client_credentials\"\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "35243480-81a3-4031-a1bf-29f7c3e06716",
+              "type": "text/javascript",
+              "exec": [
+                "pm.test(\"must return `200 Success` status\", function() {",
+                "    pm.response.to.have.status(200);",
+                "})",
+                "",
+                "pm.test(\"response body must include non-empty access_token\", function () {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.expect(access_token).to.not.be.empty;",
+                "});",
+                "",
+                "pm.test(\"response body must represent `Bearer` token\", function() {",
+                "    const { token_type } = pm.response.json()",
+                "    pm.expect(token_type).to.equal(\"Bearer\");",
+                "});",
+                "",
+                "pm.test(\"returned token must expire in the future\", function() {",
+                "    const { expires_in } = pm.response.json()",
+                "    pm.expect(expires_in).to.be.above(0);",
+                "})",
+                "",
+                "// Access token must be made available to later requests",
+                "pm.test(\"`access_token` persisted to collectionVariables\", function() {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.collectionVariables.set(\"access_token\", access_token);",
+                "})"
+              ],
+              "_lastExecutionId": "8268bf02-10fd-4bfe-aa09-9f449ea8eca4"
+            }
+          }
+        ]
+      },
+      {
+        "id": "3c2a8e82-0e8c-46af-acf6-d79b6b09213e",
+        "name": "Get Organization DIDs",
+        "request": {
+          "url": {
+            "path": [
+              "identifiers",
+              "{{ORGANIZATION_DID_WEB}}"
+            ],
+            "host": [
+              "{{API_BASE_URL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "GET",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "f781198d-8739-4889-836a-c6e61877b491",
+              "type": "text/javascript",
+              "exec": [
+                "// Some tests are skipped unless prerequisite tests pass and",
+                "// update these variables to `pm.test`.",
+                "var whenHaveAccessToken = pm.test.skip;",
+                "var whenResponseIsOk = pm.test.skip;",
+                "var whenJsonIsValid = pm.test.skip;",
+                "var whenDidDocumentIsPresent = pm.test.skip;",
+                "var whenHasAlsoKnownAs = pm.test.skip;",
+                "var whenAlsoKnownAsIsArray = pm.test.skip;",
+                "",
+                "pm.test(\"`access_token` collection variable must be set\", function () {",
+                "    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+                "    whenHaveAccessToken = pm.test;",
+                "});",
+                "",
+                "whenHaveAccessToken(\"Status code is 200\", function () {",
+                "    pm.response.to.have.status(200);",
+                "    whenResponseIsOk = pm.test;",
+                "});",
+                "",
+                "whenResponseIsOk(\"must include valid JSON response body\", function() {",
+                "    pm.response.json(); // will throw on parse failure",
+                "    whenJsonIsValid = pm.test;",
+                "});",
+                "",
+                "whenJsonIsValid(\"didDocument must be present in response body\", function() {",
+                "    const jsonData = pm.response.json();",
+                "    console.log(jsonData);",
+                "    pm.expect(jsonData).to.have.property('didDocument');",
+                "    whenDidDocumentIsPresent = pm.test;",
+                "});",
+                "",
+                "whenDidDocumentIsPresent(\"alsoKnownAs MUST be present\", function () {",
+                "    const { didDocument } = pm.response.json();",
+                "    pm.expect(didDocument).to.have.property('alsoKnownAs');",
+                "    whenHasAlsoKnownAs = pm.test;",
+                "});",
+                "",
+                "whenHasAlsoKnownAs(\"alsoKnownAs MUST be an array\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.expect(alsoKnownAs).to.be.an('array');",
+                "    whenAlsoKnownAsIsArray = pm.test;",
+                "});",
+                "",
+                "whenAlsoKnownAsIsArray(\"alsoKnownAs values MUST be unique\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);",
+                "});",
+                "",
+                "whenAlsoKnownAsIsArray(\"alsoKnownAs[0] must match API_BASE_URL\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);",
+                "});",
+                "",
+                "whenAlsoKnownAsIsArray(\"alsoKnownAs[1] must be present\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);",
+                "});",
+                "",
+                "whenDidDocumentIsPresent(\"verification method controller must match did subject\", function() {",
+                "    const { didDocument } = pm.response.json();",
+                "    const vm = didDocument.verificationMethod || [];",
+                "    vm.forEach((m) => pm.expect(m.controller).to.equal(didDocument.id));",
+                "});",
+                "",
+                "// Credential Issuer ID must be made available to later requests",
+                "pm.test(\"`credential_issuer_id` persisted to collectionVariables\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.collectionVariables.set(\"credential_issuer_id\", alsoKnownAs[1]);",
+                "})",
+                ""
+              ],
+              "_lastExecutionId": "aeab4593-f939-4552-b242-5dac69677062"
+            }
+          }
+        ],
+        "protocolProfileBehavior": {
+          "disabledSystemHeaders": {}
+        }
+      },
+      {
+        "id": "d15e34c8-7ae3-4be0-a53f-74051d13cfaa",
+        "name": "Issue Credential",
+        "request": {
+          "url": {
+            "path": [
+              "credentials",
+              "issue"
+            ],
+            "host": [
+              "{{API_BASE_URL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"credential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"id\": \"urn:uuid:{{$randomUUID}}\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"issuer\": \"{{credential_issuer_id}}\",\n        \"issuanceDate\": \"2010-01-01T19:23:24Z\",\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        }\n    },\n    \"options\": {\n        \"type\": \"Ed25519Signature2018\",\n        \"created\": \"2020-04-02T18:48:36Z\"\n    }\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "a5c4de94-b4c7-49dc-9d06-9c86bfd63363",
+              "type": "text/javascript",
+              "exec": [
+                "pm.test(\"`access_token` collection variable must be set\", function () {",
+                "    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+                "});",
+                "",
+                "pm.test(\"`credential_issuer_id` collection variable must be set\", function () {",
+                "    pm.expect(pm.collectionVariables.get(\"credential_issuer_id\")).to.not.be.undefined;",
+                "});",
+                "",
+                "pm.test(\"must return `201 Created` status\", function () {",
+                "    pm.response.to.have.status(201);",
+                "});"
+              ],
+              "_lastExecutionId": "f82cafd5-7547-4e9a-ad4f-5ef1464f4823"
+            }
+          },
+          {
+            "listen": "prerequest",
+            "script": {
+              "id": "3cd10638-be57-49ad-941a-43287e70b240",
+              "type": "text/javascript",
+              "exec": [
+                ""
+              ],
+              "_lastExecutionId": "657de5b5-9807-4cf5-a671-084dc533b89f"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 4,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 19,
+        "pending": 0,
+        "failed": 1
+      },
+      "testScripts": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 215,
+      "responseMin": 44,
+      "responseMax": 513,
+      "responseSd": 211.4820717381657,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1649261822568,
+      "completed": 1649261823393
+    },
+    "executions": [
+      {
+        "id": "ae52998a-ae74-478d-ab7e-794c65c3fe5d",
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 3,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "48f082d6-6f52-4541-8c12-038e0fb1387c",
+          "httpRequestId": "8137d2a7-239a-4789-a526-ad7d5abfb084"
+        },
+        "item": {
+          "id": "ae52998a-ae74-478d-ab7e-794c65c3fe5d",
+          "name": "Get Access Token"
+        },
+        "response": {
+          "id": "c5862e11-5ce1-4d88-8039-c543ec2ea950",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 513,
+          "responseSize": 812
+        },
+        "assertions": [
+          {
+            "assertion": "must return `200 Success` status",
+            "skipped": false
+          },
+          {
+            "assertion": "response body must include non-empty access_token",
+            "skipped": false
+          },
+          {
+            "assertion": "response body must represent `Bearer` token",
+            "skipped": false
+          },
+          {
+            "assertion": "returned token must expire in the future",
+            "skipped": false
+          },
+          {
+            "assertion": "`access_token` persisted to collectionVariables",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "3c2a8e82-0e8c-46af-acf6-d79b6b09213e",
+        "cursor": {
+          "ref": "24e70b9c-cf8d-460e-a470-65c4fb160b1e",
+          "length": 3,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "17bbd4e1-7669-446d-a5e2-8e709e4e483c"
+        },
+        "item": {
+          "id": "3c2a8e82-0e8c-46af-acf6-d79b6b09213e",
+          "name": "Get Organization DIDs"
+        },
+        "response": {
+          "id": "80e350e2-2719-4953-863b-549684b8fd12",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 88,
+          "responseSize": 1450
+        },
+        "assertions": [
+          {
+            "assertion": "`access_token` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "Status code is 200",
+            "skipped": false
+          },
+          {
+            "assertion": "must include valid JSON response body",
+            "skipped": false
+          },
+          {
+            "assertion": "didDocument must be present in response body",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs MUST be present",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs MUST be an array",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs values MUST be unique",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs[0] must match API_BASE_URL",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs[1] must be present",
+            "skipped": false
+          },
+          {
+            "assertion": "verification method controller must match did subject",
+            "skipped": false,
+            "error": {
+              "name": "AssertionError",
+              "index": 9,
+              "test": "verification method controller must match did subject",
+              "message": "expected 'did:key:z6Mki93tJ2rwrDaWTMZcdMShk4xLWf75Fu559dAapKe8pdmX' to equal 'did:web:vc.mesur.io:next'",
+              "stack": "AssertionError: expected 'did:key:z6Mki93tJ2rwrDaWTMZcdMShk4xLWf75Fu559dAapKe8pdmX' to equal 'did:web:vc.mesur.io:next'\n   at Object.eval sandbox-script.js:10:2)"
+            }
+          },
+          {
+            "assertion": "`credential_issuer_id` persisted to collectionVariables",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "d15e34c8-7ae3-4be0-a53f-74051d13cfaa",
+        "cursor": {
+          "ref": "933cf78f-6f45-481a-b565-74c758fd4d95",
+          "length": 3,
+          "cycles": 1,
+          "position": 2,
+          "iteration": 0,
+          "httpRequestId": "6782f628-1fe5-4f70-8359-5988facfad33"
+        },
+        "item": {
+          "id": "d15e34c8-7ae3-4be0-a53f-74051d13cfaa",
+          "name": "Issue Credential"
+        },
+        "response": {
+          "id": "6d6ead8e-8f5a-417e-ae2b-2bb43037c068",
+          "status": "Created",
+          "code": 201,
+          "responseTime": 44,
+          "responseSize": 683
+        },
+        "assertions": [
+          {
+            "assertion": "`access_token` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "`credential_issuer_id` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "must return `201 Created` status",
+            "skipped": false
+          }
+        ]
+      }
+    ]
+  }
+}
