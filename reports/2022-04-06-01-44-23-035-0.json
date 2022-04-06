@@ -1,0 +1,488 @@
+{
+  "collection": {
+    "info": {
+      "_postman_id": "a5159284-61bd-4327-aef6-c953ade4b078",
+      "name": "Credentials Issue Tutorial",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "id": "7e533ba4-2240-4462-a83c-f4edb325b35b",
+        "name": "Get Access Token",
+        "request": {
+          "url": {
+            "host": [
+              "{{TOKEN_ENDPOINT}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"audience\": \"{{TOKEN_AUDIENCE}}\",\n    \"client_id\": \"{{CLIENT_ID}}\",\n    \"client_secret\": \"{{CLIENT_SECRET}}\",\n    \"grant_type\": \"client_credentials\"\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "59e54aa4-5d77-4a53-9f7a-45089d26a40a",
+              "type": "text/javascript",
+              "exec": [
+                "pm.test(\"must return `200 Success` status\", function() {",
+                "    pm.response.to.have.status(200);",
+                "})",
+                "",
+                "pm.test(\"response body must include non-empty access_token\", function () {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.expect(access_token).to.not.be.empty;",
+                "});",
+                "",
+                "pm.test(\"response body must represent `Bearer` token\", function() {",
+                "    const { token_type } = pm.response.json()",
+                "    pm.expect(token_type).to.equal(\"Bearer\");",
+                "});",
+                "",
+                "pm.test(\"returned token must expire in the future\", function() {",
+                "    const { expires_in } = pm.response.json()",
+                "    pm.expect(expires_in).to.be.above(0);",
+                "})",
+                "",
+                "// Access token must be made available to later requests",
+                "pm.test(\"`access_token` persisted to collectionVariables\", function() {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.collectionVariables.set(\"access_token\", access_token);",
+                "})"
+              ],
+              "_lastExecutionId": "b778b04d-599e-462d-8743-e3523606890d"
+            }
+          }
+        ]
+      },
+      {
+        "id": "aec9acfd-3909-469d-8a77-23b82c676379",
+        "name": "Get Organization DIDs",
+        "request": {
+          "url": {
+            "path": [
+              "identifiers",
+              "{{ORGANIZATION_DID_WEB}}"
+            ],
+            "host": [
+              "{{API_BASE_URL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "GET",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "2b453830-220e-4aa3-b9d1-243a9cc129d2",
+              "type": "text/javascript",
+              "exec": [
+                "// Some tests are skipped unless prerequisite tests pass and",
+                "// update these variables to `pm.test`.",
+                "var whenHaveAccessToken = pm.test.skip;",
+                "var whenResponseIsOk = pm.test.skip;",
+                "var whenJsonIsValid = pm.test.skip;",
+                "var whenDidDocumentIsPresent = pm.test.skip;",
+                "var whenHasAlsoKnownAs = pm.test.skip;",
+                "var whenAlsoKnownAsIsArray = pm.test.skip;",
+                "",
+                "pm.test(\"`access_token` collection variable must be set\", function () {",
+                "    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+                "    whenHaveAccessToken = pm.test;",
+                "});",
+                "",
+                "whenHaveAccessToken(\"Status code is 200\", function () {",
+                "    pm.response.to.have.status(200);",
+                "    whenResponseIsOk = pm.test;",
+                "});",
+                "",
+                "whenResponseIsOk(\"must include valid JSON response body\", function() {",
+                "    pm.response.json(); // will throw on parse failure",
+                "    whenJsonIsValid = pm.test;",
+                "});",
+                "",
+                "whenJsonIsValid(\"didDocument must be present in response body\", function() {",
+                "    const jsonData = pm.response.json();",
+                "    console.log(jsonData);",
+                "    pm.expect(jsonData).to.have.property('didDocument');",
+                "    whenDidDocumentIsPresent = pm.test;",
+                "});",
+                "",
+                "whenDidDocumentIsPresent(\"alsoKnownAs MUST be present\", function () {",
+                "    const { didDocument } = pm.response.json();",
+                "    pm.expect(didDocument).to.have.property('alsoKnownAs');",
+                "    whenHasAlsoKnownAs = pm.test;",
+                "});",
+                "",
+                "whenHasAlsoKnownAs(\"alsoKnownAs MUST be an array\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.expect(alsoKnownAs).to.be.an('array');",
+                "    whenAlsoKnownAsIsArray = pm.test;",
+                "});",
+                "",
+                "whenAlsoKnownAsIsArray(\"alsoKnownAs values MUST be unique\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);",
+                "});",
+                "",
+                "whenAlsoKnownAsIsArray(\"alsoKnownAs[0] must match API_BASE_URL\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);",
+                "});",
+                "",
+                "whenAlsoKnownAsIsArray(\"alsoKnownAs[1] must be present\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);",
+                "});",
+                "",
+                "whenDidDocumentIsPresent(\"verification method controller must match did subject\", function() {",
+                "    const { didDocument } = pm.response.json();",
+                "    const vm = didDocument.verificationMethod || [];",
+                "    vm.forEach((m) => pm.expect(m.controller).to.equal(didDocument.id));",
+                "});",
+                "",
+                "// Credential Issuer ID must be made available to later requests",
+                "pm.test(\"`credential_issuer_id` persisted to collectionVariables\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.collectionVariables.set(\"credential_issuer_id\", alsoKnownAs[1]);",
+                "})",
+                ""
+              ],
+              "_lastExecutionId": "75571733-bdbe-4559-939b-53ba5d8f66da"
+            }
+          }
+        ],
+        "protocolProfileBehavior": {
+          "disabledSystemHeaders": {}
+        }
+      },
+      {
+        "id": "0a9c5d9f-ead2-47d0-84d9-ad327e84b430",
+        "name": "Issue Credential",
+        "request": {
+          "url": {
+            "path": [
+              "credentials",
+              "issue"
+            ],
+            "host": [
+              "{{API_BASE_URL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"credential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"id\": \"urn:uuid:{{$randomUUID}}\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"issuer\": \"{{credential_issuer_id}}\",\n        \"issuanceDate\": \"2010-01-01T19:23:24Z\",\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        }\n    },\n    \"options\": {\n        \"type\": \"Ed25519Signature2018\",\n        \"created\": \"2020-04-02T18:48:36Z\"\n    }\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "9367d281-9a6c-460c-a3ef-62348e024ac7",
+              "type": "text/javascript",
+              "exec": [
+                "pm.test(\"`access_token` collection variable must be set\", function () {",
+                "    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+                "});",
+                "",
+                "pm.test(\"`credential_issuer_id` collection variable must be set\", function () {",
+                "    pm.expect(pm.collectionVariables.get(\"credential_issuer_id\")).to.not.be.undefined;",
+                "});",
+                "",
+                "pm.test(\"must return `201 Created` status\", function () {",
+                "    pm.response.to.have.status(201);",
+                "});"
+              ],
+              "_lastExecutionId": "5c4d0f66-5438-4352-8812-5e8422103002"
+            }
+          },
+          {
+            "listen": "prerequest",
+            "script": {
+              "id": "e82c9134-b548-4900-a38c-aa4136cb3ad5",
+              "type": "text/javascript",
+              "exec": [
+                ""
+              ],
+              "_lastExecutionId": "668a42f1-62e7-4c7c-a7ea-bea7f9ba1cdd"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 4,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 19,
+        "pending": 0,
+        "failed": 0
+      },
+      "testScripts": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 865.6666666666666,
+      "responseMin": 491,
+      "responseMax": 1117,
+      "responseSd": 270.03374274749854,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1649209460324,
+      "completed": 1649209463033
+    },
+    "executions": [
+      {
+        "id": "7e533ba4-2240-4462-a83c-f4edb325b35b",
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 3,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "f8101380-525c-4703-b981-36d821020b9e",
+          "httpRequestId": "5606ff1a-f6b9-41fb-ae43-7d68d6fc3ce3"
+        },
+        "item": {
+          "id": "7e533ba4-2240-4462-a83c-f4edb325b35b",
+          "name": "Get Access Token"
+        },
+        "response": {
+          "id": "cf067094-92b3-4bb9-918e-121c390f8ce0",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 491,
+          "responseSize": 807
+        },
+        "assertions": [
+          {
+            "assertion": "must return `200 Success` status",
+            "skipped": false
+          },
+          {
+            "assertion": "response body must include non-empty access_token",
+            "skipped": false
+          },
+          {
+            "assertion": "response body must represent `Bearer` token",
+            "skipped": false
+          },
+          {
+            "assertion": "returned token must expire in the future",
+            "skipped": false
+          },
+          {
+            "assertion": "`access_token` persisted to collectionVariables",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "aec9acfd-3909-469d-8a77-23b82c676379",
+        "cursor": {
+          "ref": "dc39476e-b41a-4238-a3e2-f0c0a0a597ba",
+          "length": 3,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "2e9411b9-d9fb-43d5-85d2-e6b04ef10de0"
+        },
+        "item": {
+          "id": "aec9acfd-3909-469d-8a77-23b82c676379",
+          "name": "Get Organization DIDs"
+        },
+        "response": {
+          "id": "0207b495-3d3e-4afc-8fe4-df65e7c4ef6c",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 989,
+          "responseSize": 813
+        },
+        "assertions": [
+          {
+            "assertion": "`access_token` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "Status code is 200",
+            "skipped": false
+          },
+          {
+            "assertion": "must include valid JSON response body",
+            "skipped": false
+          },
+          {
+            "assertion": "didDocument must be present in response body",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs MUST be present",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs MUST be an array",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs values MUST be unique",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs[0] must match API_BASE_URL",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs[1] must be present",
+            "skipped": false
+          },
+          {
+            "assertion": "verification method controller must match did subject",
+            "skipped": false
+          },
+          {
+            "assertion": "`credential_issuer_id` persisted to collectionVariables",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "0a9c5d9f-ead2-47d0-84d9-ad327e84b430",
+        "cursor": {
+          "ref": "c7c3aa94-fcad-4b71-9105-6432c2ee164e",
+          "length": 3,
+          "cycles": 1,
+          "position": 2,
+          "iteration": 0,
+          "httpRequestId": "47839b03-bd1d-4701-8d68-f0239d0184b3"
+        },
+        "item": {
+          "id": "0a9c5d9f-ead2-47d0-84d9-ad327e84b430",
+          "name": "Issue Credential"
+        },
+        "response": {
+          "id": "f0d90dad-d456-4982-9733-3c6a1096c371",
+          "status": "Created",
+          "code": 201,
+          "responseTime": 1117,
+          "responseSize": 679
+        },
+        "assertions": [
+          {
+            "assertion": "`access_token` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "`credential_issuer_id` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "must return `201 Created` status",
+            "skipped": false
+          }
+        ]
+      }
+    ]
+  }
+}
