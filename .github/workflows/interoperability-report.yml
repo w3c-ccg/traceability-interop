@@ -5,76 +5,41 @@ on:
     # Every day at midnight
     - cron: '0 0 * * *'
   workflow_dispatch:
+  push:
 
 jobs:
-  install:
-    name: Install
-    runs-on: ubuntu-latest
-    # With the exception of GITHUB_TOKEN, secrets are not passed to the runner
-    # when a workflow is triggered from a forked repository.
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.repository == github.event.repository.full_name"
-    steps:
-      - name: Check out git repository
-        uses: actions/checkout@v2
-      - name: Set up Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: 16.x
-      - name: Install
-        run: npm i
-      - uses: actions/cache@v2
-        id: cache-save
-        with:
-          path: |
-            ./*
-          key: ${{ github.sha }}
-
-  website:
-    name: Website
-    concurrency: website
-    needs:
-      - install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/cache@v2
-        id: cache-restore
-        with:
-          path: |
-            ./*
-          key: ${{ github.sha }}
-      - name: Build Open API Specification JSON
-        run: npm run preserve
-      - uses: actions/cache@v2
-        id: cache-save
-        with:
-          path: |
-            ./docs
-          key: ${{ github.sha }}
 
   sanity:
     name: Sanity
-    needs:
-      - install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/cache@v2
-        id: cache-restore
+      # Check out repo, setup node, and install dependencies (cached).
+      # @see https://github.com/actions/setup-node#usage
+      # @see https://github.com/actions/cache/blob/main/examples.md#node---npm
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          path: |
-            ./*
-          key: ${{ github.sha }}
+          node-version: 16.x
+      - uses: actions/cache@v3
+        id: cache-npm
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      # Only install NPM packages if the `cache-npm` step misses.
+      - run: npm ci
+        if: steps.cache-npm.outputs.cache-hit != 'true'
       - name: Sanity Test
         run: |-
-          npm run report:generate -- ./docs/tutorials/report-generation/report-tester.collection.json \
+          npx newman run ./docs/tutorials/report-generation/report-tester.collection.json \
           --reporters cli,html,json
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: sanity-report
-          path: docs/reports/
+          path: newman/
 
-  issue:
-    needs:
-      - install
+  credentials-issue:
     name: Issue Credential
     runs-on: ubuntu-latest
     strategy:
@@ -100,12 +65,23 @@ jobs:
             token_endpoint: TRANSMUTE_STAGING_TOKEN_ENDPOINT
             api_base_url: TRANSMUTE_STAGING_API_BASE_URL
     steps:
-      - uses: actions/cache@v2
-        id: cache-restore
+      # Check out repo, setup node, and install dependencies (cached).
+      # @see https://github.com/actions/setup-node#usage
+      # @see https://github.com/actions/cache/blob/main/examples.md#node---npm
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          path: |
-            ./*
-          key: ${{ github.sha }}
+          node-version: 16.x
+      - uses: actions/cache@v3
+        id: cache-npm
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      # Only install NPM packages if the `cache-npm` step misses.
+      - run: npm ci
+        if: steps.cache-npm.outputs.cache-hit != 'true'
       - name: Run Tests
         env:
           organization_did_web: ${{secrets[matrix.organization_did_web]}}
@@ -115,7 +91,7 @@ jobs:
           token_endpoint: ${{secrets[matrix.token_endpoint]}}
           api_base_url: ${{secrets[matrix.api_base_url]}}
         run: |
-          npm run report:generate -- ./docs/tutorials/credentials-issue/credentials-issue.postman_collection.json \
+          npx newman run ./docs/tutorials/credentials-issue/credentials-issue.postman_collection.json \
           --env-var ORGANIZATION_DID_WEB=$organization_did_web \
           --env-var CLIENT_ID=$client_id \
           --env-var CLIENT_SECRET=$client_secret \
@@ -123,15 +99,12 @@ jobs:
           --env-var TOKEN_ENDPOINT=$token_endpoint \
           --env-var API_BASE_URL=$api_base_url \
           --reporters cli,html,json
-        continue-on-error: true
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: credentials-issue
-          path: docs/reports/
+          path: newman/
 
   workflow-instance-join:
-    needs:
-      - install
     name: Workflow Instance Join
     runs-on: ubuntu-latest
     strategy:
@@ -156,14 +129,24 @@ jobs:
             org_3_did_web: TRANSMUTE_PRODUCTION_TENANT_3_ORGANIZATION_DID_WEB
             org_3_client_id: TRANSMUTE_PRODUCTION_TENANT_3_CLIENT_ID
             org_3_client_secret: TRANSMUTE_PRODUCTION_TENANT_3_CLIENT_SECRET
-
     steps:
-      - uses: actions/cache@v2
-        id: cache-restore
+      # Check out repo, setup node, and install dependencies (cached).
+      # @see https://github.com/actions/setup-node#usage
+      # @see https://github.com/actions/cache/blob/main/examples.md#node---npm
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          path: |
-            ./*
-          key: ${{ github.sha }}
+          node-version: 16.x
+      - uses: actions/cache@v3
+        id: cache-npm
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      # Only install NPM packages if the `cache-npm` step misses.
+      - run: npm ci
+        if: steps.cache-npm.outputs.cache-hit != 'true'
       - name: Workflow Instance Join
         env:
           org_1_token_endpoint: ${{secrets[matrix.org_1_token_endpoint]}}
@@ -205,46 +188,71 @@ jobs:
           --env-var ORG_3_CLIENT_ID=$org_3_client_id \
           --env-var ORG_3_CLIENT_SECRET=$org_3_client_secret \
           --reporters cli,html,json
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: workflow-instance-join
-          path: docs/reports/
+          path: newman/
 
   publish:
     name: Publish
+    # Always run, regardless of whether jobs that this one depends on have
+    # succeeded or failed.
+    if: ${{ always() }}
     needs:
       - sanity
-      - issue
+      - credentials-issue
       - workflow-instance-join
-      - website
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check out git repository
-        uses: actions/checkout@v2
-      - name: Set up Node.js
-        uses: actions/setup-node@v1
+      # Check out repo, setup node, and install dependencies (cached).
+      # @see https://github.com/actions/setup-node#usage
+      # @see https://github.com/actions/cache/blob/main/examples.md#node---npm
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 16.x
-      - name: Install
-        run: npm i
+      - uses: actions/cache@v3
+        id: cache-npm
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      # Only install NPM packages if the `cache-npm` step misses.
+      - run: npm ci
+        if: steps.cache-npm.outputs.cache-hit != 'true'
 
-      - uses: actions/download-artifact@v2
+      # Download Artifacts
+      #
+      # Each of the report artifacts created in previous steps should be
+      # downloaded here so that the report preparation code can ingest the
+      # raw newman output and generate sanitized reports for publishing.
+
+      - uses: actions/download-artifact@v3
         with:
           name: sanity-report
-          path: ./docs/reports/
-
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: credentials-issue
-          path: ./docs/reports/
-
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: workflow-instance-join
-          path: ./docs/reports/
 
+      # Remove this after confirming that downloaded artifacts do not trample
+      # each other.
+      - name: Debug output
+        run: ls -R ./newman
+
+      # Sanitize newman output, generate report index, and write all otuput to
+      # the `./docs/reports` folder for publishing.
       - name: Rebuilding index
         run: npm run report:prepare
+
+      # Build the JSON version of the OpenAPI specification from the YAML source
+      # files prior to publishing.
+      - name: Build Open API Specification JSON
+        run: npm run preserve
 
       - name: Publish Reports
         uses: peaceiris/actions-gh-pages@v3
