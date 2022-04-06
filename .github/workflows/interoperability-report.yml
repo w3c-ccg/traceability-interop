@@ -24,29 +24,10 @@ jobs:
           path: |
             ./*
           key: ${{ github.sha }}
-  sanity:
-    name: Sanity Test
-    needs:
-      - install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/cache@v2
-        id: cache-restore
-        with:
-          path: |
-            ./*
-          key: ${{ github.sha }}
-      - name: Test Report
-        run: |-
-          npm run report:generate -- ./docs/tutorials/report-generation/report-tester.collection.json \
-          --reporters cli,html,json
-      - uses: actions/upload-artifact@v2
-        with:
-          name: newman-reports
-          path: docs/reports/
 
   website:
     name: Website
+    concurrency: website
     needs:
       - install
     runs-on: ubuntu-latest
@@ -55,31 +36,57 @@ jobs:
         id: cache-restore
         with:
           path: |
-            ./*
+            ./docs
           key: ${{ github.sha }}
-      - name: Bundle OAS JSON
+      - name: Build Open API Specification JSON
         run: npm run preserve
-      - uses: actions/upload-artifact@v2
+      - uses: actions/cache@v2
+        id: cache-save
         with:
-          name: web-content
-          path: docs
+          path: |
+            ./docs
+          key: ${{ github.sha }}
+
+  # sanity:
+  #   name: Sanity Test
+  #   needs:
+  #     - install
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/cache@v2
+  #       id: cache-restore
+  #       with:
+  #         path: |
+  #           ./*
+  #         key: ${{ github.sha }}
+  #     - name: Test Report
+  #       run: |-
+  #         npm run report:generate -- ./docs/tutorials/report-generation/report-tester.collection.json \
+  #         --reporters cli,html,json
+  #     - uses: actions/upload-artifact@v2
+  #       with:
+  #         name: newman-reports
+  #         path: docs/reports/
 
   publish:
     name: Publish
     needs:
-      - sanity
+      # - sanity
       - website
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/cache@v2
+        id: cache-restore
         with:
-          name: web-content
-      - uses: actions/download-artifact@v2
-        with:
-          name: newman-reports
-          path: ~/docs/reports
+          path: |
+            ./*
+          key: ${{ github.sha }}
+      # - uses: actions/download-artifact@v2
+      #   with:
+      #     name: newman-reports
+      #     path: ~/docs/reports
       - name: Publish Reports
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
+          publish_dir: ./docs
