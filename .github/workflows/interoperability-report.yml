@@ -25,14 +25,21 @@ jobs:
         run: |-
           npx newman run ./docs/tutorials/report-generation/report-tester.collection.json \
           --reporters cli,html,json \
-          --reporter-html-export "newman/${{format('{0}-{1}-{2}.html', github.job, matrix.name, github.run_id)}}" \
-          --reporter-json-export "newman/${{format('{0}-{1}-{2}.json', github.job, matrix.name, github.run_id)}}"
+          --reporter-html-export "newman/${{format('{0}-{1}.html', github.job, github.run_id)}}" \
+          --reporter-json-export "newman/${{format('{0}-{1}.json', github.job, github.run_id)}}"
+      # Sanitize newman output and write all reports to the `./docs/reports`
+      # folder for publishing, excluding `index.html`, which will be rebuilt
+      # during publishing.
+      - name: Sanitize Newman Output
+        run: |
+          npm run report:prepare
+          rm -f ./docs/reports/index.html
       - uses: actions/upload-artifact@v3
         # Perform artifact upload even if previous steps fail
         if: ${{ always() }}
         with:
           name: sanity-report
-          path: newman/
+          path: docs/reports/
 
   credentials-issue:
     name: Issue Credential
@@ -90,12 +97,19 @@ jobs:
           --reporters cli,html,json \
           --reporter-html-export "newman/${{format('{0}-{1}-{2}.html', github.job, matrix.name, github.run_id)}}" \
           --reporter-json-export "newman/${{format('{0}-{1}-{2}.json', github.job, matrix.name, github.run_id)}}"
+      # Sanitize newman output and write all reports to the `./docs/reports`
+      # folder for publishing, excluding `index.html`, which will be rebuilt
+      # during publishing.
+      - name: Sanitize Newman Output
+        run: |
+          npm run report:prepare
+          rm -f ./docs/reports/index.html
       - uses: actions/upload-artifact@v3
         # Perform artifact upload even if previous steps fail
         if: ${{ always() }}
         with:
           name: credentials-issue
-          path: newman/
+          path: docs/reports/
 
   workflow-instance-join:
     name: Workflow Instance Join
@@ -175,12 +189,19 @@ jobs:
           --reporters cli,html,json \
           --reporter-html-export "newman/${{format('{0}-{1}-{2}.html', github.job, matrix.name, github.run_id)}}" \
           --reporter-json-export "newman/${{format('{0}-{1}-{2}.json', github.job, matrix.name, github.run_id)}}"
+      # Sanitize newman output and write all reports to the `./docs/reports`
+      # folder for publishing, excluding `index.html`, which will be rebuilt
+      # during publishing.
+      - name: Sanitize Newman Output
+        run: |
+          npm run report:prepare
+          rm -f ./docs/reports/index.html
       - uses: actions/upload-artifact@v3
         # Perform artifact upload even if previous steps fail
         if: ${{ always() }}
         with:
           name: workflow-instance-join
-          path: newman/
+          path: docs/reports/
 
   publish:
     name: Publish
@@ -204,44 +225,29 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16.x
-      - uses: actions/cache@v3
-        id: cache-npm
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-      # Only install NPM packages if the `cache-npm` step misses.
+          cache: 'npm'
       - run: npm ci
-        if: steps.cache-npm.outputs.cache-hit != 'true'
 
       # Download Artifacts
       #
       # Each of the report artifacts created in previous steps should be
-      # downloaded here so that the report preparation code can ingest the
-      # raw newman output and generate sanitized reports for publishing.
+      # aggregated before building the report index.
 
       - uses: actions/download-artifact@v3
         with:
           name: sanity-report
-          path: newman/
+          path: docs/reports/
       - uses: actions/download-artifact@v3
         with:
           name: credentials-issue
-          path: newman/
+          path: docs/reports/
       - uses: actions/download-artifact@v3
         with:
           name: workflow-instance-join
-          path: newman/
+          path: docs/reports/
 
-      # Remove this after confirming that downloaded artifacts do not trample
-      # each other.
-      - name: Debug output
-        run: ls -R ./newman
-
-      # Sanitize newman output, generate report index, and write all otuput to
-      # the `./docs/reports` folder for publishing.
-      - name: Rebuilding index
+      # Build reports index prior to publishing
+      - name: Build reports index
         run: npm run report:prepare
 
       # Build the JSON version of the OpenAPI specification from the YAML source
