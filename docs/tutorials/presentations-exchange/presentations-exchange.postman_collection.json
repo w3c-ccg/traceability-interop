@@ -1,12 +1,12 @@
 {
 	"info": {
-		"_postman_id": "be4ee480-e8ff-4da5-8f04-c3de5a949a79",
+		"_postman_id": "e019495f-0fdd-431e-8ade-b98d0636c4c7",
 		"name": "Presentations Exchange Tutorial",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Get Access Token (Alice)",
+			"name": "Get Access Token (Issuer)",
 			"event": [
 				{
 					"listen": "test",
@@ -18,7 +18,7 @@
 							"",
 							"pm.test(\"response body must include non-empty access_token\", function () {",
 							"    const { access_token } = pm.response.json()",
-							"    pm.expect(access_token).to.not.be.empty;",
+							"    pm.expect(access_token).to.be.a('string').that.is.not.empty;",
 							"});",
 							"",
 							"pm.test(\"response body must represent `Bearer` token\", function() {",
@@ -34,7 +34,7 @@
 							"// Access token must be made available to later requests",
 							"pm.test(\"`access_token` persisted to collectionVariables\", function() {",
 							"    const { access_token } = pm.response.json()",
-							"    pm.collectionVariables.set(\"alice_access_token\", access_token);",
+							"    pm.collectionVariables.set(\"issuer_access_token\", access_token);",
 							"})"
 						],
 						"type": "text/javascript"
@@ -49,7 +49,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"audience\": \"{{ALICE_TOKEN_AUDIENCE}}\",\n    \"client_id\": \"{{ALICE_CLIENT_ID}}\",\n    \"client_secret\": \"{{ALICE_CLIENT_SECRET}}\",\n    \"grant_type\": \"client_credentials\"\n}",
+					"raw": "{\n    \"audience\": \"{{ISSUER_TOKEN_AUDIENCE}}\",\n    \"client_id\": \"{{ISSUER_CLIENT_ID}}\",\n    \"client_secret\": \"{{ISSUER_CLIENT_SECRET}}\",\n    \"grant_type\": \"client_credentials\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -57,16 +57,16 @@
 					}
 				},
 				"url": {
-					"raw": "{{ALICE_TOKEN_ENDPOINT}}",
+					"raw": "{{ISSUER_TOKEN_ENDPOINT}}",
 					"host": [
-						"{{ALICE_TOKEN_ENDPOINT}}"
+						"{{ISSUER_TOKEN_ENDPOINT}}"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "Get Access Token (Bob)",
+			"name": "Get Access Token (Verifier)",
 			"event": [
 				{
 					"listen": "test",
@@ -78,7 +78,7 @@
 							"",
 							"pm.test(\"response body must include non-empty access_token\", function () {",
 							"    const { access_token } = pm.response.json()",
-							"    pm.expect(access_token).to.not.be.empty;",
+							"    pm.expect(access_token).to.be.a('string').that.is.not.empty;",
 							"});",
 							"",
 							"pm.test(\"response body must represent `Bearer` token\", function() {",
@@ -94,7 +94,7 @@
 							"// Access token must be made available to later requests",
 							"pm.test(\"`access_token` persisted to collectionVariables\", function() {",
 							"    const { access_token } = pm.response.json()",
-							"    pm.collectionVariables.set(\"bob_access_token\", access_token);",
+							"    pm.collectionVariables.set(\"verifier_access_token\", access_token);",
 							"})"
 						],
 						"type": "text/javascript"
@@ -109,7 +109,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"audience\": \"{{BOB_TOKEN_AUDIENCE}}\",\n    \"client_id\": \"{{BOB_CLIENT_ID}}\",\n    \"client_secret\": \"{{BOB_CLIENT_SECRET}}\",\n    \"grant_type\": \"client_credentials\"\n}",
+					"raw": "{\n    \"audience\": \"{{VERIFIER_TOKEN_AUDIENCE}}\",\n    \"client_id\": \"{{VERIFIER_CLIENT_ID}}\",\n    \"client_secret\": \"{{VERIFIER_CLIENT_SECRET}}\",\n    \"grant_type\": \"client_credentials\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -117,9 +117,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{BOB_TOKEN_ENDPOINT}}",
+					"raw": "{{VERIFIER_TOKEN_ENDPOINT}}",
 					"host": [
-						"{{BOB_TOKEN_ENDPOINT}}"
+						"{{VERIFIER_TOKEN_ENDPOINT}}"
 					]
 				}
 			},
@@ -132,64 +132,54 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"// Some tests are skipped unless prerequisite tests pass and",
-							"// update these variables to `pm.test`.",
-							"var whenHaveAccessToken = pm.test.skip;",
-							"var whenResponseIsOk = pm.test.skip;",
-							"var whenJsonIsValid = pm.test.skip;",
-							"var whenDidDocumentIsPresent = pm.test.skip;",
-							"var whenHasAlsoKnownAs = pm.test.skip;",
-							"var whenAlsoKnownAsIsArray = pm.test.skip;",
-							"",
-							"pm.test(\"`alice_access_token` collection variable must be set\", function () {",
-							"    pm.expect(pm.collectionVariables.get(\"alice_access_token\")).to.not.be.undefined;",
-							"    whenHaveAccessToken = pm.test;",
+							"// This endpoint is authenticated. This test will not prevent the request from",
+							"// running when the `issuer_access_token` collection variable is missing, but it",
+							"// will give an indication of why the request failed in that scenario.",
+							"pm.test(\"`issuer_access_token` collection variable must be set\", function () {",
+							"    const issuer_access_token = pm.collectionVariables.get(\"issuer_access_token\");",
+							"    pm.expect(issuer_access_token).to.be.a('string').that.is.not.empty;",
 							"});",
 							"",
-							"whenHaveAccessToken(\"Status code is 200\", function () {",
+							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
-							"    whenResponseIsOk = pm.test;",
 							"});",
 							"",
-							"whenResponseIsOk(\"must include valid JSON response body\", function() {",
+							"pm.test(\"must include valid JSON response body\", function() {",
 							"    pm.response.json(); // will throw on parse failure",
-							"    whenJsonIsValid = pm.test;",
 							"});",
 							"",
-							"whenJsonIsValid(\"didDocument must be present in response body\", function() {",
+							"pm.test(\"didDocument must be present in response body\", function() {",
 							"    const jsonData = pm.response.json();",
 							"    pm.expect(jsonData).to.have.property('didDocument');",
-							"    whenDidDocumentIsPresent = pm.test;",
 							"});",
 							"",
-							"whenDidDocumentIsPresent(\"alsoKnownAs MUST be present\", function () {",
+							"pm.test(\"alsoKnownAs MUST be present\", function () {",
 							"    const { didDocument } = pm.response.json();",
 							"    pm.expect(didDocument).to.have.property('alsoKnownAs');",
-							"    whenHasAlsoKnownAs = pm.test;",
 							"});",
 							"",
-							"whenHasAlsoKnownAs(\"alsoKnownAs MUST be an array\", function() {",
+							"pm.test(\"alsoKnownAs MUST be an array\", function() {",
 							"    const { alsoKnownAs } = pm.response.json().didDocument;",
 							"    pm.expect(alsoKnownAs).to.be.an('array');",
-							"    whenAlsoKnownAsIsArray = pm.test;",
 							"});",
 							"",
-							"whenAlsoKnownAsIsArray(\"alsoKnownAs values MUST be unique\", function() {",
+							"pm.test(\"alsoKnownAs values MUST be unique\", function() {",
 							"    const { alsoKnownAs } = pm.response.json().didDocument;",
 							"    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);",
 							"});",
 							"",
-							"whenAlsoKnownAsIsArray(\"alsoKnownAs[0] must match API_BASE_URL\", function() {",
+							"pm.test(\"alsoKnownAs[0] MUST match API_BASE_URL\", function() {",
 							"    const { alsoKnownAs } = pm.response.json().didDocument;",
-							"    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);",
+							"    const baseUrl = pm.environment.get('ISSUER_API_BASE_URL');",
+							"    pm.expect(alsoKnownAs[0]).to.equal(baseUrl);",
 							"});",
 							"",
-							"whenAlsoKnownAsIsArray(\"alsoKnownAs[1] must be present\", function() {",
+							"pm.test(\"alsoKnownAs[1] must be present\", function() {",
 							"    const { alsoKnownAs } = pm.response.json().didDocument;",
-							"    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);",
+							"    pm.expect(alsoKnownAs[1]).to.be.a('string').that.is.not.empty;",
 							"});",
 							"",
-							"whenDidDocumentIsPresent(\"verification method controller must match did subject\", function() {",
+							"pm.test(\"verification method controller must match did subject\", function() {",
 							"    const { didDocument } = pm.response.json();",
 							"    const vm = didDocument.verificationMethod || [];",
 							"    vm.forEach((m) => pm.expect(m.controller).to.equal(didDocument.id));",
@@ -215,7 +205,7 @@
 					"bearer": [
 						{
 							"key": "token",
-							"value": "{{alice_access_token}}",
+							"value": "{{issuer_access_token}}",
 							"type": "string"
 						}
 					]
@@ -229,13 +219,13 @@
 					}
 				],
 				"url": {
-					"raw": "{{ALICE_API_BASE_URL}}/identifiers/{{ALICE_ORGANIZATION_DID_WEB}}",
+					"raw": "{{ISSUER_API_BASE_URL}}/identifiers/{{ISSUER_ORGANIZATION_DID_WEB}}",
 					"host": [
-						"{{ALICE_API_BASE_URL}}"
+						"{{ISSUER_API_BASE_URL}}"
 					],
 					"path": [
 						"identifiers",
-						"{{ALICE_ORGANIZATION_DID_WEB}}"
+						"{{ISSUER_ORGANIZATION_DID_WEB}}"
 					]
 				}
 			},
@@ -248,12 +238,17 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"`alice_access_token` collection variable must be set\", function () {",
-							"    pm.expect(pm.collectionVariables.get(\"alice_access_token\")).to.not.be.undefined;",
+							"// This endpoint is authenticated. This test will not prevent the request from",
+							"// running when the `issuer_access_token` collection variable is missing, but it",
+							"// will give an indication of why the request failed in that scenario.",
+							"pm.test(\"`issuer_access_token` collection variable must be set\", function () {",
+							"    const issuer_access_token = pm.collectionVariables.get(\"issuer_access_token\");",
+							"    pm.expect(issuer_access_token).to.be.a('string').that.is.not.empty;",
 							"});",
 							"",
 							"pm.test(\"`credential_issuer_id` collection variable must be set\", function () {",
-							"    pm.expect(pm.collectionVariables.get(\"credential_issuer_id\")).to.not.be.undefined;",
+							"    const credential_issuer_id = pm.collectionVariables.get(\"credential_issuer_id\");",
+							"    pm.expect(credential_issuer_id).to.be.a('string').that.is.not.empty;",
 							"});",
 							"",
 							"pm.test(\"must return `201 Created` status\", function () {",
@@ -285,7 +280,7 @@
 					"bearer": [
 						{
 							"key": "token",
-							"value": "{{alice_access_token}}",
+							"value": "{{issuer_access_token}}",
 							"type": "string"
 						}
 					]
@@ -308,9 +303,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{ALICE_API_BASE_URL}}/credentials/issue",
+					"raw": "{{ISSUER_API_BASE_URL}}/credentials/issue",
 					"host": [
-						"{{ALICE_API_BASE_URL}}"
+						"{{ISSUER_API_BASE_URL}}"
 					],
 					"path": [
 						"credentials",
@@ -327,12 +322,12 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"// The `/presentations/available` endpoint is authenticated. This test will not",
-							"// prevent the request from running when the `access_token` collection variable",
-							"// is missing, but it will give an indication of why the request failed in that",
-							"// scenario.",
-							"pm.test(\"`bob_access_token` collection variable must be set\", function () {",
-							"    pm.expect(pm.collectionVariables.get(\"bob_access_token\")).to.not.be.undefined;",
+							"// This endpoint is authenticated. This test will not prevent the request from",
+							"// running when the `verifier_access_token` collection variable is missing, but",
+							"// it will give an indication of why the request failed in that scenario.",
+							"pm.test(\"`verifier_access_token` collection variable must be set\", function () {",
+							"    const verifier_access_token = pm.collectionVariables.get(\"verifier_access_token\");",
+							"    pm.expect(verifier_access_token).to.be.a('string').that.is.not.empty;",
 							"});",
 							"",
 							"// The expected response code for a \"Presentations Available\" request is",
@@ -368,7 +363,7 @@
 					"bearer": [
 						{
 							"key": "token",
-							"value": "{{bob_access_token}}",
+							"value": "{{verifier_access_token}}",
 							"type": "string"
 						}
 					]
@@ -391,9 +386,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{BOB_API_BASE_URL}}/presentations/available",
+					"raw": "{{VERIFIER_API_BASE_URL}}/presentations/available",
 					"host": [
-						"{{BOB_API_BASE_URL}}"
+						"{{VERIFIER_API_BASE_URL}}"
 					],
 					"path": [
 						"presentations",
@@ -410,12 +405,12 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"// The `/presentations/prove` endpoint is authenticated. This test will not",
-							"// prevent the request from running when the `access_token` collection variable",
-							"// is missing, but it will give an indication of why the request failed in that",
-							"// scenario.",
-							"pm.test(\"`alice_access_token` collection variable must be set\", function () {",
-							"    pm.expect(pm.collectionVariables.get(\"alice_access_token\")).to.not.be.undefined;",
+							"// This endpoint is authenticated. This test will not prevent the request from",
+							"// running when the `issuer_access_token` collection variable is missing, but it",
+							"// will give an indication of why the request failed in that scenario.",
+							"pm.test(\"`issuer_access_token` collection variable must be set\", function () {",
+							"    const issuer_access_token = pm.collectionVariables.get(\"issuer_access_token\");",
+							"    pm.expect(issuer_access_token).to.be.a('string').that.is.not.empty;",
 							"});",
 							"",
 							"// Credential issuer id is a required element item used in the request body",
@@ -464,7 +459,7 @@
 					"bearer": [
 						{
 							"key": "token",
-							"value": "{{alice_access_token}}",
+							"value": "{{issuer_access_token}}",
 							"type": "string"
 						}
 					]
@@ -487,9 +482,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{ALICE_API_BASE_URL}}/presentations/prove",
+					"raw": "{{ISSUER_API_BASE_URL}}/presentations/prove",
 					"host": [
-						"{{ALICE_API_BASE_URL}}"
+						"{{ISSUER_API_BASE_URL}}"
 					],
 					"path": [
 						"presentations",
@@ -506,12 +501,12 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"// The `/presentations/submissions` endpoint is authenticated. This test will",
-							"// not prevent the request from running when the `access_token` collection",
-							"// variable is missing, but it will give an indication of why the request failed",
-							"// in that scenario.",
-							"pm.test(\"`bob_access_token` collection variable must be set\", function () {",
-							"    pm.expect(pm.collectionVariables.get(\"bob_access_token\")).to.not.be.undefined;",
+							"// This endpoint is authenticated. This test will not prevent the request from",
+							"// running when the `verifier_access_token` collection variable is missing, but",
+							"// it will give an indication of why the request failed in that scenario.",
+							"pm.test(\"`verifier_access_token` collection variable must be set\", function () {",
+							"    const verifier_access_token = pm.collectionVariables.get(\"verifier_access_token\");",
+							"    pm.expect(verifier_access_token).to.be.a('string').that.is.not.empty;",
 							"});",
 							"",
 							"// The expected response code for a \"Complete Exchange\" request is",
@@ -536,7 +531,7 @@
 					"bearer": [
 						{
 							"key": "token",
-							"value": "{{bob_access_token}}",
+							"value": "{{verifier_access_token}}",
 							"type": "string"
 						}
 					]
@@ -559,9 +554,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{BOB_API_BASE_URL}}/presentations/submissions",
+					"raw": "{{VERIFIER_API_BASE_URL}}/presentations/submissions",
 					"host": [
-						"{{BOB_API_BASE_URL}}"
+						"{{VERIFIER_API_BASE_URL}}"
 					],
 					"path": [
 						"presentations",
@@ -598,10 +593,6 @@
 			"value": ""
 		},
 		{
-			"key": "access_token",
-			"value": ""
-		},
-		{
 			"key": "verifiable_credential",
 			"value": ""
 		},
@@ -618,11 +609,11 @@
 			"value": ""
 		},
 		{
-			"key": "alice_access_token",
+			"key": "issuer_access_token",
 			"value": ""
 		},
 		{
-			"key": "bob_access_token",
+			"key": "verifier_access_token",
 			"value": ""
 		}
 	]
