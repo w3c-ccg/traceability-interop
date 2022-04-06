@@ -45,39 +45,41 @@ jobs:
           name: newman-reports
           path: docs/reports/
 
-  publish:
-    name: Publish
+  website:
+    name: Website
     needs:
-      - sanity
+      - install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/cache@v2
-        id: cache-restore-src
-        with:
-          path: |
-            ./*
-          key: ${{ github.sha }}
-      - uses: actions/download-artifact@v2
-        with:
-          name: newman-reports
-      - name: Bundle OAS JSON
-        run: npm run preserve
-
-      # - name: Download existing reports so they will be preserved in the next publish
-      #   run: npm run report:append
-
       - uses: actions/cache@v2
         id: cache-restore
         with:
           path: |
-            docs/reports/*.html
-            docs/reports/*.json
-          key: multiple-files-${{ hashFiles('docs/reports/*') }}
-          restore-keys: |
-            multiple-files-${{ hashFiles('docs/reports/*') }}
-            multiple-files-
+            ./*
+          key: ${{ github.sha }}
+      - name: Bundle OAS JSON
+        run: npm run preserve
+      - uses: actions/upload-artifact@v2
+        with:
+          name: web-content
+          path: docs
+
+  publish:
+    name: Publish
+    needs:
+      - sanity
+      - website
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: web-content
+      - uses: actions/download-artifact@v2
+        with:
+          name: newman-reports
+          path: ~/docs/reports
       - name: Publish Reports
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
+          publish_dir: .
