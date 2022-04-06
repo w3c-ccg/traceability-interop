@@ -48,7 +48,7 @@ jobs:
           key: ${{ github.sha }}
 
   sanity:
-    name: Sanity Test
+    name: Sanity
     needs:
       - install
     runs-on: ubuntu-latest
@@ -68,10 +68,62 @@ jobs:
           name: newman-reports
           path: docs/reports/
 
+  exchange:
+    runs-on: ubuntu-latest
+    strategy:
+      # Hard-coding a single test entry, this will change to include all
+      # permutations of alice/bob actors.
+      matrix:
+        alice: ['MESUR_PRODUCTION']
+        bob: ['TRANSMUTE_STAGING']
+    steps:
+      - name: Begin CI...
+        uses: actions/checkout@v2
+      - name: Use Node 16
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+      - name: Install Node Dependencies
+        run: npm ci
+      - name: Run Tests
+        env:
+          alice_organization_did_web: ${{secrets[format('{0}_ORGANIZATION_DID_WEB', matrix.alice)]}}
+          alice_client_id: ${{secrets[format('{0}_CLIENT_ID', matrix.alice)]}}
+          alice_client_secret: ${{secrets[format('{0}_CLIENT_SECRET', matrix.alice)]}}
+          alice_token_audience: ${{secrets[format('{0}_TOKEN_AUDIENCE', matrix.alice)]}}
+          alice_token_endpoint: ${{secrets[format('{0}_TOKEN_ENDPOINT', matrix.alice)]}}
+          alice_api_base_url: ${{secrets[format('{0}_API_BASE_URL', matrix.alice)]}}
+          bob_organization_did_web: ${{secrets[format('{0}_ORGANIZATION_DID_WEB', matrix.bob)]}}
+          bob_client_id: ${{secrets[format('{0}_CLIENT_ID', matrix.bob)]}}
+          bob_client_secret: ${{secrets[format('{0}_CLIENT_SECRET', matrix.bob)]}}
+          bob_token_audience: ${{secrets[format('{0}_TOKEN_AUDIENCE', matrix.bob)]}}
+          bob_token_endpoint: ${{secrets[format('{0}_TOKEN_ENDPOINT', matrix.bob)]}}
+          bob_api_base_url: ${{secrets[format('{0}_API_BASE_URL', matrix.bob)]}}
+        run: |
+          npm run report:generate -- ./docs/tutorials/presentations-exchange/presentations-exchange.postman_collection.json \
+          --env-var ALICE_ORGANIZATION_DID_WEB=$alice_organization_did_web \
+          --env-var ALICE_CLIENT_ID=$alice_client_id \
+          --env-var ALICE_CLIENT_SECRET=$alice_client_secret \
+          --env-var ALICE_TOKEN_AUDIENCE=$alice_token_audience \
+          --env-var ALICE_TOKEN_ENDPOINT=$alice_token_endpoint \
+          --env-var ALICE_API_BASE_URL=$alice_api_base_url \
+          --env-var BOB_ORGANIZATION_DID_WEB=$bob_organization_did_web \
+          --env-var BOB_CLIENT_ID=$bob_client_id \
+          --env-var BOB_CLIENT_SECRET=$bob_client_secret \
+          --env-var BOB_TOKEN_AUDIENCE=$bob_token_audience \
+          --env-var BOB_TOKEN_ENDPOINT=$bob_token_endpoint \
+          --env-var BOB_API_BASE_URL=$bob_api_base_url \
+          --reporters cli,html,json
+      - uses: actions/upload-artifact@v2
+        with:
+          name: newman-reports
+          path: docs/reports/
+
   publish:
     name: Publish
     needs:
       - sanity
+      - exchange
       - website
     runs-on: ubuntu-latest
     steps:
