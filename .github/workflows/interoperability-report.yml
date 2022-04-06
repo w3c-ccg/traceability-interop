@@ -7,105 +7,76 @@ on:
   workflow_dispatch:
 
 jobs:
-  install:
-    name: Install
+
+  interop-sanity:
+    name: Sanity
     runs-on: ubuntu-latest
-    # With the exception of GITHUB_TOKEN, secrets are not passed to the runner
-    # when a workflow is triggered from a forked repository.
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.repository == github.event.repository.full_name"
     steps:
-      - name: Check out git repository
-        uses: actions/checkout@v2
-      - name: Set up Node.js
-        uses: actions/setup-node@v1
+      # Check out repo, setup node, and install dependencies.
+      # @see https://github.com/actions/setup-node#usage
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 16.x
-      - name: Install
-        run: npm i
-      - uses: actions/cache@v2
-        id: cache-save
-        with:
-          path: |
-            ./*
-          key: ${{ github.sha }}
-
-  website:
-    name: Website
-    concurrency: website
-    needs:
-      - install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/cache@v2
-        id: cache-restore
-        with:
-          path: |
-            ./*
-          key: ${{ github.sha }}
-      - name: Build Open API Specification JSON
-        run: npm run preserve
-      - uses: actions/cache@v2
-        id: cache-save
-        with:
-          path: |
-            ./docs
-          key: ${{ github.sha }}
-
-  sanity:
-    name: Sanity
-    needs:
-      - install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/cache@v2
-        id: cache-restore
-        with:
-          path: |
-            ./*
-          key: ${{ github.sha }}
+          cache: 'npm'
+      - run: npm ci
       - name: Sanity Test
         run: |-
-          npm run report:generate -- ./docs/tutorials/report-generation/report-tester.collection.json \
-          --reporters cli,html,json
-      - uses: actions/upload-artifact@v2
+          npx newman run ./docs/tutorials/report-generation/report-tester.collection.json \
+          --reporters cli,html,json \
+          --reporter-html-export "newman/${{format('{0}-{1}.html', github.run_id, github.job)}}" \
+          --reporter-json-export "newman/${{format('{0}-{1}.json', github.run_id, github.job)}}"
+      # Sanitize newman output and write all reports to the `./docs/reports`
+      # folder for publishing, excluding `index.html`, which will be rebuilt
+      # during publishing.
+      - name: Sanitize Newman Output
+        if: ${{ always() }} # Run even when postman tests fail
+        run: |
+          npm run report:prepare
+          rm -f ./docs/reports/index.html
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }} # Run even when postman tests fail
         with:
           name: sanity-report
           path: docs/reports/
 
-  issue:
-    needs:
-      - install
+  interop-credentials-issue:
     name: Issue Credential
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - organization_did_web: MAVENNET_STAGING_ORGANIZATION_DID_WEB
+          - name: "Mavennet"
+            organization_did_web: MAVENNET_STAGING_ORGANIZATION_DID_WEB
             client_id: MAVENNET_STAGING_CLIENT_ID
             client_secret: MAVENNET_STAGING_CLIENT_SECRET
             token_audience: MAVENNET_STAGING_TOKEN_AUDIENCE
             token_endpoint: MAVENNET_STAGING_TOKEN_ENDPOINT
             api_base_url: MAVENNET_STAGING_API_BASE_URL
-          - organization_did_web: MESUR_IO_PRODUCTION_ORGANIZATION_DID_WEB
+          - name: "mesur.io"
+            organization_did_web: MESUR_IO_PRODUCTION_ORGANIZATION_DID_WEB
             client_id: MESUR_IO_PRODUCTION_CLIENT_ID
             client_secret: MESUR_IO_PRODUCTION_CLIENT_SECRET
             token_audience: MESUR_IO_PRODUCTION_TOKEN_AUDIENCE
             token_endpoint: MESUR_IO_PRODUCTION_TOKEN_ENDPOINT
             api_base_url: MESUR_IO_PRODUCTION_API_BASE_URL
-          - organization_did_web: TRANSMUTE_STAGING_ORGANIZATION_DID_WEB
+          - name: "Transmute"
+            organization_did_web: TRANSMUTE_STAGING_ORGANIZATION_DID_WEB
             client_id: TRANSMUTE_STAGING_CLIENT_ID
             client_secret: TRANSMUTE_STAGING_CLIENT_SECRET
             token_audience: TRANSMUTE_STAGING_TOKEN_AUDIENCE
             token_endpoint: TRANSMUTE_STAGING_TOKEN_ENDPOINT
             api_base_url: TRANSMUTE_STAGING_API_BASE_URL
     steps:
-      - uses: actions/cache@v2
-        id: cache-restore
+      # Check out repo, setup node, and install dependencies.
+      # @see https://github.com/actions/setup-node#usage
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          path: |
-            ./*
-          key: ${{ github.sha }}
+          node-version: 16.x
+          cache: 'npm'
+      - run: npm ci
       - name: Run Tests
         env:
           organization_did_web: ${{secrets[matrix.organization_did_web]}}
@@ -115,30 +86,39 @@ jobs:
           token_endpoint: ${{secrets[matrix.token_endpoint]}}
           api_base_url: ${{secrets[matrix.api_base_url]}}
         run: |
-          npm run report:generate -- ./docs/tutorials/credentials-issue/credentials-issue.postman_collection.json \
+          npx newman run ./docs/tutorials/credentials-issue/credentials-issue.postman_collection.json \
           --env-var ORGANIZATION_DID_WEB=$organization_did_web \
           --env-var CLIENT_ID=$client_id \
           --env-var CLIENT_SECRET=$client_secret \
           --env-var TOKEN_AUDIENCE=$token_audience \
           --env-var TOKEN_ENDPOINT=$token_endpoint \
           --env-var API_BASE_URL=$api_base_url \
-          --reporters cli,html,json
-        continue-on-error: true
-      - uses: actions/upload-artifact@v2
+          --reporters cli,html,json \
+          --reporter-html-export "newman/${{format('{0}-{1}-{2}.html', github.run_id, github.job, matrix.name)}}" \
+          --reporter-json-export "newman/${{format('{0}-{1}-{2}.json', github.run_id, github.job, matrix.name)}}"
+      # Sanitize newman output and write all reports to the `./docs/reports`
+      # folder for publishing, excluding `index.html`, which will be rebuilt
+      # during publishing.
+      - name: Sanitize Newman Output
+        if: ${{ always() }} # Run even when postman tests fail
+        run: |
+          npm run report:prepare
+          rm -f ./docs/reports/index.html
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }} # Run even when postman tests fail
         with:
           name: credentials-issue
           path: docs/reports/
 
-  workflow-instance-join:
-    needs:
-      - install
+  interop-workflow-instance-join:
     name: Workflow Instance Join
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - org_1_token_endpoint: TRANSMUTE_PRODUCTION_TOKEN_ENDPOINT
+          - name: "Transmute"
+            org_1_token_endpoint: TRANSMUTE_PRODUCTION_TOKEN_ENDPOINT
             org_1_token_audience: TRANSMUTE_PRODUCTION_TOKEN_AUDIENCE
             org_1_api_base_url: TRANSMUTE_PRODUCTION_API_BASE_URL
             org_1_did_web: TRANSMUTE_PRODUCTION_TENANT_1_ORGANIZATION_DID_WEB
@@ -156,14 +136,15 @@ jobs:
             org_3_did_web: TRANSMUTE_PRODUCTION_TENANT_3_ORGANIZATION_DID_WEB
             org_3_client_id: TRANSMUTE_PRODUCTION_TENANT_3_CLIENT_ID
             org_3_client_secret: TRANSMUTE_PRODUCTION_TENANT_3_CLIENT_SECRET
-
     steps:
-      - uses: actions/cache@v2
-        id: cache-restore
+      # Check out repo, setup node, and install dependencies.
+      # @see https://github.com/actions/setup-node#usage
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          path: |
-            ./*
-          key: ${{ github.sha }}
+          node-version: 16.x
+          cache: 'npm'
+      - run: npm ci
       - name: Workflow Instance Join
         env:
           org_1_token_endpoint: ${{secrets[matrix.org_1_token_endpoint]}}
@@ -204,47 +185,74 @@ jobs:
           --env-var ORG_3_DID_WEB=$org_3_did_web \
           --env-var ORG_3_CLIENT_ID=$org_3_client_id \
           --env-var ORG_3_CLIENT_SECRET=$org_3_client_secret \
-          --reporters cli,html,json
-      - uses: actions/upload-artifact@v2
+          --reporters cli,html,json \
+          --reporter-html-export "newman/${{format('{0}-{1}-{2}.html', github.run_id, github.job, matrix.name)}}" \
+          --reporter-json-export "newman/${{format('{0}-{1}-{2}.json', github.run_id, github.job, matrix.name)}}"
+      # Sanitize newman output and write all reports to the `./docs/reports`
+      # folder for publishing, excluding `index.html`, which will be rebuilt
+      # during publishing.
+      - name: Sanitize Newman Output
+        if: ${{ always() }} # Run even when postman tests fail
+        run: |
+          npm run report:prepare
+          rm -f ./docs/reports/index.html
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }} # Run even when postman tests fail
         with:
           name: workflow-instance-join
           path: docs/reports/
 
-  publish:
+  interop-publish:
     name: Publish
+    runs-on: ubuntu-latest
+
+    # Always run, regardless of whether jobs that this one depends on have
+    # succeeded or failed.
+    if: ${{ always() }}
+
+    # All jobs for which output will be published must be complete before this
+    # job can run.
     needs:
       - sanity
-      - issue
+      - credentials-issue
       - workflow-instance-join
-      - website
-    runs-on: ubuntu-latest
+
     steps:
-      - name: Check out git repository
-        uses: actions/checkout@v2
-      - name: Set up Node.js
-        uses: actions/setup-node@v1
+      # Check out repo, setup node, and install dependencies.
+      # @see https://github.com/actions/setup-node#usage
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 16.x
-      - name: Install
-        run: npm i
+          cache: 'npm'
+      - run: npm ci
 
-      - uses: actions/download-artifact@v2
+      # Download Artifacts
+      #
+      # Each of the report artifacts created in previous steps should be
+      # aggregated before building the report index.
+
+      - uses: actions/download-artifact@v3
         with:
           name: sanity-report
-          path: ./docs/reports/
-
-      - uses: actions/download-artifact@v2
+          path: docs/reports/
+      - uses: actions/download-artifact@v3
         with:
           name: credentials-issue
-          path: ./docs/reports/
-
-      - uses: actions/download-artifact@v2
+          path: docs/reports/
+      - uses: actions/download-artifact@v3
         with:
           name: workflow-instance-join
-          path: ./docs/reports/
+          path: docs/reports/
 
-      - name: Rebuilding index
+      # Build reports index prior to publishing
+      - name: Build reports index
         run: npm run report:prepare
+
+      # Build the JSON version of the OpenAPI specification from the YAML source
+      # files prior to publishing.
+      - name: Build Open API Specification JSON
+        run: npm run preserve
 
       - name: Publish Reports
         uses: peaceiris/actions-gh-pages@v3
