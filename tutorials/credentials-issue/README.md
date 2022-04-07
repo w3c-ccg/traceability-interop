@@ -62,48 +62,44 @@ The "Get Access Token" request does not interact with the system under test, but
 
 The following tests should be added to the "Get Access Token" request in the "Tests" tab:
 
-Token requests are expected to return a `200 Success` response code. Any other response code shoult trigger a failure.
 ```javascript
+// Token requests are expected to return a `200 Success` response code. Any
+// other response code should trigger a failure.
 pm.test("must return `200 Success` status", function() {
     pm.response.to.have.status(200);
-})
-```
+});
 
-The response should include an `access_token` value - this will be presented to authenticated API endpoints in the `Authentication` header (see the last testing code block for details on how this is persisted).
-
-```javascript
+// The response should include an `access_token` value - this will be presented
+// to authenticated API endpoints in the `Authentication` header (see the last
+// testing code block for details on how this is persisted).
 pm.test("response body must include non-empty access_token", function () {
     const { access_token } = pm.response.json()
-    pm.expect(access_token).to.not.be.empty;
+    pm.expect(access_token).to.be.a('string').that.is.not.empty;
 });
-```
 
-The type of `access_token` returned by the token request is expected to be `Bearer`.
-
-```javascript
+// The type of `access_token` returned by the token request is expected to be
+// `Bearer`.
 pm.test("response body must represent `Bearer` token", function() {
     const { token_type } = pm.response.json()
     pm.expect(token_type).to.equal("Bearer");
 });
-```
 
-The returned data includes an `expires_in` field that indicates time until token expiration. Validate that this value is a whole number greater than zero, as anything less than or equal to zero means that the `access_token` is already expired.
-
-```javascript
+// The returned data includes an `expires_in` field that indicates time until
+// token expiration. Validate that this value is a whole number greater than
+// zero, as anything less than or equal to zero means that the `access_token`
+// is already expired.
 pm.test("returned token must expire in the future", function() {
     const { expires_in } = pm.response.json()
     pm.expect(expires_in).to.be.above(0);
-})
-```
+});
 
-The returned `access_token` value is persisted as a Postman collection variable that can be accessed by other requests in the collection by calling `pm.collectionVariables.get("access_token")`.
-
-```javascript
-// Access token must be made available to later requests
+// The returned `access_token` value is persisted as a Postman collection
+// variable that can be accessed by other requests in the collection by calling
+// `pm.collectionVariables.get("access_token")`.
 pm.test("`access_token` persisted to collectionVariables", function() {
     const { access_token } = pm.response.json()
     pm.collectionVariables.set("access_token", access_token);
-})
+});
 ```
 
 ### Running the Request
@@ -154,119 +150,69 @@ _NOTE: Any skipped test MUST be considered a failure, they are just spipped to c
 The following code should be added to the "Get Organization DIDs" request in the "Tests" tab:
 
 ```javascript
-// Some tests are skipped unless prerequisite tests pass and
-// update these variables to `pm.test`.
-var whenHaveAccessToken = pm.test.skip;
-var whenResponseIsOk = pm.test.skip;
-var whenJsonIsValid = pm.test.skip;
-var whenDidDocumentIsPresent = pm.test.skip;
-var whenHasAlsoKnownAs = pm.test.skip;
-var whenAlsoKnownAsIsArray = pm.test.skip;
-```
-
-The `/identifiers` endpoint is authenticated. This test will not prevent the request from running when the `access_token` collection variable is missing, but it will give an indication of why the request failed in that scenario.
-
-```javascript
+// This endpoint is authenticated. This test will not prevent the request from
+// running when the `access_token` collection variable is missing, but it will
+// give an indication of why the request failed in that scenario.
 pm.test("`access_token` collection variable must be set", function () {
-    pm.expect(pm.collectionVariables.get("access_token")).to.not.be.undefined;
-    whenHaveAccessToken = pm.test;
+    const access_token = pm.collectionVariables.get("access_token");
+    pm.expect(access_token).to.be.a('string').that.is.not.empty;
 });
-```
 
-The response code for this request must be `200 OK`. This test will be skipped if the `access_token` collection variable is not set.
-
-```javascript
-whenHaveAccessToken("Status code is 200", function () {
+pm.test("Status code is 200", function () {
     pm.response.to.have.status(200);
-    whenResponseIsOk = pm.test;
 });
-```
 
-This short-circuit test will validate that the response body is actually valid JSON. If it is not, several of the other tests that rely on parsing the JSON will be skipped.
-
-```javascript
-whenResponseIsOk("must include valid JSON response body", function() {
+pm.test("must include valid JSON response body", function() {
     pm.response.json(); // will throw on parse failure
-    whenJsonIsValid = pm.test;
 });
-```
 
-The response JSON must include a `didDocument` property that contains the resolved DID document. This test is skipped if the response body is not valid JSON.
-
-```javascript
-whenJsonIsValid("didDocument must be present in response body", function() {
+// The response JSON must include a didDocument property that contains the
+// resolved DID document.
+pm.test("didDocument must be present in response body", function() {
     const jsonData = pm.response.json();
-    console.log(jsonData);
     pm.expect(jsonData).to.have.property('didDocument');
-    whenDidDocumentIsPresent = pm.test;
 });
-```
 
-The DID document must contain an `alsoKnownAs` property. This test will be skipped if the JSON response body does not contain a `didDocument` property.
-
-```javascript
-whenDidDocumentIsPresent("alsoKnownAs MUST be present", function () {
+// The DID document must contain an alsoKnownAs property.
+pm.test("alsoKnownAs MUST be present", function () {
     const { didDocument } = pm.response.json();
     pm.expect(didDocument).to.have.property('alsoKnownAs');
-    whenHasAlsoKnownAs = pm.test;
 });
-```
 
-The `alsoKnownAs` property MUST be an array. This test will be skipped if the `alsoKnownAs` property is missing.
-
-```javascript
-whenHasAlsoKnownAs("alsoKnownAs MUST be an array", function() {
+// The alsoKnownAs property MUST be an array.
+pm.test("alsoKnownAs MUST be an array", function() {
     const { alsoKnownAs } = pm.response.json().didDocument;
     pm.expect(alsoKnownAs).to.be.an('array');
-    whenAlsoKnownAsIsArray = pm.test;
 });
-```
 
-The `alsoKnownAs` property MUST be a set. This test will be skipped if the `alsoKnownAs` property is missing.
-
-```javascript
-whenAlsoKnownAsIsArray("alsoKnownAs values MUST be unique", function() {
+// The alsoKnownAs property MUST be a set.
+pm.test("alsoKnownAs values MUST be unique", function() {
     const { alsoKnownAs } = pm.response.json().didDocument;
     pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);
 });
-```
 
-The first element of the `alsoKnownAs` property must match the value of `API_BASE_URL`. This helps ensure that tests are using the correct resolution provider. See [Discovery Organization Capabilities from did:web](../../discovery.md) for more details. This test will be skipped if the `alsoKnownAs` property is not an array.
-
-```javascript
-whenAlsoKnownAsIsArray("alsoKnownAs[0] must match API_BASE_URL", function() {
+// The second element of the alsoKnownAs property will be used as a
+// credentials_issuer_id for subsequent tests.
+pm.test("alsoKnownAs[1] must be present", function() {
     const { alsoKnownAs } = pm.response.json().didDocument;
-    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);
+    pm.expect(alsoKnownAs[1]).to.be.a('string').that.is.not.empty;
 });
-```
 
-The second element of the `alsoKnownAs` property will be used as a `credentials_issuer_id` for subsequent tsts. This test will be skipped if the `alsoKnownAs` property is not an array.
-
-```javascript
-whenAlsoKnownAsIsArray("alsoKnownAs[1] must be present", function() {
-    const { alsoKnownAs } = pm.response.json().didDocument;
-    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);
-});
-```
-
-If a `verificationMethod` property is present, the `controller` property must match the `didDocument.id` property. This test will be skipped if the `didDocument` property is missing.
-
-```javascript
-whenDidDocumentIsPresent("verification method controller must match did subject", function() {
+// If a verificationMethod property is present, the controller property must
+// match the didDocument.id property.
+pm.test("verification method controller must match did subject", function() {
     const { didDocument } = pm.response.json();
     const vm = didDocument.verificationMethod || [];
     vm.forEach((m) => pm.expect(m.controller).to.equal(didDocument.id));
 });
-```
 
-The value of `didDocument.alsoKnownAs[1]` is persisted as a Postman collection variable that can be accessed by other requests in the collection by calling `pm.collectionVariables.get("credential_issuer_id")`.
-
-```javascript
-// Credential Issuer ID must be made available to later requests
+// The value of didDocument.alsoKnownAs[1] is persisted as a Postman collection
+// variable that can be accessed by other requests in the collection by calling
+// pm.collectionVariables.get("credential_issuer_id").
 pm.test("`credential_issuer_id` persisted to collectionVariables", function() {
     const { alsoKnownAs } = pm.response.json().didDocument;
     pm.collectionVariables.set("credential_issuer_id", alsoKnownAs[1]);
-})
+});
 ```
 
 ### Running the Request
