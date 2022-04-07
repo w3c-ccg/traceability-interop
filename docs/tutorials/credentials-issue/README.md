@@ -62,48 +62,44 @@ The "Get Access Token" request does not interact with the system under test, but
 
 The following tests should be added to the "Get Access Token" request in the "Tests" tab:
 
-Token requests are expected to return a `200 Success` response code. Any other response code shoult trigger a failure.
 ```javascript
+// Token requests are expected to return a `200 Success` response code. Any
+// other response code should trigger a failure.
 pm.test("must return `200 Success` status", function() {
     pm.response.to.have.status(200);
-})
-```
+});
 
-The response should include an `access_token` value - this will be presented to authenticated API endpoints in the `Authentication` header (see the last testing code block for details on how this is persisted).
-
-```javascript
+// The response should include an `access_token` value - this will be presented
+// to authenticated API endpoints in the `Authentication` header (see the last
+// testing code block for details on how this is persisted).
 pm.test("response body must include non-empty access_token", function () {
     const { access_token } = pm.response.json()
-    pm.expect(access_token).to.not.be.empty;
+    pm.expect(access_token).to.be.a('string').that.is.not.empty;
 });
-```
 
-The type of `access_token` returned by the token request is expected to be `Bearer`.
-
-```javascript
+// The type of `access_token` returned by the token request is expected to be
+// `Bearer`.
 pm.test("response body must represent `Bearer` token", function() {
     const { token_type } = pm.response.json()
     pm.expect(token_type).to.equal("Bearer");
 });
-```
 
-The returned data includes an `expires_in` field that indicates time until token expiration. Validate that this value is a whole number greater than zero, as anything less than or equal to zero means that the `access_token` is already expired.
-
-```javascript
+// The returned data includes an `expires_in` field that indicates time until
+// token expiration. Validate that this value is a whole number greater than
+// zero, as anything less than or equal to zero means that the `access_token`
+// is already expired.
 pm.test("returned token must expire in the future", function() {
     const { expires_in } = pm.response.json()
     pm.expect(expires_in).to.be.above(0);
-})
-```
+});
 
-The returned `access_token` value is persisted as a Postman collection variable that can be accessed by other requests in the collection by calling `pm.collectionVariables.get("access_token")`.
-
-```javascript
-// Access token must be made available to later requests
+// The returned `access_token` value is persisted as a Postman collection
+// variable that can be accessed by other requests in the collection by calling
+// `pm.collectionVariables.get("access_token")`.
 pm.test("`access_token` persisted to collectionVariables", function() {
     const { access_token } = pm.response.json()
     pm.collectionVariables.set("access_token", access_token);
-})
+});
 ```
 
 ### Running the Request
