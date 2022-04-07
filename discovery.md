@@ -32,27 +32,16 @@ This is trivial, simply do:
 HTTP GET https://platform.example/organization/123/did.json => didDocument.json
 ```
 
-2. Review the `serviceEndpoint`, `assertionMethod`, and `authentication` sections of the DID document.
+2. Review the `alsoKnownAs`, `assertionMethod`, and `authentication` sections of the DID document.
 
-#### `services`
+#### `alsoKnownAs`
 
-> Means of communicating or interacting with the DID subject or associated entities via one or more service endpoints. 
+> This relationship is a statement that the subject of this identifier is also identified by one or more other identifiers.
 
-See [services](https://www.w3.org/TR/did-core/#dfn-service).
+See [alsoKnownAs](https://www.w3.org/TR/did-core/#dfn-alsoknownas).
 
 This entry MUST be present.
-This entry MUST have an element of type `TraceabilityAPI` with a `serviceEndpoint` URL for a VC-API that supports presentation exchange.
-
-For example: 
-```json
-  "services": [
-    {
-      "id": "did:web:platform.example:organization:123#traceability-api",
-      "type": "TraceabilityAPI",
-      "serviceEndpoint": "https://platform.example/organization/123"
-    }
-  ]
-```
+This entry MUST have a first element that is the base URL for a VC-API that supports presentation exchange.
 
 #### `assertionMethod`
 

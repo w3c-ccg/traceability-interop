@@ -231,6 +231,15 @@ whenAlsoKnownAsIsArray("alsoKnownAs values MUST be unique", function() {
 });
 ```
 
+The first element of the `alsoKnownAs` property must match the value of `API_BASE_URL`. This helps ensure that tests are using the correct resolution provider. See [Discovery Organization Capabilities from did:web](../../discovery.md) for more details. This test will be skipped if the `alsoKnownAs` property is not an array.
+
+```javascript
+whenAlsoKnownAsIsArray("alsoKnownAs[0] must match API_BASE_URL", function() {
+    const { alsoKnownAs } = pm.response.json().didDocument;
+    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);
+});
+```
+
 The second element of the `alsoKnownAs` property will be used as a `credentials_issuer_id` for subsequent tsts. This test will be skipped if the `alsoKnownAs` property is not an array.
 
 ```javascript
