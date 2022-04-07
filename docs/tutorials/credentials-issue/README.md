@@ -212,7 +212,7 @@ pm.test("verification method controller must match did subject", function() {
 pm.test("`credential_issuer_id` persisted to collectionVariables", function() {
     const { alsoKnownAs } = pm.response.json().didDocument;
     pm.collectionVariables.set("credential_issuer_id", alsoKnownAs[1]);
-})
+});
 ```
 
 ### Running the Request
