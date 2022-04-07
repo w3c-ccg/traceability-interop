@@ -4,17 +4,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  unit-workflow-instance-join:
+    name: Workflow Instance Join
     runs-on: ubuntu-latest
     strategy:
-      # Matrix paths are independent, and failure for one provider should not
-      # halt the running jobs testing another provider.
       fail-fast: false
-      # See matrix of secrets...
-      # https://sbulav.github.io/terraform/github-actions-matrix-secrets/
       matrix:
         include:
-          - org_1_token_endpoint: TRANSMUTE_PRODUCTION_TOKEN_ENDPOINT
+          - name: "Transmute"
+            org_1_token_endpoint: TRANSMUTE_PRODUCTION_TOKEN_ENDPOINT
             org_1_token_audience: TRANSMUTE_PRODUCTION_TOKEN_AUDIENCE
             org_1_api_base_url: TRANSMUTE_PRODUCTION_API_BASE_URL
             org_1_did_web: TRANSMUTE_PRODUCTION_TENANT_1_ORGANIZATION_DID_WEB
@@ -32,14 +30,15 @@ jobs:
             org_3_did_web: TRANSMUTE_PRODUCTION_TENANT_3_ORGANIZATION_DID_WEB
             org_3_client_id: TRANSMUTE_PRODUCTION_TENANT_3_CLIENT_ID
             org_3_client_secret: TRANSMUTE_PRODUCTION_TENANT_3_CLIENT_SECRET
-
     steps:
-      - name: Begin CI...
-        uses: actions/checkout@v2
-      - name: Use Node 16
-        uses: actions/setup-node@v1
+      # Check out repo, setup node, and install dependencies.
+      # @see https://github.com/actions/setup-node#usage
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 16.x
+          cache: 'npm'
+      - run: npm ci
       - name: Workflow Instance Join
         env:
           org_1_token_endpoint: ${{secrets[matrix.org_1_token_endpoint]}}
@@ -61,7 +60,7 @@ jobs:
           org_3_client_id: ${{secrets[matrix.org_3_client_id]}}
           org_3_client_secret: ${{secrets[matrix.org_3_client_secret]}}
         run: |
-          npx newman run ./ecommerce-workflow-instance-join.collection.json \
+          npx newman run ./docs/tutorials/workflow-join/ecommerce-workflow-instance-join.collection.json \
           --env-var ORG_1_TOKEN_ENDPOINT=$org_1_token_endpoint \
           --env-var ORG_1_TOKEN_AUDIENCE=$org_1_token_audience \
           --env-var ORG_1_BASE_URL=$org_1_api_base_url \
@@ -80,4 +79,19 @@ jobs:
           --env-var ORG_3_DID_WEB=$org_3_did_web \
           --env-var ORG_3_CLIENT_ID=$org_3_client_id \
           --env-var ORG_3_CLIENT_SECRET=$org_3_client_secret \
-          --reporters cli,json 
+          --reporters cli,html,json \
+          --reporter-html-export "newman/${{format('{0}-{1}-{2}.html', github.run_id, github.job, matrix.name)}}" \
+          --reporter-json-export "newman/${{format('{0}-{1}-{2}.json', github.run_id, github.job, matrix.name)}}"
+      # Sanitize newman output and write all reports to the `./docs/reports`
+      # folder for publishing, excluding `index.html`, which will be rebuilt
+      # during publishing.
+      - name: Sanitize Newman Output
+        if: ${{ always() }} # Run even when postman tests fail
+        run: |
+          npm run report:prepare
+          rm -f ./docs/reports/index.html
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }} # Run even when postman tests fail
+        with:
+          name: workflow-instance-join
+          path: docs/reports/

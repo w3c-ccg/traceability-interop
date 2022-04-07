@@ -2,6 +2,10 @@
 
 [![Interoperability Report](https://github.com/w3c-ccg/traceability-interop/actions/workflows/interoperability-report.yml/badge.svg)](https://github.com/w3c-ccg/traceability-interop/actions/workflows/interoperability-report.yml)
 
+## Latest Spec
+
+- [https://w3id.org/traceability/interoperability/openapi](https://w3id.org/traceability/interoperability/openapi)
+
 ## Latest Reports
 
 - [https://w3id.org/traceability/interoperability/reports](https://w3id.org/traceability/interoperability/reports)

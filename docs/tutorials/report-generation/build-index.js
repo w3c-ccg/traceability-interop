@@ -55,7 +55,12 @@ const buildReportsIndex = () => {
 };
 
 (() => {
-  cleanAndMoveReports('./newman');
+  try {
+    cleanAndMoveReports('./newman');
+  } catch (e) {
+    console.log('No newman reports to clean');
+  }
+
   buildReportsIndex();
   // consider removing reports older than 1 month / 1 year...
 })();
