@@ -2,9 +2,6 @@
 # %% imports
 from datetime import datetime
 import json
-from sys import meta_path
-from time import time
-from click import style
 import requests
 import pandas as pd
 import plotly.express as px
@@ -336,7 +333,7 @@ for idx, r in df_summary_provider.iterrows():
                             [
                                 html.H4(r[1], className="card-title"),
                                 html.P("of tests taken, passed",
-                                    className="card-text"),
+                                       className="card-text"),
                             ]
                         ),
                     ],
@@ -355,7 +352,7 @@ for idx, r in df_summary_provider.iterrows():
                             [
                                 html.H4(r[1], className="card-title"),
                                 html.P("of tests taken, passed",
-                                    className="card-text"),
+                                       className="card-text"),
                             ]
                         ),
                     ],
@@ -384,16 +381,16 @@ df_inter = df_inter.loc[~df_inter['Provider'].str.contains(' - ')].copy()
 facet_tests = px.scatter(
     df_inter,
     y='Test Step', color='Result',
-    x='Provider', 
+    x='Provider',
     facet_col='Test Type',
     size='Size',
-    symbol = 'Shape', symbol_sequence= ['square'],
+    symbol='Shape', symbol_sequence=['square'],
     color_discrete_map={
         '(?)': 'darkred', 'Pass': 'darkgreen', 'Fail': 'darkred'},
 )
 
 facet_tests.update_layout(
-    showlegend = False,
+    showlegend=False,
     height=1200,
     font_size=12,
     font_color='white',
@@ -408,14 +405,15 @@ facet_tests.update_layout(
     )
 )
 facet_tests.update_xaxes(showgrid=False)
-facet_tests.update_yaxes(showgrid=False, autorange="reversed") # matches=None, showticklabels=False, visible=True
+# matches=None, showticklabels=False, visible=True
+facet_tests.update_yaxes(showgrid=False, autorange="reversed")
 facet_tests.update_annotations(font=dict(size=12))
 facet_tests.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
-for annotation in facet_tests['layout']['annotations']: 
-    annotation['textangle']= 60
-    annotation['font'].size= 14
+for annotation in facet_tests['layout']['annotations']:
+    annotation['textangle'] = 60
+    annotation['font'].size = 14
     # annotation['textposition']= 'bottom' # would like this flipped with x-axis
-    
+
 for axis in facet_tests.layout:
     if type(facet_tests.layout[axis]) == go.layout.YAxis:
         facet_tests.layout[axis].title.text = ''
@@ -461,7 +459,8 @@ overview = [
 summary = [
     dbc.Col([
         html.H2("Summary"),
-        html.Div(summaryText, style={"margin-bottom": "3em", "font-size":"1.2em"}),
+        html.Div(summaryText, style={
+                 "margin-bottom": "3em", "font-size": "1.2em"}),
         html.H3("Provider Summary"),
         html.Div(summaryProvider, style={"margin-bottom": "2em"}),
         html.Div(summaryProviderMulti, style={"margin-bottom": "3em"}),
@@ -478,8 +477,8 @@ summary = [
         html.Div([
             dcc.Graph(
                 id="test-facets",
-                figure=facet_tests, 
-                config={'displayModeBar':False}
+                figure=facet_tests,
+                config={'displayModeBar': False}
             )
         ]),
         # getTable(df_summary_test, 'summary-test'),
@@ -491,10 +490,12 @@ results = [
         html.H2("Results"),
         dbc.Row([
             dbc.Col([
-                dcc.Graph(id="chart-tests", figure=results_chart, config={'displayModeBar':False}),
+                dcc.Graph(id="chart-tests", figure=results_chart,
+                          config={'displayModeBar': False}),
             ], xl="6"),
             dbc.Col([
-                dcc.Graph(id="chart-tests-tree", figure=results_tree, config={'displayModeBar':False}),
+                dcc.Graph(id="chart-tests-tree", figure=results_tree,
+                          config={'displayModeBar': False}),
             ], xl="6"),
         ]),
     ], xl="12")
