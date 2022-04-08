@@ -399,8 +399,6 @@ results_flow.update_layout(
 # %% setup content
 overview = [
     dbc.Col([
-        html.H1("Traceability Interop"),
-        html.Div("")
     ], xl="12")
 ]
 summary = [
