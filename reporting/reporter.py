@@ -71,7 +71,10 @@ def build_detail(args, execution, assertion):
 
 # %% set up dataframe(s)
 for report_source in report_sources:
-    provider = report_source.rsplit('-', 1)[1].replace('.json', '')
+    rs = report_source.replace('.json', '')
+    provider = rs.rsplit('-', 1)[1]
+    if 'exchange' in report_source:
+        provider = ' - '.join(rs.split("-")[-2:])
     report = json.loads(requests.get(report_source).text)
     name = report['collection']['info']['name']
     print(provider, name)
