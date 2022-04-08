@@ -143,7 +143,13 @@ df_summary_provider['Passing'] = df_summary_provider['Passing'].apply(
 df_summary_provider = df_summary_provider.sort_values(
     ['Provider'], ascending=True)
 
-crosstab_results = df_details.groupby(['Test Type', 'Provider'])['Passing'].mean(
+df_singles = df_details.loc[~df_details['Provider'].str.contains(' - ')].copy()
+df_multi = df_details.loc[df_details['Provider'].str.contains(' - ')].copy()
+
+crosstab_results = df_singles.groupby(['Test Type', 'Provider'])['Passing'].mean(
+).round(3).apply(lambda x: "{:.1%}".format(x)).unstack().fillna('n/a').reset_index()
+
+crosstab_results_multi = df_multi.groupby(['Test Type', 'Provider'])['Passing'].mean(
 ).round(3).apply(lambda x: "{:.1%}".format(x)).unstack().fillna('n/a').reset_index()
 
 
@@ -351,8 +357,10 @@ results_tree = px.treemap(
         '(?)': 'darkred', 'Pass': 'darkgreen', 'Fail': 'darkred'},
 )
 
-df_inter['Size'] = 20
+df_inter['Size'] = 18
 df_inter['Shape'] = 'Box'
+df_inter_full = df_inter.copy()
+df_inter = df_inter.loc[~df_inter['Provider'].str.contains(' - ')].copy()
 facet_tests = px.scatter(
     df_inter,
     y='Test Step', color='Result',
@@ -367,7 +375,7 @@ facet_tests = px.scatter(
 facet_tests.update_layout(
     showlegend = False,
     height=1200,
-    font_size=18,
+    font_size=12,
     font_color='white',
     paper_bgcolor='rgba(0,0,0,0)',
     plot_bgcolor='rgba(0,0,0,0)',
@@ -399,7 +407,7 @@ for axis in facet_tests.layout:
 
 results_chart.update_layout(
     height=725,
-    font_size=12,
+    font_size=10,
     # font_color='white',
     paper_bgcolor='rgba(0,0,0,0)',
     plot_bgcolor='rgba(0,0,0,0)',
@@ -440,6 +448,11 @@ summary = [
         html.Div([
             getTable(crosstab_results, 'summary-test-crosstab')
         ], style={"width": "60%"}),
+        html.Br(),
+        html.Div([
+            getTable(crosstab_results_multi, 'summary-test-crosstab-multi')
+        ], style={"width": "60%"}),
+        html.Br(),
         html.Br(),
         html.Div([
             dcc.Graph(
