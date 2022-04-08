@@ -348,7 +348,7 @@ results_tree = px.treemap(
         '(?)': 'darkred', 'Pass': 'darkgreen', 'Fail': 'darkred'},
 )
 
-df_inter['Size'] = 12
+df_inter['Size'] = 8
 df_inter['Shape'] = 'Box'
 facet_tests = px.scatter(
     df_inter,
@@ -372,7 +372,7 @@ facet_tests.update_layout(
         l=0,
         r=0,
         b=0,
-        t=40,
+        t=220,
         pad=0
     )
 )
@@ -380,11 +380,17 @@ facet_tests.update_xaxes(showgrid=False)
 facet_tests.update_yaxes(showgrid=False, autorange="reversed") # matches=None, showticklabels=False, visible=True
 facet_tests.update_annotations(font=dict(size=12))
 facet_tests.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+for annotation in facet_tests['layout']['annotations']: 
+    annotation['textangle']= 60
+    # annotation['textposition']= 'bottom' # would like this flipped with x-axis
+    
 for axis in facet_tests.layout:
     if type(facet_tests.layout[axis]) == go.layout.YAxis:
         facet_tests.layout[axis].title.text = ''
     if type(facet_tests.layout[axis]) == go.layout.XAxis:
         facet_tests.layout[axis].title.text = ''
+        facet_tests.layout[axis].tickangle = 60
+        # facet_tests.layout[axis].position = 'top'
 
 results_chart.update_layout(
     height=725,
@@ -433,7 +439,8 @@ summary = [
         html.Div([
             dcc.Graph(
                 id="test-facets",
-                figure=facet_tests
+                figure=facet_tests, 
+                config={'displayModeBar':False}
             )
         ]),
         # getTable(df_summary_test, 'summary-test'),
@@ -445,10 +452,10 @@ results = [
         html.H2("Results"),
         dbc.Row([
             dbc.Col([
-                dcc.Graph(id="chart-tests", figure=results_chart),
+                dcc.Graph(id="chart-tests", figure=results_chart, config={'displayModeBar':False}),
             ], xl="6"),
             dbc.Col([
-                dcc.Graph(id="chart-tests-tree", figure=results_tree),
+                dcc.Graph(id="chart-tests-tree", figure=results_tree, config={'displayModeBar':False}),
             ], xl="6"),
         ]),
     ], xl="12")
