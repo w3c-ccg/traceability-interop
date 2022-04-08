@@ -37,7 +37,7 @@ header = [
     'Assertion',
     'Result',
     'Error Message',
-    'Result Numeric'
+    'Passing'
 ]
 reports = []
 
@@ -109,7 +109,7 @@ df_details = df[[
     'Assertion',
     'Result',
     'Error Message',
-    'Result Numeric'
+    'Passing'
 ]].copy()
 df = df[[
     'Provider',
@@ -120,22 +120,29 @@ df = df[[
     'Error Message',
 ]].copy()
 
+df_failed = df_details.loc[df_details['Result'] == 'Fail'].copy()
+
+# %% groupings
+df_inter = df_details[['Provider', 'Test Type', 'Test Step', 'Result']]
 df_summary_test = df_details.groupby(['Test Type', 'Provider'])[
-    'Result Numeric'].mean().reset_index()
+    'Passing'].mean().apply(lambda x: "{:.1%}".format(x)).unstack('Test Type').fillna('0%').reset_index()
 df_summary_provider = df_details.groupby(
-    ['Provider'])['Result Numeric'].mean().reset_index()
+    ['Provider'])['Passing'].mean().fillna(0).reset_index()
 
-df_summary_test.columns = ['Test Type', 'Provider', 'Passing']
-df_summary_provider.columns = ['Provider', 'Passing']
+# df_summary_test.columns = ['Test Type', 'Provider', 'Passing']
+# df_summary_provider.columns = ['Provider', 'Passing']
 
-df_summary_test['Passing'] = df_summary_test['Passing'].apply(
-    lambda x: "{:.1%}".format(x))
+# df_summary_test['Passing'] = df_summary_test['Passing']
+# df_summary_test = df_summary_test.sort_values(
+#     ['Test Type', 'Provider'], ascending=True)
 df_summary_provider['Passing'] = df_summary_provider['Passing'].apply(
     lambda x: "{:.1%}".format(x))
-df_summary_test = df_summary_test.sort_values(
-    ['Test Type', 'Provider'], ascending=True)
 df_summary_provider = df_summary_provider.sort_values(
     ['Provider'], ascending=True)
+
+crosstab_results = df_details.groupby(['Test Type', 'Provider'])['Passing'].mean(
+).round(3).apply(lambda x: "{:.1%}".format(x)).unstack().fillna('n/a').reset_index()
+
 
 # %% useful comps
 now = str(datetime.now())
@@ -156,9 +163,6 @@ summaryText = [
             df_summary_provider['Passing'].str.replace("\%", "").astype(float).mean()/100),
     ])
 ]
-
-crosstab_results = df_details.groupby(['Test Type', 'Provider'])['Result Numeric'].mean(
-).round(3).apply(lambda x: "{:.1%}".format(x)).unstack().reset_index()
 
 # %% setup dash
 SIDEBAR_STYLE = {
@@ -204,6 +208,8 @@ sidebar = html.Div(
 )
 
 # %% charts
+
+
 def getTable(d, id, filter=False):
     df_dict = d.to_dict('records')
     tbl = None
@@ -216,28 +222,43 @@ def getTable(d, id, filter=False):
                 for i in d.columns
             ],
             data=df_dict,
-            tooltip_data=[
-                {
-                    column: {'value': str(value), 'type': 'markdown'}
-                    for column, value in row.items()
-                } for row in df_dict
-            ],
+            # tooltip_data=[
+            #     {
+            #         column: {'value': str(value), 'type': 'markdown'}
+            #         for column, value in row.items()
+            #     } for row in df_dict
+            # ],
             style_cell=dict(
-                textAlign='left', maxWidth="220px",
-                overflow="ellipsis",
+                textAlign='left',
+                # maxWidth="220px",
+                # overflow="ellipsis",
                 backgroundColor='rgb(39, 43, 48)',
                 color='white'
             ),
             style_header=dict(
+                textAlign='center',
                 backgroundColor='rgb(30, 30, 30)',
-                color='white'
+                color='white',
+                border='1px solid rgb(30, 30, 30)'
             ),
+            style_data={
+                'border': '1px solid rgb(30, 30, 30)',
+                'whiteSpace': 'normal',
+                'height': 'auto',
+                'lineHeight': '1em'
+            },
+            style_data_conditional=[
+                {
+                    'if': {'row_index': 'odd'},
+                    'backgroundColor': 'rgb(49, 53, 58)',
+                }
+            ],
             editable=False,
             row_selectable=False,
             column_selectable=False,
             cell_selectable=False,
             sort_action="native",
-            filter_action=filter,
+            filter_action="native",
             # style_as_list_view=True,
         )
     else:
@@ -249,12 +270,12 @@ def getTable(d, id, filter=False):
                 for i in d.columns
             ],
             data=df_dict,
-            tooltip_data=[
-                {
-                    column: {'value': str(value), 'type': 'markdown'}
-                    for column, value in row.items()
-                } for row in df_dict
-            ],
+            # tooltip_data=[
+            #     {
+            #         column: {'value': str(value), 'type': 'markdown'}
+            #         for column, value in row.items()
+            #     } for row in df_dict
+            # ],
             style_cell=dict(
                 textAlign='left', maxWidth="220px",
                 overflow="ellipsis",
@@ -262,9 +283,18 @@ def getTable(d, id, filter=False):
                 color='white'
             ),
             style_header=dict(
+                textAlign='center',
                 backgroundColor='rgb(30, 30, 30)',
-                color='white'
+                color='white',
+                border='1px solid rgb(30, 30, 30)',
             ),
+            style_data={'border': '1px solid rgb(30, 30, 30)'},
+            style_data_conditional=[
+                {
+                    'if': {'row_index': 'odd'},
+                    'backgroundColor': 'rgb(49, 53, 58)',
+                }
+            ],
             editable=False,
             row_selectable=False,
             column_selectable=False,
@@ -284,63 +314,6 @@ def df_to_heatmap(d, idx):
         'y': d.index.tolist()
     }
 
-def genSankey(d, cat_cols=[], value_cols=''):
-        # maximum of 6 value cols -> 6 colors
-        colorPalette = [
-            '#B80C09','#0B4F6C','#01BAEF','#FBFBFF','#040F16', '#495867', '#C18C5D','#76BED0','#F7CB15','#F55D3E',
-            '#247BA0', '#1F487E', '#1D3461', '#605F5E', '#FB3640'
-        ]
-        labelList = []
-        colorNumList = []
-        for catCol in cat_cols:
-            labelListTemp =  list(set(d[catCol].values))
-            colorNumList.append(len(labelListTemp))
-            labelList = labelList + labelListTemp
-            
-        # remove duplicates from labelList
-        labelList = list(dict.fromkeys(labelList))
-        
-        # define colors based on number of levels
-        colorList = []
-        for idx, colorNum in enumerate(colorNumList):
-            # colorList = colorList + [colorPalette[idx]]*colorNum
-            colorList = colorList + [colorPalette[idx]]*colorNum
-            
-        # transform df into a source-target pair
-        for i in range(len(cat_cols)-1):
-            if i==0:
-                sourceTargetDf = d[[cat_cols[i],cat_cols[i+1],value_cols]]
-                sourceTargetDf.columns = ['source','target','count']
-            else:
-                tempDf = d[[cat_cols[i],cat_cols[i+1],value_cols]]
-                tempDf.columns = ['source','target','count']
-                sourceTargetDf = pd.concat([sourceTargetDf,tempDf])
-            sourceTargetDf = sourceTargetDf.groupby(['source','target']).agg({'count':'sum'}).reset_index()
-            
-        # add index for source-target pair
-        sourceTargetDf['sourceID'] = sourceTargetDf['source'].apply(lambda x: labelList.index(x))
-        sourceTargetDf['targetID'] = sourceTargetDf['target'].apply(lambda x: labelList.index(x))
-        
-        fig = go.Figure(data=[
-            go.Sankey(
-                node = dict(
-                    pad = 0.75,
-                    thickness = 45,
-                    line = dict(
-                        color = "black",
-                        width = .25
-                    ),
-                    label = labelList,
-                    color = colorList
-                ),
-                link = dict(
-                    source = sourceTargetDf['sourceID'],
-                    target = sourceTargetDf['targetID'],
-                    value = sourceTargetDf['count']
-                )
-            )
-        ])
-        return fig
 
 summaryProvider = []
 for idx, r in df_summary_provider.iterrows():
@@ -352,7 +325,8 @@ for idx, r in df_summary_provider.iterrows():
                     dbc.CardBody(
                         [
                             html.H4(r[1], className="card-title"),
-                            html.P("of tests passed", className="card-text"),
+                            html.P("of tests taken, passed",
+                                   className="card-text"),
                         ]
                     ),
                 ],
@@ -360,21 +334,64 @@ for idx, r in df_summary_provider.iterrows():
     )
 
 results_chart = px.sunburst(
-    df_details, 
-    path=["Result", "Test Type",  "Provider", "Test Step"]
+    df_details,
+    path=["Test Type",  "Provider", "Test Step"],
+    color="Result",
+    color_discrete_map={
+        '(?)': 'darkred', 'Pass': 'darkgreen', 'Fail': 'darkred'},
+)
+results_tree = px.treemap(
+    df_details,
+    path=["Test Type",  "Provider", "Test Step"],
+    color="Result",
+    color_discrete_map={
+        '(?)': 'darkred', 'Pass': 'darkgreen', 'Fail': 'darkred'},
 )
 
-
-
-results_flow = genSankey(
-    df_details[["Provider", "Test Type",  "Result", "Test Step", "Result Numeric"]],
-    cat_cols=["Provider", "Test Type", "Test Step", "Result"],
-    value_cols='Result Numeric'
+df_inter['Size'] = 12
+df_inter['Shape'] = 'Box'
+facet_tests = px.scatter(
+    df_inter,
+    y='Test Step', color='Result',
+    x='Provider', 
+    facet_col='Test Type',
+    size='Size',
+    symbol = 'Shape', symbol_sequence= ['square'],
+    color_discrete_map={
+        '(?)': 'darkred', 'Pass': 'darkgreen', 'Fail': 'darkred'},
 )
+
+facet_tests.update_layout(
+    showlegend = False,
+    height=1200,
+    font_size=16,
+    font_color='white',
+    paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor='rgba(0,0,0,0)',
+    margin=dict(
+        l=0,
+        r=0,
+        b=0,
+        t=40,
+        pad=0
+    )
+)
+facet_tests.update_xaxes(showgrid=False)
+facet_tests.update_yaxes(showgrid=False, autorange="reversed") # matches=None, showticklabels=False, visible=True
+facet_tests.update_annotations(font=dict(size=12))
+facet_tests.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+for axis in facet_tests.layout:
+    if type(facet_tests.layout[axis]) == go.layout.YAxis:
+        facet_tests.layout[axis].title.text = ''
+    if type(facet_tests.layout[axis]) == go.layout.XAxis:
+        facet_tests.layout[axis].title.text = ''
 
 results_chart.update_layout(
     height=725,
-    font_size=10,
+    font_size=12,
+    # font_color='white',
+    paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor='rgba(0,0,0,0)',
     margin=dict(
         l=0,
         r=0,
@@ -383,10 +400,11 @@ results_chart.update_layout(
         pad=0
     ),
 )
-
-results_flow.update_layout(
-    height=1225,
-    font_size=10,
+results_tree.update_layout(
+    height=725,
+    font_size=12,
+    paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor='rgba(0,0,0,0)',
     margin=dict(
         l=0,
         r=0,
@@ -412,22 +430,35 @@ summary = [
             getTable(crosstab_results, 'summary-test-crosstab')
         ], style={"width": "60%"}),
         html.Br(),
-        getTable(df_summary_test, 'summary-test'),
+        html.Div([
+            dcc.Graph(
+                id="test-facets",
+                figure=facet_tests
+            )
+        ]),
+        # getTable(df_summary_test, 'summary-test'),
         html.Br(),
     ], xl="12")
 ]
 results = [
     dbc.Col([
         html.H2("Results"),
-        dcc.Graph(id="chart-tests", figure=results_chart),
-        # html.Br(),
-        # dcc.Graph(id="chart-flow", figure=results_flow),
+        dbc.Row([
+            dbc.Col([
+                dcc.Graph(id="chart-tests", figure=results_chart),
+            ], xl="6"),
+            dbc.Col([
+                dcc.Graph(id="chart-tests-tree", figure=results_tree),
+            ], xl="6"),
+        ]),
     ], xl="12")
 ]
 details = [
     dbc.Col([
         html.H2("Details"),
-        getTable(df, 'results-table', filter=True)
+        html.Div([
+            getTable(df, 'results-table', filter=True)
+        ], style={"width": "100%", "max-width": "100%"})
     ], xl="12")
 ]
 
@@ -435,18 +466,21 @@ details = [
 content = html.Div(
     id="page-content", style=CONTENT_STYLE,
     children=[
-        dbc.Row(id="overview", children=overview,
+        dbc.Row([dbc.Col([
+            dbc.Row(id="overview", children=overview,
                 style={"margin-bottom": "3em"}),
-        dbc.Row(id="summary", children=summary,
+            dbc.Row(id="summary", children=summary,
                 style={"margin-bottom": "3em"}),
-        dbc.Row(id="results", children=results,
+            dbc.Row(id="results", children=results,
                 style={"margin-bottom": "3em"}),
-        dbc.Row(id="details", children=details,
+            dbc.Row(id="details", children=details,
                 style={"margin-bottom": "3em"}),
+        ], xl="12")]),
     ]
 )
 
 app.layout = html.Div([dcc.Location(id="url"), sidebar, content])
+
 
 # %% main it up
 if __name__ == "__main__":
