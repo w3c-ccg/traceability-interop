@@ -348,7 +348,7 @@ results_tree = px.treemap(
         '(?)': 'darkred', 'Pass': 'darkgreen', 'Fail': 'darkred'},
 )
 
-df_inter['Size'] = 8
+df_inter['Size'] = 20
 df_inter['Shape'] = 'Box'
 facet_tests = px.scatter(
     df_inter,
@@ -364,7 +364,7 @@ facet_tests = px.scatter(
 facet_tests.update_layout(
     showlegend = False,
     height=1200,
-    font_size=16,
+    font_size=18,
     font_color='white',
     paper_bgcolor='rgba(0,0,0,0)',
     plot_bgcolor='rgba(0,0,0,0)',
@@ -382,6 +382,7 @@ facet_tests.update_annotations(font=dict(size=12))
 facet_tests.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
 for annotation in facet_tests['layout']['annotations']: 
     annotation['textangle']= 60
+    annotation['font'].size= 14
     # annotation['textposition']= 'bottom' # would like this flipped with x-axis
     
 for axis in facet_tests.layout:
@@ -389,6 +390,7 @@ for axis in facet_tests.layout:
         facet_tests.layout[axis].title.text = ''
     if type(facet_tests.layout[axis]) == go.layout.XAxis:
         facet_tests.layout[axis].title.text = ''
+        # facet_tests.layout[axis].font_size = 14
         facet_tests.layout[axis].tickangle = 60
         # facet_tests.layout[axis].position = 'top'
 
