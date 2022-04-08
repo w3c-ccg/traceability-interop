@@ -15,7 +15,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # %% setup
-URL = "https://w3c-ccg.github.io/traceability-interop/reports/"
+URL = "https://w3id.org/traceability/interoperability/reports/"
 url = requests.get(URL)
 
 # %% process initial json
