@@ -472,7 +472,7 @@ summary = [
         html.Br(),
         html.Div([
             getTable(crosstab_results_multi, 'summary-test-crosstab-multi')
-        ], style={"width": "60%"}),
+        ], style={"width": "80%"}),
         html.Br(),
         html.Br(),
         html.Div([
