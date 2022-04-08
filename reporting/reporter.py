@@ -326,21 +326,41 @@ def df_to_heatmap(d, idx):
 
 summaryProvider = []
 for idx, r in df_summary_provider.iterrows():
-    summaryProvider.append(
-        html.Div([
-            dbc.Card(
-                [
-                    dbc.CardHeader(r[0]),
-                    dbc.CardBody(
-                        [
-                            html.H4(r[1], className="card-title"),
-                            html.P("of tests taken, passed",
-                                   className="card-text"),
-                        ]
-                    ),
-                ],
-            )], style={"display": "inline-block"})
-    )
+    if ' - ' not in r[0]:
+        summaryProvider.append(
+            html.Div([
+                dbc.Card(
+                    [
+                        dbc.CardHeader(r[0]),
+                        dbc.CardBody(
+                            [
+                                html.H4(r[1], className="card-title"),
+                                html.P("of tests taken, passed",
+                                    className="card-text"),
+                            ]
+                        ),
+                    ],
+                )], style={"display": "inline-block"})
+        )
+
+summaryProviderMulti = []
+for idx, r in df_summary_provider.iterrows():
+    if ' - ' in r[0]:
+        summaryProviderMulti.append(
+            html.Div([
+                dbc.Card(
+                    [
+                        dbc.CardHeader(r[0]),
+                        dbc.CardBody(
+                            [
+                                html.H4(r[1], className="card-title"),
+                                html.P("of tests taken, passed",
+                                    className="card-text"),
+                            ]
+                        ),
+                    ],
+                )], style={"display": "inline-block"})
+        )
 
 results_chart = px.sunburst(
     df_details,
@@ -441,9 +461,10 @@ overview = [
 summary = [
     dbc.Col([
         html.H2("Summary"),
-        html.Div(summaryText, style={"margin-bottom": "3em"}),
+        html.Div(summaryText, style={"margin-bottom": "3em", "font-size":"1.2em"}),
         html.H3("Provider Summary"),
-        html.Div(summaryProvider, style={"margin-bottom": "3em"}),
+        html.Div(summaryProvider, style={"margin-bottom": "2em"}),
+        html.Div(summaryProviderMulti, style={"margin-bottom": "3em"}),
         html.H3("Provider & Test Summary"),
         html.Div([
             getTable(crosstab_results, 'summary-test-crosstab')
