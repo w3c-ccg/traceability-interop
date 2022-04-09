@@ -37,7 +37,7 @@ Test results are sourced from the JSON test results published here:
 
 At the end of the day, there will be 3 modules:
 
-- `report_data.py` — go get the data, link it up, create appropriate data frames, and store them as CSV for easy use
-- `report_static.py` — generate a static HTML report for use with gh-pages
-- `report_dashboard.py` — the latter half of this app that spins up a dash app on flask for actually working with the test results
+- `./postman_reporter/report_data.py` — go get the data, link it up, create appropriate data frames, and store them as CSV for easy use
+- `./postman_reporter/report_static.py` — generate a static HTML report for use with gh-pages
+- `./postman_reporter/report_dashboard.py` — the latter half of this app that spins up a dash app on flask for actually working with the test results
 - `reporter.py` — the main binary that runs one or more modules as listed above, based on command line arguments 
