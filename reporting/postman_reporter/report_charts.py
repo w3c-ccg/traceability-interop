@@ -1,8 +1,8 @@
 import plotly.express as px
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
-from dash import Dash, html, dcc, dash_table
-from report_config import *
+from dash import html, dash_table
+from postman_reporter.report_config import *
 
 def getSidebar():
     html.Div(
@@ -86,6 +86,7 @@ def getTable(d, id, filter=False):
             cell_selectable=False,
             sort_action="native",
             filter_action="native",
+            page_size=1000,
         )
     else:
         tbl = dash_table.DataTable(
@@ -120,6 +121,7 @@ def getTable(d, id, filter=False):
             column_selectable=False,
             cell_selectable=False,
             sort_action="native",
+            page_size=1000,
         )
     return tbl
 

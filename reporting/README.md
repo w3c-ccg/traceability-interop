@@ -33,11 +33,25 @@ Test results are sourced from the JSON test results published here:
 [https://w3c-ccg.github.io/traceability-interop/reports/](https://w3c-ccg.github.io/traceability-interop/reports/)
 
 
+To get a list of reporter options, you can execute the reporter with the help paramter:
+```bash
+$ ./reporter.py -h
+usage: reporter.py [-h] [--mode [{all,data,html,dashboard}]]
+
+Interop test results reporting utility
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --mode [{all,data,html,dashboard}]
+                        mode to run the reporter in
+```
+
+
 ## Next steps and end goals
 
-At the end of the day, there will be 3 modules:
+There are 3 main modules:
 
 - `./postman_reporter/report_data.py` — go get the data, link it up, create appropriate data frames, and store them as CSV for easy use
-- `./postman_reporter/report_static.py` — generate a static HTML report for use with gh-pages
+- `./postman_reporter/report_static.py` — generate a static HTML report for use with gh-pages (IN-PROGRESS)
 - `./postman_reporter/report_dashboard.py` — the latter half of this app that spins up a dash app on flask for actually working with the test results
 - `reporter.py` — the main binary that runs one or more modules as listed above, based on command line arguments 

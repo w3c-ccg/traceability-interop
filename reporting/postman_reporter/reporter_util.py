@@ -6,7 +6,7 @@ import pickle
 
 from typing import List
 from tqdm import tqdm
-from report_config import *
+from postman_reporter.report_config import *
 
 # %% methods
 def get_var_name(var):
@@ -45,8 +45,14 @@ def get_html_base():
                     max-width: 100%;
                 }
                 body {
-                    min-height: 100%;
+                    width: 100%;
                     max-width: 100%;
+                    min-width: 100%;
+                    min-height: 100%;                    
+                }
+                #page-content {
+                    margin-left: 1rem !important;
+                    margin-right: 1rem !important;
                 }
 
                 .card {
@@ -88,7 +94,6 @@ def get_html_base():
                 {%config%}
                 {%scripts%}
                 {%renderer%}
-                <div>W3C Traceability Interop Profile Test Results</div>
             </footer>
         </body>
     </html>
