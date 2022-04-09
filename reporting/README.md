@@ -26,7 +26,7 @@ The reporter can be run with the following command:
 $ ./reporter.py
 ```
 
-It will automatically fetch the latest interop test results, process them, and launch a server hosing the dashboard at [http://localhost:8050/](http://localhost:8050/)
+It will automatically fetch the latest interop test results, process them, and launch a server hosting the dashboard at [http://localhost:8050/](http://localhost:8050/)
 
 Test results are sourced from the JSON test results published here:
 
