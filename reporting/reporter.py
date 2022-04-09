@@ -124,6 +124,11 @@ df_failed = df_details.loc[df_details['Result'] == 'Fail'].copy()
 
 # %% groupings
 df_inter = df_details[['Provider', 'Test Type', 'Test Step', 'Result']]
+df_inter['Size'] = 18
+df_inter['Shape'] = 'Box'
+df_inter_full = df_inter.copy()
+df_inter = df_inter.loc[~df_inter['Provider'].str.contains(' - ')].copy()
+
 df_summary_test = df_details.groupby(['Test Type', 'Provider'])[
     'Passing'].mean().apply(lambda x: "{:.1%}".format(x)).unstack('Test Type').fillna('0%').reset_index()
 df_summary_provider = df_details.groupby(
@@ -374,10 +379,6 @@ results_tree = px.treemap(
         '(?)': 'darkred', 'Pass': 'darkgreen', 'Fail': 'darkred'},
 )
 
-df_inter['Size'] = 18
-df_inter['Shape'] = 'Box'
-df_inter_full = df_inter.copy()
-df_inter = df_inter.loc[~df_inter['Provider'].str.contains(' - ')].copy()
 facet_tests = px.scatter(
     df_inter,
     y='Test Step', color='Result',
