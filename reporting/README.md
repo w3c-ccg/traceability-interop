@@ -35,7 +35,7 @@ Test results are sourced from the JSON test results published here:
 
 ## Next steps and end goals
 
-At the end of the data there will be 3 modules:
+At the end of the day, there will be 3 modules:
 
 - `report_data.py` — go get the data, link it up, create appropriate data frames, and store them as CSV for easy use
 - `report_static.py` — generate a static HTML report for use with gh-pages
