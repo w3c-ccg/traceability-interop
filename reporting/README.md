@@ -37,7 +37,7 @@ Test results are sourced from the JSON test results published here:
 
 At the end of the data there will be 3 modules:
 
-- `report_data.py` - go get the data, link it up, and create appropriate data frames and store them as csv for easy use
+- `report_data.py` — go get the data, link it up, create appropriate data frames, and store them as CSV for easy use
 - `report_static.py` - generate a static html report for use with gh-pages
 - `report_dashboard.py` - the latter half of this app that spins up a dash app on flask for actually working with the test results
 - `reporter.py` - the main binary that runs one or more modules as listed above based on command line arguments 
