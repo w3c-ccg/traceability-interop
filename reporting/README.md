@@ -5,7 +5,7 @@
 To build and run the test reporting, first install and run either [miniconda](https://docs.conda.io/en/latest/miniconda.html) or full [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html)
 
 
-Once that is installed you can create the reporting environment with the following command:
+Once that is installed, you can create the reporting environment with the following command:
 
 ```bash
 $ conda env create -f environment.yml 
