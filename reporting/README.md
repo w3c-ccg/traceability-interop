@@ -49,7 +49,7 @@ optional arguments:
 
 ## Next steps and end goals
 
-There are 3 main modules:
+There are three main modules:
 
 - `./postman_reporter/report_data.py` — go get the data, link it up, create appropriate data frames, and store them as CSV for easy use
 - `./postman_reporter/report_static.py` — generate a static HTML report for use with gh-pages (IN-PROGRESS)
