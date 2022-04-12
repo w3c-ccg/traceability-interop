@@ -9,7 +9,7 @@ The product importer of record (_Importer_) issues a Proforma Invoice (1) which 
 
 _Customs_ verifies the Proforma Invoice (3) from the _Importer_.
 
-The importer issues the final Commercial Invoice (7) which is presented to the Freight Forwarder (8) also with instance id `["instance_1"]`.
+The _Importer_ issues the final Commercial Invoice (7) which is presented to the _Freight Forwarder_ (8), also with instance ID `["instance_1"]`.
 
 Upon shipping, the Freight Forwarder issues a House BL (4) which is presented (5) with instance id `["instance_2"]`.
 Passing on the Commercial Invoice (9), the Freight Forwarder joins includes both its own and the Importer’s instance ids `["instance_1", "instance_2"]`. 
