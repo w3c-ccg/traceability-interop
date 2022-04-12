@@ -438,6 +438,63 @@ jobs:
           name: workflow-instance-join
           path: docs/reports/
 
+  interop-credentials-revocation:
+    name: Revoke Credential
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "Mavennet"
+            actor: "MAVENNET_STAGING"
+          - name: "mesur.io"
+            actor: "MESUR_IO_PRODUCTION"
+          - name: "Transmute"
+            actor: "TRANSMUTE_PRODUCTION"
+    steps:
+      # Check out repo, setup node, and install dependencies.
+      # @see https://github.com/actions/setup-node#usage
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          cache: 'npm'
+      - run: npm ci
+      - name: Run Tests
+        env:
+          organization_did_web: ${{secrets[format('{0}_ORGANIZATION_DID_WEB', matrix.actor)]}}
+          client_id: ${{secrets[format('{0}_CLIENT_ID', matrix.actor)]}}
+          client_secret: ${{secrets[format('{0}_CLIENT_SECRET', matrix.actor)]}}
+          token_audience: ${{secrets[format('{0}_TOKEN_AUDIENCE', matrix.actor)]}}
+          token_endpoint: ${{secrets[format('{0}_TOKEN_ENDPOINT', matrix.actor)]}}
+          api_base_url: ${{secrets[format('{0}_API_BASE_URL', matrix.actor)]}}
+        run: |
+          npx newman run ./docs/tutorials/credentials-revocation/credentials-revocation.postman_collection.json \
+          --env-var ORGANIZATION_DID_WEB=$organization_did_web \
+          --env-var CLIENT_ID=$client_id \
+          --env-var CLIENT_SECRET=$client_secret \
+          --env-var TOKEN_AUDIENCE=$token_audience \
+          --env-var TOKEN_ENDPOINT=$token_endpoint \
+          --env-var API_BASE_URL=$api_base_url \
+          --reporters cli,htmlextra,json \
+          --reporter-htmlextra-skipSensitiveData \
+          --reporter-htmlextra-export "newman/${{format('{0}-{1}-{2}.html', github.run_id, github.job, matrix.name)}}" \
+          --reporter-json-export "newman/${{format('{0}-{1}-{2}.json', github.run_id, github.job, matrix.name)}}"
+      # Sanitize newman output and write all reports to the `./docs/reports`
+      # folder for publishing, excluding `index.html`, which will be rebuilt
+      # during publishing.
+      - name: Sanitize Newman Output
+        if: ${{ always() }} # Run even when postman tests fail
+        run: |
+          npm run report:prepare
+          rm -f ./docs/reports/index.html
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }} # Run even when postman tests fail
+        with:
+          name: credentials-revocation
+          path: docs/reports/
+
+
   interop-publish:
     name: Publish
     runs-on: ubuntu-latest
@@ -452,6 +509,7 @@ jobs:
       - interop-sanity
       - interop-credentials-issue
       - interop-credentials-verify
+      - interop-credentials-revocation
       - interop-did-web-discovery
       - interop-presentations-exchange
       - interop-presentations-verify
@@ -484,6 +542,10 @@ jobs:
         with:
           name: credentials-verify
           path: docs/reports/
+      - uses: actions/download-artifact@v3
+        with:
+          name: credentials-revocation
+          path: docs/reports/          
       - uses: actions/download-artifact@v3
         with:
           name: did-web-discovery
