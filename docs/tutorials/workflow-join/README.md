@@ -11,8 +11,8 @@ _Customs_ verifies the Proforma Invoice (3) from the _Importer_.
 
 The _Importer_ issues the final Commercial Invoice (7) which is presented to the _Freight Forwarder_ (8), also with instance ID `["instance_1"]`.
 
-Upon shipping, the Freight Forwarder issues a House BL (4) which is presented (5) with instance id `["instance_2"]`.
-Passing on the Commercial Invoice (9), the Freight Forwarder joins includes both its own and the Importer’s instance ids `["instance_1", "instance_2"]`. 
+Upon shipping, the _Freight Forwarder_ issues a House BL (4) which is presented (5) with instance ID `["instance_2"]`.
+Passing on the Commercial Invoice (9), the _Freight Forwarder_ includes both its own and the Importer’s instance IDs `["instance_1", "instance_2"]`. 
 
 Customs verifies the House BL from the Freight Forwarder (6). 
 Receiving the Commercial Invoice (10), Customs can also join the two graphs, thus knowing that the original Proforma Invoice relates to the Freight Forwarder’s presentations. 
