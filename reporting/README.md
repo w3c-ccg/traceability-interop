@@ -33,7 +33,7 @@ Test results are sourced from the JSON test results published here:
 [https://w3c-ccg.github.io/traceability-interop/reports/](https://w3c-ccg.github.io/traceability-interop/reports/)
 
 
-To get a list of reporter options, you can execute the reporter with the help paramter:
+To get a list of reporter options, you can execute the reporter with the help parameter:
 ```bash
 $ ./reporter.py -h
 usage: reporter.py [-h] [--mode [{all,data,html,dashboard}]]
