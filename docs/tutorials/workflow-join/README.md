@@ -7,7 +7,7 @@ This is an eCommerce business workflow which demonstrates joining two individual
 ## Business Focused Workflow Steps
 The product importer of record (_Importer_) issues a Proforma Invoice (1) which is presented to _Customs_ with instance ID `["instance_1"]` well ahead of shipping (2). 
 
-Customs verifies the Proforma Invoice (3) from the Importer.
+_Customs_ verifies the Proforma Invoice (3) from the _Importer_.
 
 The importer issues the final Commercial Invoice (7) which is presented to the Freight Forwarder (8) also with instance id `["instance_1"]`.
 
