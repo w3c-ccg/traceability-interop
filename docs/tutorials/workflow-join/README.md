@@ -5,7 +5,7 @@
 This is an eCommerce business workflow which demonstrates joining two individual workflows into a common graph, leveraging workflow instance IDs. A total of three organizations collaborate in this scenario. Two organizations (_Importer_ and _Freight Forwarder_) first make individual presentations to a third org (_Customs_). When the correlation is realized, the workflows instances are joined with `["instance_1", "instance_2"]`.
 
 ## Business Focused Workflow Steps
-The product importer of record issues a Proforma Invoice (1) which is presented to Customs with instance id `["instance_1"]` well ahead of shipping (2). 
+The product importer of record (_Importer_) issues a Proforma Invoice (1) which is presented to _Customs_ with instance ID `["instance_1"]` well ahead of shipping (2). 
 
 Customs verifies the Proforma Invoice (3) from the Importer.
 
