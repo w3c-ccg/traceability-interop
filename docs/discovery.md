@@ -45,7 +45,7 @@ This entry MUST have an element of type `TraceabilityAPI` with a `serviceEndpoin
 
 For example: 
 ```json
-  "services": [
+  "service": [
     {
       "id": "did:web:platform.example:organization:123#traceability-api",
       "type": "TraceabilityAPI",
@@ -97,7 +97,7 @@ For example:
     "did:key:z6MksSdhqJH3VvzcX8WP6VbdB85e6T7aaL5yLLYeJLJrto8V#z6MksSdhqJH3VvzcX8WP6VbdB85e6T7aaL5yLLYeJLJrto8V",
     "did:key:z82LkpR3sPw87xdgs72J3EzGXChciBmhV6ukkbeAGFtCpauXHiEwtM2tyDcphRnLmKsB1fi#z82LkpR3sPw87xdgs72J3EzGXChciBmhV6ukkbeAGFtCpauXHiEwtM2tyDcphRnLmKsB1fi"
   ],
-  "services": [
+  "service": [
     {
       "id": "did:web:platform.example:organization:123#traceability-api",
       "type": "TraceabilityAPI",
