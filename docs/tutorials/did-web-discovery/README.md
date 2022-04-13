@@ -51,7 +51,7 @@ For this tutorial, you will need to add the following environment variables to t
   <dt><code>API_BASE_URL</code></dt>
   <dd>The base URL for your organizations VC-API supporting DID resolution.</dd>
   <dt><code>ORGANIZATION_DID_WEB</code></dt>
-  <dd>Your organization's DID Web, <em>e.g.</em>, <code>did:web:api.did.actor:api</code></dd>
+  <dd>Your organization's DID Web, e.g., <code>did:web:api.did.actor:api</code></dd>
 </dl>
 
 ### Request
