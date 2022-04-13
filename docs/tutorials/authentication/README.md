@@ -9,7 +9,7 @@ Before getting started, you must ensure that you have the appropriate software i
 * First, download and install [Postman](https://www.postman.com/).
 * Second, download and install [Newman](https://learning.postman.com/docs/running-collections/using-newman-cli/command-line-integration-with-newman/).
 
-If you are not already familar with Postman, we recommend you complete the first few sections of their learning center from the link above.
+If you are not already familiar with Postman, we recommend you complete the first few sections of their learning center from the link above.
 
 You may also find it beneficial to review [Oauth.com Documentation](https://www.oauth.com/oauth2-servers/client-registration/client-id-secret/) before proceeding.
 
