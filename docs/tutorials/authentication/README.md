@@ -21,7 +21,7 @@ Name your new workspace "Traceability Interoperability".
 
 <img src="./resources/create-workspace.png"/>
 
-Start your setup by creating a new Postman collection called "Authentication Tutorial", and a new Postman environment called "Authentication Tutorial"; all requests and environment variables in this tutorial will be created in these new containers.
+Start your setup by creating a new Postman collection called `Authentication Tutorial`, and a new Postman environment called `Authentication Tutorial`; all requests and environment variables in this tutorial will be created in these new containers.
 
 ## Access Token Request
 
