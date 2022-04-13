@@ -6,7 +6,7 @@ This tutorial describes how to obtain an access token for use in making authenti
 
 Before getting started, you must ensure that you have the appropriate software installed locally. Installation of these items is beyond the scope of this document, but instructions can be found for your operating system at the links provided:
 
-* First step is to download and install [Postman](https://www.postman.com/).
+* First, download and install [Postman](https://www.postman.com/).
 * You will also want to download and install [Newman](https://learning.postman.com/docs/running-collections/using-newman-cli/command-line-integration-with-newman/).
 
 If you are not already familar with Postman, we recommend you complete the first few sections of their learning center from the link above.
