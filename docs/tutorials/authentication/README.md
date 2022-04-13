@@ -17,7 +17,7 @@ You may also find it beneficial to review [Oauth.com Documentation](https://www.
 
 First, create a new Postman workspace to hold all of your Traceability Interoperability related tutorial collections. Click the "Workspaces" dropdown in the main Postman menu, then click the "Create Workspace" button.
 
-Name your new workspace "Traceability Interoperability".
+Name your new workspace `Traceability Interoperability`.
 
 <img src="./resources/create-workspace.png"/>
 
@@ -25,18 +25,18 @@ Start your setup by creating a new Postman collection called `Authentication Tut
 
 ## Access Token Request
 
-The first thing you will need to do is create is an access token request along with the supporting environment variable configuration.
+First, create an access token request along with the supporting environment variable configuration.
 
 ### Environment
 
-Add the following variable configuration to the "Authentication Tutorial" Postman  environment that you created during setup:
+Add the following variable configuration to the "Authentication Tutorial" Postman environment that you created during setup:
 
 <dl>
   <dt><code>CLIENT_ID</code></dt>
   <dd>The client ID obtained from your OAuth service provider.</dd>
   <dt><code>CLIENT_SECRET</code></dt>
   <dd>
-    The client secret obtained from your OAuth service provider. 🔥 Be especially careful with `CLIENT_SECRET`🔥, If it is stolen it will allow an attacker the ability to perform all api operations supported by your service provider.
+    The client secret obtained from your OAuth service provider. 🔥 _**Be especially careful with `CLIENT_SECRET`!**_ 🔥 If it is stolen, an attacker can use it to perform all API operations supported by your service provider.
   </dd>
   <dt><code>TOKEN_AUDIENCE</code></dt>
   <dd>
@@ -44,7 +44,7 @@ Add the following variable configuration to the "Authentication Tutorial" Postma
   </dd>
   <dt><code>TOKEN_ENDPOINT</code></dt>
   <dd>
-    This is the endpoint used to obtain an access token for Machine to Machine connection secured via <code>CLIENT_ID</code> and <code>CLIENT_SECRET</code>.
+    This is the endpoint used to obtain an access token for Machine-to-Machine connection secured via <code>CLIENT_ID</code> and <code>CLIENT_SECRET</code>.
   </dd>
 </dl>
 
@@ -54,7 +54,7 @@ When you are done, the environment should look something like this:
 
 ### Request
 
-Create a new `POST` request called "Get Access Token" in the "Authentication Tutorial" collection.
+Create a new `POST` request called `Get Access Token` in the `Authentication Tutorial` collection.
 Set the request URL to `{{TOKEN_ENDPOINT}}`, and the request body to the following:
 
 ```
@@ -72,7 +72,7 @@ When you are done, your request should look something like this:
 
 ### Testing
 
-The "Get Access Token" request does not interact with the system under test, but it is nevertheless valuable to validate the response data so that problems which will cause failures in other requests are called out as early as possible.
+The `Get Access Token` request does not interact with the system under test, but it is nevertheless valuable to validate the response data so that problems which will cause failures in other requests are called out as early as possible.
 
 The following javascript should be added to the "Tests" tab of the "Get Access Token" request:
 
@@ -119,13 +119,13 @@ If you switch the "Body" dropdown to "Test Results", you should see all tests pa
 
 ## Development
 
-The postman collection can be run from the colland-line using `newman` and a local `.env` file containing your organizations secrets.
+The Postman collection can be run from the command-line using `newman` and a local `.env` file containing your organization's secrets.
 
-Copy the _sample.env_ to _.env_ and add values relevant to your organization, then use the following example to run the test suite from the command-line.
+Copy the `sample.env` to `.env` and add values relevant to your organization; then use the following example to run the test suite from the command-line.
 
-🔥 Be especially careful not to add your secrets to _example.env_ or to commit your _.env_ file to git. 🔥
+🔥 _**Be especially careful not to add your secrets to `example.env` or to commit your `.env` file to git.**_ 🔥
 
-_Example: Run postman collection from the command-line_
+### Example: Run postman collection from the command-line
 ```sh
 source .env && \
 npx newman run ./authentication.postman_collection.json \
