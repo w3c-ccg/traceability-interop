@@ -1,6 +1,6 @@
 # DID Web Discovery Tutorial
 
-If you have not done so already, please review and complete the previous tutorials which form the foundation for the material presented in this tutorial.
+_If you have not done so already, **please review and complete the previous tutorials**  listed below, which form the foundation for the material presented in this tutorial._
 
 1. [Access Token Tutorial](../authentication/README.md) - Obtain an OAuth2 client credentials grant token
 
@@ -8,10 +8,10 @@ In this tutorial, we will be using DID Web Discovery to find the base URL for a 
 
 ## Setup and Configuration
 
-This tutorial will be picking up where the Access Token Tutorial left off; the quickest way to get set up to work on this tutorial is to:
+This tutorial picks up where the Access Token Tutorial left off; the quickest way to get set up to work on this tutorial is to:
 
-1. Duplicate the Access Token Tutorial and rename it to DID Web Discovery Tutorial.
-1. Duplicate the Access Token Environment and rename it to DID Web Discovery Environment.
+1. Duplicate the `Access Token Tutorial` and rename it to `DID Web Discovery Tutorial`.
+1. Duplicate the `Access Token Environment` and rename it to `DID Web Discovery Environment`.
 
 Be sure to activate the new DID Web Discovery Environment by selecting it in the drop-down menu at the top-right of the Postman interface.
 
@@ -19,9 +19,9 @@ Be sure to activate the new DID Web Discovery Environment by selecting it in the
 
 ## Access Token Request
 
-The first thing that we need to do is preserve the output of the Get Access Token request so that we can use the created access token for authenticated requests to the VC API endpoint.
+First, preserve the output of the `Get Access Token` request, so that we can use the created access token for authenticated requests to the VC API endpoint.
 
-Open up the "Get Access Token" request in the "Get Access Token Tutorial" and select the "Tests" tab. Add the following code to the end of the test so that the access token is stored as a collection variable:
+To preserve this output, open the "Get Access Token" request in the "Get Access Token Tutorial", and select the "Tests" tab. Add the following code to the end of the test, so that the access token is stored as a collection variable:
 
 ```javascript
 // The returned `access_token` value is persisted as a Postman collection
@@ -41,7 +41,7 @@ You will need to run this request at least once in order to populate the `access
 
 ## Get Organization DIDs
 
-In this tutorial, we will be using DID Web Discovery to find the base URL for a VC-API that supports presentation exchange as well as a DID to use for issuing credentials.
+In this tutorial, we use DID Web Discovery to find the base URL for a VC-API that supports presentation exchange as well as a DID to use for issuing credentials.
 
 ### Environment
 
@@ -49,7 +49,7 @@ For this tutorial, you will need to add the following environment variables to t
 
 <dl>
   <dt><code>API_BASE_URL</code></dt>
-  <dd>The base URL for your organizations VC-API supporting DID resolution.</dd>
+  <dd>The base URL for your organization's VC-API supporting DID resolution.</dd>
   <dt><code>ORGANIZATION_DID_WEB</code></dt>
   <dd>Your organization's DID Web, e.g., <code>did:web:api.did.actor:api</code></dd>
 </dl>
