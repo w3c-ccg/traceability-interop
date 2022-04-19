@@ -2,7 +2,7 @@
 
 If you have not done so already, please review and complete the previous tutorials which form the foundation for the material presented in this tutorial.
 
-1. [Access Token Tutorial](../authentication/README.md) - Obtain an OAuth2 client credentials grant token
+1. [Authentication Tutorial](../authentication/README.md) - Obtain an OAuth2 client credentials grant token
 1. [Did Web Discovery Tutorial](../did-web-discovery/README.md) - Get Organization identifiers and VC-API service endpoint
 1. [Credentials Issue Tutorial](../credentials-issue/README.md) - Issue a verifiable credential
 1. [Credentials Verify Tutorial](../credentials-verify/README.md) - Verify a verifiable credential
