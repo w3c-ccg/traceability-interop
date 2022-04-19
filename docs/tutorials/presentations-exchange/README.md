@@ -2,11 +2,11 @@
 
 If you have not done so already, please review and complete the previous tutorials which form the foundation for the material presented in this tutorial.
 
-1. [Access Token Tutorial](../authentication/README.md) - Obtain an OAuth2 client credentials grant token
+1. [Authentication Tutorial](../authentication/README.md) - Obtain an OAuth2 client credentials grant token
 1. [Did Web Discovery Tutorial](../did-web-discovery/README.md) - Get Organization identifiers and VC-API service endpoint
 1. [Credentials Issue Tutorial](../credentials-issue/README.md) - Issue a verifiable credential
 
-In this tutorial we will use the OAuth token from the Access Token Tutorial to make an authenticated call to a VC-API service endpoint obtained from the Did Web Discovery Tutorial to start a presentation exchange workflow by creating a verifiable presentation.
+In this tutorial we will use the OAuth token from the Authentication Tutorial to make an authenticated call to a VC-API service endpoint obtained from the Did Web Discovery Tutorial to start a presentation exchange workflow by creating a verifiable presentation.
 
 ## Setup and Configuration
 
