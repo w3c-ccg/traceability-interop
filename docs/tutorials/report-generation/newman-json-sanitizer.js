@@ -21,12 +21,14 @@ const cleanExecutions = (executions) => {
       },
       // 🔥 we opt to not include any details of the request, and only status and timing from the response
       // request details can be inferred from collection data.
+      // NOTE: The `response` may be missing if there was a request error, e.g.,
+      //       ENOTFOUND in the case of missing base url parameters.
       response: {
-        id: execution.response.id,
-        status: execution.response.status,
-        code: execution.response.code,
-        responseTime: execution.response.responseTime,
-        responseSize: execution.response.responseSize,
+        id: execution.response?.id,
+        status: execution.response?.status,
+        code: execution.response?.code,
+        responseTime: execution.response?.responseTime,
+        responseSize: execution.response?.responseSize,
       },
       assertions: execution.assertions,
     });
