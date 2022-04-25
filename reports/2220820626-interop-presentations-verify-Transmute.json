@@ -1,0 +1,1033 @@
+{
+  "collection": {
+    "info": {
+      "_postman_id": "131e57eb-71ce-4b65-aa72-56f870272d1a",
+      "name": "Presentations Verify Tutorial",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "id": "b30855d9-291f-4552-bb21-472440b6c2b8",
+        "name": "Get Access Token",
+        "request": {
+          "url": {
+            "host": [
+              "{{TOKEN_ENDPOINT}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"audience\": \"{{TOKEN_AUDIENCE}}\",\n    \"client_id\": \"{{CLIENT_ID}}\",\n    \"client_secret\": \"{{CLIENT_SECRET}}\",\n    \"grant_type\": \"client_credentials\"\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "b6cc3218-2ed2-4f51-820a-d147c62055bd",
+              "type": "text/javascript",
+              "exec": [
+                "// Token requests are expected to return a `200 Success` response code. Any",
+                "// other response code should trigger a failure.",
+                "pm.test(\"must return `200 Success` status\", function() {",
+                "    pm.response.to.have.status(200);",
+                "});",
+                "",
+                "// The response should include an `access_token` value - this will be presented",
+                "// to authenticated API endpoints in the `Authentication` header (see the last",
+                "// testing code block for details on how this is persisted).",
+                "pm.test(\"response body must include non-empty access_token\", function () {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.expect(access_token).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// The type of `access_token` returned by the token request is expected to be",
+                "// `Bearer`.",
+                "pm.test(\"response body must represent `Bearer` token\", function() {",
+                "    const { token_type } = pm.response.json()",
+                "    pm.expect(token_type).to.equal(\"Bearer\");",
+                "});",
+                "",
+                "// The returned data includes an `expires_in` field that indicates time until",
+                "// token expiration. Validate that this value is a whole number greater than",
+                "// zero, as anything less than or equal to zero means that the `access_token`",
+                "// is already expired.",
+                "pm.test(\"returned token must expire in the future\", function() {",
+                "    const { expires_in } = pm.response.json()",
+                "    pm.expect(expires_in).to.be.above(0);",
+                "});",
+                "",
+                "// The returned `access_token` value is persisted as a Postman collection",
+                "// variable that can be accessed by other requests in the collection by calling",
+                "// `pm.collectionVariables.get(\"access_token\")`.",
+                "pm.test(\"`access_token` persisted to collectionVariables\", function() {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.collectionVariables.set(\"access_token\", access_token);",
+                "});"
+              ],
+              "_lastExecutionId": "401da139-50b9-4472-b33c-9aaf73a28120"
+            }
+          }
+        ]
+      },
+      {
+        "id": "32143a1f-3c41-4391-a8bd-c52a8f711824",
+        "name": "Get Organization DIDs",
+        "request": {
+          "url": {
+            "path": [
+              "identifiers",
+              "{{ORGANIZATION_DID_WEB}}"
+            ],
+            "host": [
+              "{{API_BASE_URL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "GET",
+          "auth": {
+            "type": "noauth",
+            "noauth": []
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "6ed8a7cd-3d01-4eb0-b339-a6c24517c776",
+              "type": "text/javascript",
+              "exec": [
+                "// This endpoint is authenticated. This test will not prevent the request from",
+                "// running when the `access_token` collection variable is missing, but it will",
+                "// give an indication of why the request failed in that scenario.",
+                "pm.test(\"`access_token` collection variable must be set\", function () {",
+                "    const access_token = pm.collectionVariables.get(\"access_token\");",
+                "    pm.expect(access_token).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "pm.test(\"Status code is 200\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});",
+                "",
+                "pm.test(\"must include valid JSON response body\", function() {",
+                "    pm.response.json(); // will throw on parse failure",
+                "});",
+                "",
+                "// The response JSON must include a didDocument property that contains the",
+                "// resolved DID document.",
+                "pm.test(\"didDocument must be present in response body\", function() {",
+                "    const jsonData = pm.response.json();",
+                "    pm.expect(jsonData).to.have.property('didDocument');",
+                "});",
+                "",
+                "// The DID document must contain an alsoKnownAs property.",
+                "pm.test(\"alsoKnownAs MUST be present\", function () {",
+                "    const { didDocument } = pm.response.json();",
+                "    pm.expect(didDocument).to.have.property('alsoKnownAs');",
+                "});",
+                "",
+                "// The alsoKnownAs property MUST be an array.",
+                "pm.test(\"alsoKnownAs MUST be an array\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.expect(alsoKnownAs).to.be.an('array');",
+                "});",
+                "",
+                "// The alsoKnownAs property MUST be a set.",
+                "pm.test(\"alsoKnownAs values MUST be unique\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);",
+                "});",
+                "",
+                "// The second element of the alsoKnownAs property will be used as a",
+                "// credentials_issuer_id for subsequent tests.",
+                "pm.test(\"alsoKnownAs[1] must be present\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.expect(alsoKnownAs[1]).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// If a verificationMethod property is present, the controller property must",
+                "// match the didDocument.id property.",
+                "pm.test(\"verification method controller must match did subject\", function() {",
+                "    const { didDocument } = pm.response.json();",
+                "    const vm = didDocument.verificationMethod || [];",
+                "    vm.forEach((m) => pm.expect(m.controller).to.equal(didDocument.id));",
+                "});",
+                "",
+                "// The value of didDocument.alsoKnownAs[1] is persisted as a Postman collection",
+                "// variable that can be accessed by other requests in the collection by calling",
+                "// pm.collectionVariables.get(\"credential_issuer_id\").",
+                "pm.test(\"`credential_issuer_id` persisted to collectionVariables\", function() {",
+                "    const { alsoKnownAs } = pm.response.json().didDocument;",
+                "    pm.collectionVariables.set(\"credential_issuer_id\", alsoKnownAs[1]);",
+                "});",
+                "",
+                "pm.test(\"Issuer makes unauthenticated discovery of verifiers exchange endpoint. `exchange_endpoint` is persisted to collectionVariables\", function() {",
+                "    const { service } = pm.response.json().didDocument;",
+                "    pm.collectionVariables.set(\"exchange_endpoint\", service[0].serviceEndpoint);",
+                "});"
+              ],
+              "_lastExecutionId": "ec04e39e-e475-46d9-8567-8fb6ddbc36d4"
+            }
+          }
+        ],
+        "protocolProfileBehavior": {
+          "disabledSystemHeaders": {}
+        }
+      },
+      {
+        "id": "48aca941-4d12-497f-9eda-7a1b1512e9e3",
+        "name": "Issue Credential",
+        "request": {
+          "url": {
+            "path": [
+              "credentials",
+              "issue"
+            ],
+            "host": [
+              "{{API_BASE_URL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"credential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"id\": \"urn:uuid:{{$randomUUID}}\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"issuer\": \"{{credential_issuer_id}}\",\n        \"issuanceDate\": \"2010-01-01T19:23:24Z\",\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        }\n    },\n    \"options\": {\n        \"type\": \"Ed25519Signature2018\",\n        \"created\": \"2020-04-02T18:48:36Z\"\n    }\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "482d415e-29e7-4fb4-9600-38934093623a",
+              "type": "text/javascript",
+              "exec": [
+                "pm.test(\"`access_token` collection variable must be set\", function () {",
+                "    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+                "});",
+                "",
+                "pm.test(\"`credential_issuer_id` collection variable must be set\", function () {",
+                "    pm.expect(pm.collectionVariables.get(\"credential_issuer_id\")).to.not.be.undefined;",
+                "});",
+                "",
+                "pm.test(\"must return `201 Created` status\", function () {",
+                "    pm.response.to.have.status(201);",
+                "});",
+                "",
+                "// Verifiable credential must be made available to later requests",
+                "pm.test(\"`verifiable_credential` persisted to collectionVariables\", function() {",
+                "    const verifiable_credential = JSON.stringify(pm.response.json());",
+                "    pm.collectionVariables.set(\"verifiable_credential\", verifiable_credential);",
+                "})"
+              ],
+              "_lastExecutionId": "95444fe7-c9ef-43cf-bc60-e6a35a7259a4"
+            }
+          },
+          {
+            "listen": "prerequest",
+            "script": {
+              "id": "2a48f780-b075-4e51-99d8-479e69cb81ee",
+              "type": "text/javascript",
+              "exec": [
+                ""
+              ],
+              "_lastExecutionId": "3900bf97-8da1-4583-b5b5-e5d83b79a7b2"
+            }
+          }
+        ]
+      },
+      {
+        "id": "212c7732-f281-435a-840b-9d4f4d030205",
+        "name": "Initiate Exchange",
+        "request": {
+          "url": {
+            "path": [
+              "presentations",
+              "available"
+            ],
+            "host": [
+              "{{exchange_endpoint}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"query\": [\n    {\n      \"type\": \"QueryByExample\",\n      \"credentialQuery\": [\n        {\n          \"type\": [\n            \"VerifiableCredential\"\n          ],\n          \"reason\": \"We want to present credentials.\"\n        }\n      ]\n    }\n  ]\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "1fb8a2cf-120c-43b9-adb6-298081d98793",
+              "type": "text/javascript",
+              "exec": [
+                "// The `/presentations/available` endpoint is authenticated. This test will not",
+                "// prevent the request from running when the `access_token` collection variable",
+                "// is missing, but it will give an indication of why the request failed in that",
+                "// scenario.",
+                "pm.test(\"`access_token` collection variable must be set\", function () {",
+                "    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+                "});",
+                "",
+                "// The expected response code for a \"Presentations Available\" request is",
+                "// `200 Success`.",
+                "pm.test(\"must return `200 Success` status\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});",
+                "",
+                "// The response body must include a \"domain\" property.",
+                "pm.test(\"response must include 'domain' property\", function() {",
+                "    const { domain } = pm.response.json()",
+                "    pm.expect(domain).to.be.a('string').that.is.not.empty;",
+                "    // Domain must be made available to later requests",
+                "    pm.collectionVariables.set(\"domain\", domain);",
+                "});",
+                "",
+                "// The response body must include a \"challenge\" property.",
+                "pm.test(\"response must include 'challenge' property\", function() {",
+                "    const { challenge } = pm.response.json()",
+                "    pm.expect(challenge).to.be.a('string').that.is.not.empty;",
+                "    // Challenge must be made available to later requests",
+                "    pm.collectionVariables.set(\"challenge\", challenge);",
+                "});",
+                ""
+              ],
+              "_lastExecutionId": "d1f4e55b-4b93-4456-8463-35e97f8164ed"
+            }
+          }
+        ]
+      },
+      {
+        "id": "302cfcd7-36c0-4c04-b99e-c830d9a3961b",
+        "name": "Sign Presentation",
+        "request": {
+          "url": {
+            "path": [
+              "presentations",
+              "prove"
+            ],
+            "host": [
+              "{{API_BASE_URL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"presentation\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"type\": [\n            \"VerifiablePresentation\"\n        ],\n        \"holder\": \"{{credential_issuer_id}}\",\n        \"verifiableCredential\": [\n            {{verifiable_credential}}\n        ]\n    },\n    \"options\": {\n        \"domain\": \"{{domain}}\",\n        \"challenge\": \"{{challenge}}\"\n    }\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "a6a242e3-d92c-4e08-911b-be7d8ce000a4",
+              "type": "text/javascript",
+              "exec": [
+                "// The `/presentations/prove` endpoint is authenticated. This test will not",
+                "// prevent the request from running when the `access_token` collection variable",
+                "// is missing, but it will give an indication of why the request failed in that",
+                "// scenario.",
+                "pm.test(\"`access_token` collection variable must be set\", function () {",
+                "    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+                "});",
+                "",
+                "// Credential issuer id is a required element item used in the request body",
+                "pm.test(\"`credential_issuer_id` collection variable must be set\", function () {",
+                "    const credential_issuer_id = pm.collectionVariables.get(\"credential_issuer_id\");",
+                "    pm.expect(credential_issuer_id).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// Verifiable credential is a required element item used in the request body",
+                "pm.test(\"`verifiable_credential` collection variable must be set\", function () {",
+                "    const verifiable_credential = pm.collectionVariables.get(\"verifiable_credential\");",
+                "    pm.expect(verifiable_credential).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// Domain is a required element item used in the request body",
+                "pm.test(\"`domain` collection variable must be set\", function () {",
+                "    const domain = pm.collectionVariables.get(\"domain\");",
+                "    pm.expect(domain).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// Challenge is a required element item used in the request body",
+                "pm.test(\"`challenge` collection variable must be set\", function () {",
+                "    const challenge = pm.collectionVariables.get(\"challenge\");",
+                "    pm.expect(challenge).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// The expected response code for a \"Sign Presentation\" request is",
+                "// `201 Success`.",
+                "pm.test(\"must return `201 Success` status\", function () {",
+                "    pm.response.to.have.status(201);",
+                "});",
+                "",
+                "// Verifiable presentation must be made available to later requests",
+                "pm.test(\"`verifiable_presentation` persisted to collectionVariables\", function() {",
+                "    const verifiable_presentation = JSON.stringify(pm.response.json());",
+                "    pm.collectionVariables.set(\"verifiable_presentation\", verifiable_presentation);",
+                "})"
+              ],
+              "_lastExecutionId": "6bdd3f08-1e6f-48de-b013-88680fedfe99"
+            }
+          }
+        ]
+      },
+      {
+        "id": "2aa98bca-1b41-4255-b1bc-fe3528cdc2a8",
+        "name": "Complete Exchange",
+        "request": {
+          "url": {
+            "path": [
+              "presentations",
+              "submissions"
+            ],
+            "host": [
+              "{{exchange_endpoint}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{{verifiable_presentation}}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "aa20b94f-3d08-4a76-8257-bab78cfc3b96",
+              "type": "text/javascript",
+              "exec": [
+                "// The `/presentations/submissions` endpoint is authenticated. This test will",
+                "// not prevent the request from running when the `access_token` collection",
+                "// variable is missing, but it will give an indication of why the request failed",
+                "// in that scenario.",
+                "pm.test(\"`access_token` collection variable must be set\", function () {",
+                "    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+                "});",
+                "",
+                "// The expected response code for a \"Complete Exchange\" request is",
+                "// `200 Success`.",
+                "pm.test(\"must return `200 Success` status\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});",
+                "",
+                "// Response should confirm the submission is accepted.",
+                "pm.test(\"verification response should be 'true'\", function() {",
+                "    const { verified } = pm.response.json()",
+                "    pm.expect(verified).to.be.true;",
+                "});"
+              ],
+              "_lastExecutionId": "c6db575d-5b8d-46fd-95fd-3c84231f85da"
+            }
+          }
+        ]
+      },
+      {
+        "id": "4d2d85a7-b65b-4f37-a610-33eac3774125",
+        "name": "Verify Presentation",
+        "request": {
+          "url": {
+            "path": [
+              "presentations",
+              "verify"
+            ],
+            "host": [
+              "{{API_BASE_URL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"verifiablePresentation\": {{verifiable_presentation}},\n    \"options\": {\n        \"domain\": \"{{domain}}\",\n        \"challenge\": \"{{challenge}}\"\n    }\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "87b4d2e1-096e-445f-b2de-a676b060a9b8",
+              "type": "text/javascript",
+              "exec": [
+                "// The `/presentations/available` endpoint is authenticated. This test will not",
+                "// prevent the request from running when the `access_token` collection variable",
+                "// is missing, but it will give an indication of why the request failed in that",
+                "// scenario.",
+                "pm.test(\"`access_token` collection variable must be set\", function () {",
+                "    pm.expect(pm.collectionVariables.get(\"access_token\")).to.not.be.undefined;",
+                "});",
+                "",
+                "// Verifiable verifiable_presentation is a required element item used in the",
+                "// request body",
+                "pm.test(\"`verifiable_presentation` collection variable must be set\", function () {",
+                "    const verifiable_presentation = pm.collectionVariables.get(\"verifiable_presentation\");",
+                "    pm.expect(verifiable_presentation).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// Domain is a required element item used in the request body",
+                "pm.test(\"`domain` collection variable must be set\", function () {",
+                "    const domain = pm.collectionVariables.get(\"domain\");",
+                "    pm.expect(domain).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// Challenge is a required element item used in the request body",
+                "pm.test(\"`challenge` collection variable must be set\", function () {",
+                "    const challenge = pm.collectionVariables.get(\"challenge\");",
+                "    pm.expect(challenge).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// The expected response code for a \"Verify Presentation\" request is",
+                "// `200 Success`.",
+                "pm.test(\"must return `200 Success` status\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});",
+                "",
+                "// Response should confirm the presentation is verified.",
+                "pm.test(\"verification response should be 'true'\", function() {",
+                "    const { verified } = pm.response.json()",
+                "    pm.expect(verified).to.be.true;",
+                "});"
+              ],
+              "_lastExecutionId": "6dd6b8f0-e067-4cee-99f4-e96b03ac6c0a"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 7,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 22,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 7,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 7,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 7,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 40,
+        "pending": 0,
+        "failed": 0
+      },
+      "testScripts": {
+        "total": 14,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 8,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 1028.5714285714287,
+      "responseMin": 217,
+      "responseMax": 1801,
+      "responseSd": 515.5058146112021,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1650896697905,
+      "completed": 1650896705387
+    },
+    "executions": [
+      {
+        "id": "b30855d9-291f-4552-bb21-472440b6c2b8",
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 7,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "cd31d429-eca8-4343-ada2-b0e4f25e571e",
+          "httpRequestId": "4e110bd4-52c4-4eac-b731-eab98ca4da0d"
+        },
+        "item": {
+          "id": "b30855d9-291f-4552-bb21-472440b6c2b8",
+          "name": "Get Access Token"
+        },
+        "response": {
+          "id": "15715d4f-6c7e-45d2-a7dc-b1bd275ea13a",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 597,
+          "responseSize": 852
+        },
+        "assertions": [
+          {
+            "assertion": "must return `200 Success` status",
+            "skipped": false
+          },
+          {
+            "assertion": "response body must include non-empty access_token",
+            "skipped": false
+          },
+          {
+            "assertion": "response body must represent `Bearer` token",
+            "skipped": false
+          },
+          {
+            "assertion": "returned token must expire in the future",
+            "skipped": false
+          },
+          {
+            "assertion": "`access_token` persisted to collectionVariables",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "32143a1f-3c41-4391-a8bd-c52a8f711824",
+        "cursor": {
+          "ref": "84d60e2b-333c-44c7-8f28-afa6e6143011",
+          "length": 7,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "4369cc9b-baa5-4ee1-8a64-f1021c146ae4"
+        },
+        "item": {
+          "id": "32143a1f-3c41-4391-a8bd-c52a8f711824",
+          "name": "Get Organization DIDs"
+        },
+        "response": {
+          "id": "9b84baa5-b588-47ad-ba7c-df19e1c9206a",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 217,
+          "responseSize": 816
+        },
+        "assertions": [
+          {
+            "assertion": "`access_token` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "Status code is 200",
+            "skipped": false
+          },
+          {
+            "assertion": "must include valid JSON response body",
+            "skipped": false
+          },
+          {
+            "assertion": "didDocument must be present in response body",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs MUST be present",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs MUST be an array",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs values MUST be unique",
+            "skipped": false
+          },
+          {
+            "assertion": "alsoKnownAs[1] must be present",
+            "skipped": false
+          },
+          {
+            "assertion": "verification method controller must match did subject",
+            "skipped": false
+          },
+          {
+            "assertion": "`credential_issuer_id` persisted to collectionVariables",
+            "skipped": false
+          },
+          {
+            "assertion": "Issuer makes unauthenticated discovery of verifiers exchange endpoint. `exchange_endpoint` is persisted to collectionVariables",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "48aca941-4d12-497f-9eda-7a1b1512e9e3",
+        "cursor": {
+          "ref": "69022006-2fec-4e05-9e25-7187e2b0613b",
+          "length": 7,
+          "cycles": 1,
+          "position": 2,
+          "iteration": 0,
+          "httpRequestId": "273fb18e-5436-48fc-a79a-909218d0929b"
+        },
+        "item": {
+          "id": "48aca941-4d12-497f-9eda-7a1b1512e9e3",
+          "name": "Issue Credential"
+        },
+        "response": {
+          "id": "87b59ada-49cd-4a13-8adc-d85afad53c4c",
+          "status": "Created",
+          "code": 201,
+          "responseTime": 1801,
+          "responseSize": 679
+        },
+        "assertions": [
+          {
+            "assertion": "`access_token` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "`credential_issuer_id` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "must return `201 Created` status",
+            "skipped": false
+          },
+          {
+            "assertion": "`verifiable_credential` persisted to collectionVariables",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "212c7732-f281-435a-840b-9d4f4d030205",
+        "cursor": {
+          "ref": "da8c8190-f2da-4e0e-b57f-a8934198054f",
+          "length": 7,
+          "cycles": 1,
+          "position": 3,
+          "iteration": 0,
+          "httpRequestId": "1baa6c95-61e5-4f6e-84b4-aa6310a059be"
+        },
+        "item": {
+          "id": "212c7732-f281-435a-840b-9d4f4d030205",
+          "name": "Initiate Exchange"
+        },
+        "response": {
+          "id": "843ed951-e68c-44aa-af36-b1021319cd06",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 709,
+          "responseSize": 234
+        },
+        "assertions": [
+          {
+            "assertion": "`access_token` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "must return `200 Success` status",
+            "skipped": false
+          },
+          {
+            "assertion": "response must include 'domain' property",
+            "skipped": false
+          },
+          {
+            "assertion": "response must include 'challenge' property",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "302cfcd7-36c0-4c04-b99e-c830d9a3961b",
+        "cursor": {
+          "ref": "107ea13f-e59c-4523-9b4c-4db924fce2d3",
+          "length": 7,
+          "cycles": 1,
+          "position": 4,
+          "iteration": 0,
+          "httpRequestId": "046fc6a7-1e2f-4104-83ac-2131091916e1"
+        },
+        "item": {
+          "id": "302cfcd7-36c0-4c04-b99e-c830d9a3961b",
+          "name": "Sign Presentation"
+        },
+        "response": {
+          "id": "87488aba-62f9-4946-ba0c-4aa50c98243f",
+          "status": "Created",
+          "code": 201,
+          "responseTime": 1305,
+          "responseSize": 1349
+        },
+        "assertions": [
+          {
+            "assertion": "`access_token` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "`credential_issuer_id` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "`verifiable_credential` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "`domain` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "`challenge` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "must return `201 Success` status",
+            "skipped": false
+          },
+          {
+            "assertion": "`verifiable_presentation` persisted to collectionVariables",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "2aa98bca-1b41-4255-b1bc-fe3528cdc2a8",
+        "cursor": {
+          "ref": "2fcbbdf5-8e66-4b75-8598-090386a592e2",
+          "length": 7,
+          "cycles": 1,
+          "position": 5,
+          "iteration": 0,
+          "httpRequestId": "da3c7934-fc9c-4677-9ec6-e3c4f0539e5c"
+        },
+        "item": {
+          "id": "2aa98bca-1b41-4255-b1bc-fe3528cdc2a8",
+          "name": "Complete Exchange"
+        },
+        "response": {
+          "id": "5d7a2f76-d2a2-4185-903a-225ba200f6c9",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 1053,
+          "responseSize": 17
+        },
+        "assertions": [
+          {
+            "assertion": "`access_token` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "must return `200 Success` status",
+            "skipped": false
+          },
+          {
+            "assertion": "verification response should be 'true'",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "4d2d85a7-b65b-4f37-a610-33eac3774125",
+        "cursor": {
+          "ref": "ec842350-0e77-496e-8ccf-afd5210913ea",
+          "length": 7,
+          "cycles": 1,
+          "position": 6,
+          "iteration": 0,
+          "httpRequestId": "845fe210-b5e5-4f94-9a9a-fc55e1110e1b"
+        },
+        "item": {
+          "id": "4d2d85a7-b65b-4f37-a610-33eac3774125",
+          "name": "Verify Presentation"
+        },
+        "response": {
+          "id": "380d120f-7e18-4616-89ca-8c113514d3b0",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 1518,
+          "responseSize": 2793
+        },
+        "assertions": [
+          {
+            "assertion": "`access_token` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "`verifiable_presentation` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "`domain` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "`challenge` collection variable must be set",
+            "skipped": false
+          },
+          {
+            "assertion": "must return `200 Success` status",
+            "skipped": false
+          },
+          {
+            "assertion": "verification response should be 'true'",
+            "skipped": false
+          }
+        ]
+      }
+    ]
+  }
+}
