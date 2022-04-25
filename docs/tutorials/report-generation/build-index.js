@@ -53,6 +53,7 @@ const buildReportsIndex = () => {
   try {
     cleanAndMoveReports('./newman');
   } catch (e) {
+    console.log(e);
     console.log('No newman reports to clean');
   }
 
