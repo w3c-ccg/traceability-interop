@@ -1,8 +1,7 @@
-/* eslint-disable no-unused-expressions */
-/* eslint-disable function-paren-newline */
 const path = require('path');
 const fs = require('fs');
 const reportCleaner = require('./newman-json-sanitizer');
+
 const readFilesSync = (dir) => {
   const files = [];
   fs.readdirSync(dir).forEach((filename) => {
@@ -22,14 +21,12 @@ const readFilesSync = (dir) => {
     }
   });
 
-  files.sort((a, b) =>
-    // eslint-disable-next-line implicit-arrow-linebreak
-    a.name.localeCompare(b.name, undefined, {
-      numeric: true,
-      sensitivity: 'base',
-    })
-  );
+  const sortArgs = {
+    numeric: true,
+    sensitivity: 'base',
+  };
 
+  files.sort((a, b) => a.name.localeCompare(b.name, undefined, sortArgs));
   return files;
 };
 
@@ -49,8 +46,6 @@ const buildReportsIndex = () => {
   const reports = readFilesSync(path.join(__dirname, '../../reports'))
     .filter((f) => f.name !== 'index' && ['.json', '.html'].includes(f.ext))
     .map((f) => `https://w3id.org/traceability/interoperability/reports/${f.name + f.ext}`);
-  // .map((f) => `https://w3c-ccg.github.io/traceability-interop/reports/${f.name + f.ext}`);
-
   fs.writeFileSync(path.join(__dirname, '../../reports/index.json'), JSON.stringify({ items: reports }, null, 2));
 };
 
