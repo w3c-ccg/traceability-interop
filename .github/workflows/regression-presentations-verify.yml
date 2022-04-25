@@ -11,12 +11,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - name: "Mavennet"
-          #   actor: "MAVENNET_STAGING"
+          - name: "Mavennet"
+            actor: "MAVENNET_STAGING"
           - name: "mesur.io"
             actor: "MESUR_IO_PRODUCTION"
-          # - name: "Transmute"
-          #   actor: "TRANSMUTE_PRODUCTION"
+          - name: "Transmute"
+            actor: "TRANSMUTE_PRODUCTION"
     steps:
       # Check out repo, setup node, and install dependencies.
       # @see https://github.com/actions/setup-node#usage
@@ -35,7 +35,17 @@ jobs:
           token_endpoint: ${{secrets[format('{0}_TOKEN_ENDPOINT', matrix.actor)]}}
           api_base_url: ${{secrets[format('{0}_API_BASE_URL', matrix.actor)]}}
         run: |
-          node ./test.js
+          npx newman run ./docs/tutorials/presentations-verify/presentations-verify.postman_collection.json \
+          --env-var ORGANIZATION_DID_WEB=$organization_did_web \
+          --env-var CLIENT_ID=$client_id \
+          --env-var CLIENT_SECRET=$client_secret \
+          --env-var TOKEN_AUDIENCE=$token_audience \
+          --env-var TOKEN_ENDPOINT=$token_endpoint \
+          --env-var API_BASE_URL=$api_base_url \
+          --reporters cli,htmlextra,json \
+          --reporter-htmlextra-skipSensitiveData \
+          --reporter-htmlextra-export "newman/${{format('{0}-{1}-{2}.html', github.run_id, github.job, matrix.name)}}" \
+          --reporter-json-export "newman/${{format('{0}-{1}-{2}.json', github.run_id, github.job, matrix.name)}}"
       # Sanitize newman output and write all reports to the `./docs/reports`
       # folder for publishing, excluding `index.html`, which will be rebuilt
       # during publishing.
