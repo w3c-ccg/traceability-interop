@@ -2,9 +2,9 @@
 import argparse
 import os
 
-# from postman_reporter import report_static
 from postman_reporter import report_dashboard
 from postman_reporter import report_data
+from postman_reporter import report_static
 
 
 def runData():
@@ -20,7 +20,7 @@ def runDash():
 
 
 def runHtml():
-    print("Static HTML not yet implemented!")
+    report_static.generate_html()
     return 0
 
 
@@ -29,6 +29,12 @@ def main(args):
     if not os.path.exists("./data"):
         os.mkdir(
             "./data"
+        )  # explicitly let it throw an exception if permissions are not there
+
+    # then for html
+    if not os.path.exists("./html"):
+        os.mkdir(
+            "./html"
         )  # explicitly let it throw an exception if permissions are not there
 
     # now check args
