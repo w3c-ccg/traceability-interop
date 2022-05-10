@@ -11,7 +11,7 @@ In this tutorial we will use the OAuth token from the Authentication Tutorial to
 
 ## Setup and Configuration
 
-This tutorial will be picking up where the Presentations Exchange Tutorial left off; the quickest way to get set up to work on this tutorial is to:
+This tutorial picks up where the Presentations Exchange Tutorial left off; the quickest way to get set up to work on this tutorial is to —
 
 1. Duplicate the "Presentations Exchange Tutorial" collection and rename it to "Presentations Verify Tutorial".
 1. Duplicate the "Presentations Exchange Tutorial" environment and rename it to "Presentations Verify Tutorial".
