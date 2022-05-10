@@ -13,10 +13,10 @@ In this tutorial we will use the OAuth token from the Authentication Tutorial to
 
 This tutorial will be picking up where the Presentations Exchange Tutorial left off; the quickest way to get set up to work on this tutorial is to:
 
-1. Duplicate the "Presentations Exchange Tutorial" and rename it to "Presentations Verify Tutorial".
-1. Duplicate the "Presentations Exchange Environment" and rename it to "Presentations Verify Environment".
+1. Duplicate the "Presentations Exchange Tutorial" collection and rename it to "Presentations Verify Tutorial".
+1. Duplicate the "Presentations Exchange Tutorial" environment and rename it to "Presentations Verify Tutorial".
 
-Be sure to activate the new "Presentations Verify Environment" by selecting it in the drop-down menu at the top-right of the Postman interface.
+Be sure to activate the new "Presentations Verify Tutorial" environment by selecting it in the drop-down menu at the top-right of the Postman interface.
 
 <img src="./resources/select-environment.png"/>
 
@@ -32,8 +32,8 @@ No additional environment variables are needed for this request, all required en
 
 Create a new `POST` request called "Verify Presentation" in the "Presentations Verify Tutorial" collection.
 
-* Set the request URL to `{{API_BASE_URL}}/presentations/verify`.
-* In the "Auth" tab, select "Bearer Token" set the "Token" value to `{{access_token}}`.
+* Set the request URL to `{{VERIFIER_API_BASE_URL}}/presentations/verify`.
+* In the "Auth" tab, select "Bearer Token" set the "Token" value to `{{verifier_access_token}}`.
 * In the "Headers" tab, dd an `Accept` header with the value `application/json`.
 * In the body tab, add the following raw JSON:
   ```json
@@ -59,12 +59,12 @@ The "Verify Presentation" request is part of the system under test, and as such 
 The following code should be added to the "Verify Presentation" request in the "Tests" tab:
 
 ```javascript
-// The `/presentations/available` endpoint is authenticated. This test will not
-// prevent the request from running when the `access_token` collection variable
-// is missing, but it will give an indication of why the request failed in that
-// scenario.
-pm.test("`access_token` collection variable must be set", function () {
-    pm.expect(pm.collectionVariables.get("access_token")).to.not.be.undefined;
+// This endpoint is authenticated. This test will not prevent the request from
+// running when the `verifier_access_token` collection variable is missing, but
+// it will give an indication of why the request failed in that scenario.
+pm.test("`verifier_access_token` collection variable must be set", function () {
+    const verifier_access_token = pm.collectionVariables.get("verifier_access_token");
+    pm.expect(verifier_access_token).to.be.a('string').that.is.not.empty;
 });
 
 // Verifiable verifiable_presentation is a required element item used in the
@@ -117,11 +117,17 @@ _Example: Run postman collection from the command-line_
 ```sh
 source .env && \
 npx newman run ./presentations-verify.postman_collection.json \
---env-var ORGANIZATION_DID_WEB=$ORGANIZATION_DID_WEB \
---env-var CLIENT_ID=$CLIENT_ID \
---env-var CLIENT_SECRET=$CLIENT_SECRET \
---env-var TOKEN_AUDIENCE=$TOKEN_AUDIENCE \
---env-var TOKEN_ENDPOINT=$TOKEN_ENDPOINT \
---env-var API_BASE_URL=$API_BASE_URL \
+--env-var ISSUER_ORGANIZATION_DID_WEB=$ISSUER_ORGANIZATION_DID_WEB \
+--env-var ISSUER_CLIENT_ID=$ISSUER_CLIENT_ID \
+--env-var ISSUER_CLIENT_SECRET=$ISSUER_CLIENT_SECRET \
+--env-var ISSUER_TOKEN_AUDIENCE=$ISSUER_TOKEN_AUDIENCE \
+--env-var ISSUER_TOKEN_ENDPOINT=$ISSUER_TOKEN_ENDPOINT \
+--env-var ISSUER_API_BASE_URL=$ISSUER_API_BASE_URL \
+--env-var VERIFIER_ORGANIZATION_DID_WEB=$VERIFIER_ORGANIZATION_DID_WEB \
+--env-var VERIFIER_CLIENT_ID=$VERIFIER_CLIENT_ID \
+--env-var VERIFIER_CLIENT_SECRET=$VERIFIER_CLIENT_SECRET \
+--env-var VERIFIER_TOKEN_AUDIENCE=$VERIFIER_TOKEN_AUDIENCE \
+--env-var VERIFIER_TOKEN_ENDPOINT=$VERIFIER_TOKEN_ENDPOINT \
+--env-var VERIFIER_API_BASE_URL=$VERIFIER_API_BASE_URL \
 --reporters cli,json
 ```
