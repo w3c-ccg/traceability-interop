@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "3fe21025-a4b0-4827-a9c8-fd89e5465a81",
+		"_postman_id": "5ab1fa5e-f50d-4dcf-b2f9-fc64296f1de9",
 		"name": "Presentations Exchange Tutorial",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -152,7 +152,131 @@
 			"response": []
 		},
 		{
-			"name": "Get Issuer Organization DIDs",
+			"name": "Get Organization DIDs (Issuer)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// This endpoint is authenticated. This test will not prevent the request from",
+							"// running when the `issuer_access_token` collection variable is missing, but it",
+							"// will give an indication of why the request failed in that scenario.",
+							"pm.test(\"`issuer_access_token` collection variable must be set\", function () {",
+							"    const issuer_access_token = pm.collectionVariables.get(\"issuer_access_token\");",
+							"    pm.expect(issuer_access_token).to.be.a('string').that.is.not.empty;",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"must include valid JSON response body\", function() {",
+							"    pm.response.json(); // will throw on parse failure",
+							"});",
+							"",
+							"// The response JSON must include a didDocument property that contains the",
+							"// resolved DID document.",
+							"pm.test(\"didDocument must be present in response body\", function() {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('didDocument');",
+							"});",
+							"",
+							"// The DID document must contain an alsoKnownAs property.",
+							"pm.test(\"alsoKnownAs MUST be present\", function () {",
+							"    const { didDocument } = pm.response.json();",
+							"    pm.expect(didDocument).to.have.property('alsoKnownAs');",
+							"});",
+							"",
+							"// The alsoKnownAs property MUST be an array.",
+							"pm.test(\"alsoKnownAs MUST be an array\", function() {",
+							"    const { alsoKnownAs } = pm.response.json().didDocument;",
+							"    pm.expect(alsoKnownAs).to.be.an('array');",
+							"});",
+							"",
+							"// The alsoKnownAs property MUST be a set.",
+							"pm.test(\"alsoKnownAs values MUST be unique\", function() {",
+							"    const { alsoKnownAs } = pm.response.json().didDocument;",
+							"    pm.expect(new Set(alsoKnownAs)).to.have.lengthOf(alsoKnownAs.length);",
+							"});",
+							"",
+							"// The second element of the alsoKnownAs property will be used as a",
+							"// credentials_issuer_id for subsequent tests.",
+							"pm.test(\"alsoKnownAs[1] must be present\", function() {",
+							"    const { alsoKnownAs } = pm.response.json().didDocument;",
+							"    pm.expect(alsoKnownAs[1]).to.be.a('string').that.is.not.empty;",
+							"});",
+							"",
+							"// Service array is used to look up traceability API service endpoint",
+							"pm.test(\"Response must include 'service' array\", function() {",
+							"    const { service } = pm.response.json().didDocument;",
+							"    pm.expect(service).to.be.an('array').that.is.not.empty;",
+							"});",
+							"",
+							"// If a verificationMethod property is present, the controller property must",
+							"// match the didDocument.id property.",
+							"pm.test(\"verification method controller must match did subject\", function() {",
+							"    const { didDocument } = pm.response.json();",
+							"    const vm = didDocument.verificationMethod || [];",
+							"    vm.forEach((m) => pm.expect(m.controller).to.equal(didDocument.id));",
+							"});",
+							"",
+							"// Service array must be correctly defined in DID document",
+							"pm.test(\"'service' array must define Traceability API service endpoint\", function() {",
+							"    const { service } = pm.response.json().didDocument;",
+							"    const entry = service.find((s) => s.type == \"TraceabilityAPI\");",
+							"    pm.expect(entry).to.be.an('object').that.is.not.empty;",
+							"    pm.expect(entry.serviceEndpoint).to.be.a('string').that.is.not.empty;",
+							"});",
+							"",
+							"// The value of didDocument.alsoKnownAs[1] is persisted as a Postman collection",
+							"// variable that can be accessed by other requests in the collection by calling",
+							"// pm.collectionVariables.get(\"credential_issuer_id\").",
+							"pm.test(\"`credential_issuer_id` persisted to collectionVariables\", function() {",
+							"    const { alsoKnownAs } = pm.response.json().didDocument;",
+							"    pm.collectionVariables.set(\"credential_issuer_id\", alsoKnownAs[1]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{issuer_access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{ISSUER_API_BASE_URL}}/identifiers/{{ISSUER_ORGANIZATION_DID_WEB}}",
+					"host": [
+						"{{ISSUER_API_BASE_URL}}"
+					],
+					"path": [
+						"identifiers",
+						"{{ISSUER_ORGANIZATION_DID_WEB}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Organization DIDs (Verifier)",
 			"event": [
 				{
 					"listen": "test",
@@ -214,13 +338,29 @@
 							"    vm.forEach((m) => pm.expect(m.controller).to.equal(didDocument.id));",
 							"});",
 							"",
+							"// Service array must be correctly defined in DID document",
+							"pm.test(\"'service' array must define Traceability API service endpoint\", function() {",
+							"    const { service } = pm.response.json().didDocument;",
+							"    const entry = service.find((s) => s.type == \"TraceabilityAPI\");",
+							"    pm.expect(entry).to.be.an('object').that.is.not.empty;",
+							"    pm.expect(entry.serviceEndpoint).to.be.a('string').that.is.not.empty;",
+							"});",
+							"",
 							"// The value of didDocument.alsoKnownAs[1] is persisted as a Postman collection",
 							"// variable that can be accessed by other requests in the collection by calling",
 							"// pm.collectionVariables.get(\"credential_issuer_id\").",
 							"pm.test(\"`credential_issuer_id` persisted to collectionVariables\", function() {",
 							"    const { alsoKnownAs } = pm.response.json().didDocument;",
 							"    pm.collectionVariables.set(\"credential_issuer_id\", alsoKnownAs[1]);",
-							"});"
+							"});",
+							"",
+							"// The serviceEndpoint for the verifier must be persisted for later use",
+							"pm.test(\"`verifier_exchange_endpoint` is persisted to collectionVariables\", function() {",
+							"    const { service } = pm.response.json().didDocument;",
+							"    const entry = service.find((s) => s.type == \"TraceabilityAPI\");",
+							"    pm.collectionVariables.set(\"verifier_exchange_endpoint\", entry.serviceEndpoint);",
+							"});",
+							""
 						],
 						"type": "text/javascript"
 					}
@@ -235,60 +375,10 @@
 					"bearer": [
 						{
 							"key": "token",
-							"value": "{{issuer_access_token}}",
+							"value": "{{verifier_access_token}}",
 							"type": "string"
 						}
 					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Accept",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"url": {
-					"raw": "{{ISSUER_API_BASE_URL}}/identifiers/{{ISSUER_ORGANIZATION_DID_WEB}}",
-					"host": [
-						"{{ISSUER_API_BASE_URL}}"
-					],
-					"path": [
-						"identifiers",
-						"{{ISSUER_ORGANIZATION_DID_WEB}}"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get Verifier Organization DIDs",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Issuer makes unauthenticated discovery of verifiers exchange endpoint. `verifier_exchange_endpoint` is persisted to collectionVariables\", function() {",
-							"    const { service } = pm.response.json().didDocument;",
-							"    pm.collectionVariables.set(\"verifier_exchange_endpoint\", service[0].serviceEndpoint);",
-							"});",
-							"",
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"protocolProfileBehavior": {
-				"disabledSystemHeaders": {}
-			},
-			"request": {
-				"auth": {
-					"type": "noauth"
 				},
 				"method": "GET",
 				"header": [
