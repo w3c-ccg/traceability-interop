@@ -8,7 +8,7 @@ To build and run the test reporting, first install and run either [miniconda](ht
 Once that is installed, you can create the reporting environment with the following command:
 
 ```bash
-$ conda env create -f environment.yml 
+$ conda env create -f environment.yml python=3.9
 ```
 
 
