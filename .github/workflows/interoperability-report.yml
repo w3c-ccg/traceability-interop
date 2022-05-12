@@ -296,12 +296,24 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: "Mavennet"
-            actor: "MAVENNET_STAGING"
-          - name: "mesur.io"
-            actor: "MESUR_IO_PRODUCTION"
-          - name: "Transmute"
-            actor: "TRANSMUTE_PRODUCTION"
+          - name: "mesur.io-Transmute"
+            issuer: MESUR_IO_PRODUCTION
+            verifier: TRANSMUTE_PRODUCTION
+          - name: "mesur.io-Mavennet"
+            issuer: MESUR_IO_PRODUCTION
+            verifier: MAVENNET_STAGING
+          - name: "Transmute-Mavennet"
+            issuer: TRANSMUTE_PRODUCTION
+            verifier: MAVENNET_STAGING
+          - name: "Transmute-mesur.io"
+            issuer: TRANSMUTE_PRODUCTION
+            verifier: MESUR_IO_PRODUCTION
+          - name: "Mavennet-mesur.io"
+            issuer: MAVENNET_STAGING
+            verifier: MESUR_IO_PRODUCTION
+          - name: "Mavennet-Transmute"
+            issuer: MAVENNET_STAGING
+            verifier: TRANSMUTE_PRODUCTION
     steps:
       # Check out repo, setup node, and install dependencies.
       # @see https://github.com/actions/setup-node#usage
@@ -313,20 +325,32 @@ jobs:
       - run: npm ci
       - name: Run Tests
         env:
-          organization_did_web: ${{secrets[format('{0}_ORGANIZATION_DID_WEB', matrix.actor)]}}
-          client_id: ${{secrets[format('{0}_CLIENT_ID', matrix.actor)]}}
-          client_secret: ${{secrets[format('{0}_CLIENT_SECRET', matrix.actor)]}}
-          token_audience: ${{secrets[format('{0}_TOKEN_AUDIENCE', matrix.actor)]}}
-          token_endpoint: ${{secrets[format('{0}_TOKEN_ENDPOINT', matrix.actor)]}}
-          api_base_url: ${{secrets[format('{0}_API_BASE_URL', matrix.actor)]}}
+          issuer_organization_did_web: ${{secrets[format('{0}_ORGANIZATION_DID_WEB', matrix.issuer)]}}
+          issuer_client_id: ${{secrets[format('{0}_CLIENT_ID', matrix.issuer)]}}
+          issuer_client_secret: ${{secrets[format('{0}_CLIENT_SECRET', matrix.issuer)]}}
+          issuer_token_audience: ${{secrets[format('{0}_TOKEN_AUDIENCE', matrix.issuer)]}}
+          issuer_token_endpoint: ${{secrets[format('{0}_TOKEN_ENDPOINT', matrix.issuer)]}}
+          issuer_api_base_url: ${{secrets[format('{0}_API_BASE_URL', matrix.issuer)]}}
+          verifier_organization_did_web: ${{secrets[format('{0}_ORGANIZATION_DID_WEB', matrix.verifier)]}}
+          verifier_client_id: ${{secrets[format('{0}_CLIENT_ID', matrix.verifier)]}}
+          verifier_client_secret: ${{secrets[format('{0}_CLIENT_SECRET', matrix.verifier)]}}
+          verifier_token_audience: ${{secrets[format('{0}_TOKEN_AUDIENCE', matrix.verifier)]}}
+          verifier_token_endpoint: ${{secrets[format('{0}_TOKEN_ENDPOINT', matrix.verifier)]}}
+          verifier_api_base_url: ${{secrets[format('{0}_API_BASE_URL', matrix.verifier)]}}
         run: |
           npx newman run ./docs/tutorials/presentations-verify/presentations-verify.postman_collection.json \
-          --env-var ORGANIZATION_DID_WEB=$organization_did_web \
-          --env-var CLIENT_ID=$client_id \
-          --env-var CLIENT_SECRET=$client_secret \
-          --env-var TOKEN_AUDIENCE=$token_audience \
-          --env-var TOKEN_ENDPOINT=$token_endpoint \
-          --env-var API_BASE_URL=$api_base_url \
+          --env-var ISSUER_ORGANIZATION_DID_WEB=$issuer_organization_did_web \
+          --env-var ISSUER_CLIENT_ID=$issuer_client_id \
+          --env-var ISSUER_CLIENT_SECRET=$issuer_client_secret \
+          --env-var ISSUER_TOKEN_AUDIENCE=$issuer_token_audience \
+          --env-var ISSUER_TOKEN_ENDPOINT=$issuer_token_endpoint \
+          --env-var ISSUER_API_BASE_URL=$issuer_api_base_url \
+          --env-var VERIFIER_ORGANIZATION_DID_WEB=$verifier_organization_did_web \
+          --env-var VERIFIER_CLIENT_ID=$verifier_client_id \
+          --env-var VERIFIER_CLIENT_SECRET=$verifier_client_secret \
+          --env-var VERIFIER_TOKEN_AUDIENCE=$verifier_token_audience \
+          --env-var VERIFIER_TOKEN_ENDPOINT=$verifier_token_endpoint \
+          --env-var VERIFIER_API_BASE_URL=$verifier_api_base_url \
           --reporters cli,htmlextra,json \
           --reporter-htmlextra-skipSensitiveData \
           --reporter-htmlextra-export "newman/${{format('{0}-{1}-{2}.html', github.run_id, github.job, matrix.name)}}" \
@@ -545,7 +569,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: credentials-revocation
-          path: docs/reports/          
+          path: docs/reports/
       - uses: actions/download-artifact@v3
         with:
           name: did-web-discovery
