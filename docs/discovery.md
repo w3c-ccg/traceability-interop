@@ -128,7 +128,6 @@ https://platform.example/organization/123/presentations/prove
 https://platform.example/organization/123/presentations/verify
 https://platform.example/organization/123/presentations/available
 https://platform.example/organization/123/presentations/submissions
-https://platform.example/organization/123/presentations
 ```
 
 These endpoints require the application to be authenticated:
