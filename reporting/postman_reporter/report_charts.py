@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 from dash import html, dash_table
 from postman_reporter.report_config import *
 
+
 def getSidebar():
     html.Div(
         [
@@ -24,26 +25,28 @@ def getSidebar():
             ),
         ],
         style=SIDEBAR_STYLE,
-)
+    )
+
 
 def getSummaryText(df, now):
     return [
         html.P([
             "These are the test results for the ",
             html.A("Traceability Interop Profile",
-                href="https://w3c-ccg.github.io/traceability-interop/", target="_blank"),
+                   href="https://w3c-ccg.github.io/traceability-interop/", target="_blank"),
             " as of:" + now
         ]),
         html.P([
             "The highest current % of passed tests by a single provider is: ", str(
-                df['Passing'].max()),
+                df['Passing'].min()),
             html.Br(),
-            "The lowest is: ", str(df['Passing'].min()),
+            "The lowest is: ", str(df['Passing'].max()),
             html.Br(),
             "Across all providers the average % of passed tests is: ", "{:.1%}".format(
                 df['Passing'].str.replace("\%", "").astype(float).mean()/100),
         ])
     ]
+
 
 def getTable(d, id, filter=False):
     df_dict = d.to_dict('records')
@@ -135,6 +138,7 @@ def df_to_heatmap(d, idx):
         'y': d.index.tolist()
     }
 
+
 def getCards(df):
     summaryProvider = []
     for idx, r in df.iterrows():
@@ -148,7 +152,7 @@ def getCards(df):
                                 [
                                     html.H4(r[1], className="card-title"),
                                     html.P("of tests taken, passed",
-                                        className="card-text"),
+                                           className="card-text"),
                                 ]
                             ),
                         ],
@@ -167,13 +171,14 @@ def getCards(df):
                                 [
                                     html.H4(r[1], className="card-title"),
                                     html.P("of tests taken, passed",
-                                        className="card-text"),
+                                           className="card-text"),
                                 ]
                             ),
                         ],
                     )], style={"display": "inline-block"})
             )
     return summaryProvider, summaryProviderMulti
+
 
 def getFacet(df):
     facet_tests = px.scatter(
@@ -204,7 +209,8 @@ def getFacet(df):
     facet_tests.update_xaxes(showgrid=False)
     facet_tests.update_yaxes(showgrid=False, autorange="reversed")
     facet_tests.update_annotations(font=dict(size=12))
-    facet_tests.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+    facet_tests.for_each_annotation(
+        lambda a: a.update(text=a.text.split("=")[-1]))
     for annotation in facet_tests['layout']['annotations']:
         annotation['textangle'] = 60
         annotation['font'].size = 14
@@ -217,6 +223,7 @@ def getFacet(df):
             facet_tests.layout[axis].title.text = ''
             facet_tests.layout[axis].tickangle = 60
     return facet_tests
+
 
 def getSunburst(df, path=DEFAULT_REPORT_PATH, color="Result"):
     subburst = px.sunburst(
@@ -240,6 +247,7 @@ def getSunburst(df, path=DEFAULT_REPORT_PATH, color="Result"):
         ),
     )
     return subburst
+
 
 def getTree(df, path=DEFAULT_REPORT_PATH, color="Result"):
     tree = px.treemap(
