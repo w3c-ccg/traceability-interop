@@ -79,9 +79,7 @@ For example:
 {
   "@context": [
     "https://www.w3.org/ns/did/v1",
-    {
-      "@vocab": "https://www.w3.org/ns/did/#"
-    }
+    "https://w3id.org/traceability/v1"
   ],
   "id": "did:web:platform.example:organization:123",
   "alsoKnownAs": [
