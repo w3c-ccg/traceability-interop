@@ -34,11 +34,11 @@ HTTP GET https://platform.example/organization/123/did.json => didDocument.json
 
 2. Review the `serviceEndpoint`, `assertionMethod`, and `authentication` sections of the DID document.
 
-#### `services`
+#### `service`
 
 > Means of communicating or interacting with the DID subject or associated entities via one or more service endpoints. 
 
-See [services](https://www.w3.org/TR/did-core/#dfn-service).
+See [service](https://www.w3.org/TR/did-core/#dfn-service).
 
 This entry MUST be present.
 This entry MUST have an element of type `TraceabilityAPI` with a `serviceEndpoint` URL for a VC-API that supports presentation exchange.
@@ -79,9 +79,7 @@ For example:
 {
   "@context": [
     "https://www.w3.org/ns/did/v1",
-    {
-      "@vocab": "https://www.w3.org/ns/did/#"
-    }
+    "https://w3id.org/traceability/v1"
   ],
   "id": "did:web:platform.example:organization:123",
   "alsoKnownAs": [
@@ -114,7 +112,7 @@ In this example, the organization suports authentication and credential issuance
 ```json
 {
   "id": "did:web:platform.example:organization:123#traceability-api",
-  "type": "TraceabilityAPI", // Todo: define this service type in the trace-vocab.
+  "type": "TraceabilityAPI",
   "serviceEndpoint": "https://platform.example/organization/123"
 }
 ```
