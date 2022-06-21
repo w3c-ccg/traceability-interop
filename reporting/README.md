@@ -47,7 +47,7 @@ optional arguments:
 ```
 
 
-## Next steps and end goals
+## Module Description
 
 There are three main modules:
 
@@ -55,3 +55,8 @@ There are three main modules:
 - `./postman_reporter/report_static.py` — generate a static HTML report for use with gh-pages (IN-PROGRESS)
 - `./postman_reporter/report_dashboard.py` — the latter half of this app that spins up a dash app on flask for actually working with the test results
 - `reporter.py` — the main binary that runs one or more modules as listed above, based on command line arguments 
+
+## Output
+
+After running the reporter you will see a dashboard in your browser
+![image](https://user-images.githubusercontent.com/3495140/174913518-0612f10a-fe81-442c-816e-ab69fac285fa.png)
