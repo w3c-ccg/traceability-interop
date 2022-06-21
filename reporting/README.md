@@ -60,3 +60,11 @@ There are three main modules:
 
 After running the reporter you will see a dashboard in your browser
 ![image](https://user-images.githubusercontent.com/3495140/174913518-0612f10a-fe81-442c-816e-ab69fac285fa.png)
+
+In addition to the summary stats multiple drill through visualizations that cross compare results and identify problems in red are available
+![image](https://user-images.githubusercontent.com/3495140/174913726-f94a8aff-7163-4b82-aaec-6aa0f6b3cc93.png)
+![image](https://user-images.githubusercontent.com/3495140/174913749-0fa20211-c37e-4895-ad2d-7772dcaeb70a.png)
+
+There is also a searchable and filterable table of all unit test results
+![image](https://user-images.githubusercontent.com/3495140/174913783-b5fd187d-908c-4c69-a67d-ad0f3dd94100.png)
+
