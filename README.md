@@ -67,9 +67,18 @@ This implementation will cover all required AND optional APIs and will be used t
 
 ## Postman Interoperability Test Suite
 
-In order to ensure interoperability tests are conducted in a manner consistent with production environments, we will be maintaining postman collections and client credential configuration in github actons.
+In order to ensure interoperability tests are conducted in a manner consistent with production environments, we maintain a set of postman collections and client credential configuration located in the [tutorials](./docs/tutorials/) section of the docs.  These tests are executed in github actons, on demand by implementers, as well as being run on a nightly scheduled basis.
 
-This will allow us to test implementations in production with the appropriate security and authorizaton policies in place.
+This approach allows us to test implementations in production with the appropriate security and authorizaton policies in place.
+
+
+If you would like to register an implementation with to the test suite, please contact one of the editors of the specification as listed here:
+
+- [Orie Steele](mailto:orie@transmute.industries?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
+- [Michael Prorock](mailto:mprorock@mesur.io?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
+- [Mahmoud Alkhraishi](mailto:mahmoud@mavennet.com?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
+
+Test Suite Registration is required for participation in up coming Technical Demonstrations with various government and non-government entities related to trade and import/export data exchange.
 
 ## Development
 
