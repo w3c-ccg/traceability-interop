@@ -11,7 +11,9 @@ by changes to files in the `docs/openapi` folder.
 ## Testing Notes
 
 ### Optional Elements
-When a schema calls for optional elements, the base happy path test will exclude all optional items. There will be one additional happy path test each optional item separately.
+When a schema calls for optional elements, the base happy path test will exclude all optional items.
+
+There will be one additional happy path test for each optional item, which will be run separately.
 
 There will be one negative test for each optional item in which an invalid value will be used.
 
