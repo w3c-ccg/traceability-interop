@@ -47,7 +47,7 @@ optional arguments:
 ```
 
 
-## Next steps and end goals
+## Module Description
 
 There are three main modules:
 
@@ -55,3 +55,16 @@ There are three main modules:
 - `./postman_reporter/report_static.py` — generate a static HTML report for use with gh-pages (IN-PROGRESS)
 - `./postman_reporter/report_dashboard.py` — the latter half of this app that spins up a dash app on flask for actually working with the test results
 - `reporter.py` — the main binary that runs one or more modules as listed above, based on command line arguments 
+
+## Output
+
+After running the reporter you will see a dashboard in your browser
+![image](https://user-images.githubusercontent.com/3495140/174913518-0612f10a-fe81-442c-816e-ab69fac285fa.png)
+
+In addition to the summary stats multiple drill through visualizations that cross compare results and identify problems in red are available
+![image](https://user-images.githubusercontent.com/3495140/174913726-f94a8aff-7163-4b82-aaec-6aa0f6b3cc93.png)
+![image](https://user-images.githubusercontent.com/3495140/174913749-0fa20211-c37e-4895-ad2d-7772dcaeb70a.png)
+
+There is also a searchable and filterable table of all unit test results
+![image](https://user-images.githubusercontent.com/3495140/174913783-b5fd187d-908c-4c69-a67d-ad0f3dd94100.png)
+

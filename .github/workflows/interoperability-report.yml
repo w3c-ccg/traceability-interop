@@ -289,6 +289,86 @@ jobs:
           name: presentations-exchange
           path: docs/reports/
 
+  interop-presentations-exchange-oauth:
+    name: Presentations Exchange OAuth
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "mesur.io-Transmute"
+            holder: MESUR_IO_PRODUCTION
+            verifier: TRANSMUTE_PRODUCTION
+          - name: "mesur.io-Mavennet"
+            holder: MESUR_IO_PRODUCTION
+            verifier: MAVENNET_STAGING
+          - name: "Transmute-Mavennet"
+            holder: TRANSMUTE_PRODUCTION
+            verifier: MAVENNET_STAGING
+          - name: "Transmute-mesur.io"
+            holder: TRANSMUTE_PRODUCTION
+            verifier: MESUR_IO_PRODUCTION
+          - name: "Mavennet-mesur.io"
+            holder: MAVENNET_STAGING
+            verifier: MESUR_IO_PRODUCTION
+          - name: "Mavennet-Transmute"
+            holder: MAVENNET_STAGING
+            verifier: TRANSMUTE_PRODUCTION
+    steps:
+      # Check out repo, setup node, and install dependencies.
+      # @see https://github.com/actions/setup-node#usage
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          cache: 'npm'
+      - run: npm ci
+      - name: Run Tests
+        env:
+          holder_organization_did_web: ${{secrets[format('{0}_ORGANIZATION_DID_WEB', matrix.holder)]}}
+          holder_client_id: ${{secrets[format('{0}_CLIENT_ID', matrix.holder)]}}
+          holder_client_secret: ${{secrets[format('{0}_CLIENT_SECRET', matrix.holder)]}}
+          holder_token_audience: ${{secrets[format('{0}_TOKEN_AUDIENCE', matrix.holder)]}}
+          holder_token_endpoint: ${{secrets[format('{0}_TOKEN_ENDPOINT', matrix.holder)]}}
+          holder_api_base_url: ${{secrets[format('{0}_API_BASE_URL', matrix.holder)]}}
+          verifier_organization_did_web: ${{secrets[format('{0}_ORGANIZATION_DID_WEB', matrix.verifier)]}}
+          verifier_client_id: ${{secrets[format('{0}_CLIENT_ID', matrix.verifier)]}}
+          verifier_client_secret: ${{secrets[format('{0}_CLIENT_SECRET', matrix.verifier)]}}
+          verifier_token_audience: ${{secrets[format('{0}_TOKEN_AUDIENCE', matrix.verifier)]}}
+          verifier_token_endpoint: ${{secrets[format('{0}_TOKEN_ENDPOINT', matrix.verifier)]}}
+          verifier_api_base_url: ${{secrets[format('{0}_API_BASE_URL', matrix.verifier)]}}
+        run: |
+          npx newman run ./docs/tutorials/presentations-exchange-oauth/presentations-exchange-oauth.json \
+          --env-var HOLDER_ORGANIZATION_DID_WEB=$holder_organization_did_web \
+          --env-var HOLDER_CLIENT_ID=$holder_client_id \
+          --env-var HOLDER_CLIENT_SECRET=$holder_client_secret \
+          --env-var HOLDER_TOKEN_AUDIENCE=$holder_token_audience \
+          --env-var HOLDER_TOKEN_ENDPOINT=$holder_token_endpoint \
+          --env-var HOLDER_API_BASE_URL=$holder_api_base_url \
+          --env-var VERIFIER_ORGANIZATION_DID_WEB=$verifier_organization_did_web \
+          --env-var VERIFIER_CLIENT_ID=$verifier_client_id \
+          --env-var VERIFIER_CLIENT_SECRET=$verifier_client_secret \
+          --env-var VERIFIER_TOKEN_AUDIENCE=$verifier_token_audience \
+          --env-var VERIFIER_TOKEN_ENDPOINT=$verifier_token_endpoint \
+          --env-var VERIFIER_API_BASE_URL=$verifier_api_base_url \
+          --reporters cli,htmlextra,json \
+          --reporter-htmlextra-skipSensitiveData \
+          --reporter-htmlextra-export "newman/${{format('{0}-{1}-{2}.html', github.run_id, github.job, matrix.name)}}" \
+          --reporter-json-export "newman/${{format('{0}-{1}-{2}.json', github.run_id, github.job, matrix.name)}}"
+      # Sanitize newman output and write all reports to the `./docs/reports`
+      # folder for publishing, excluding `index.html`, which will be rebuilt
+      # during publishing.
+      - name: Sanitize Newman Output
+        if: ${{ always() }} # Run even when postman tests fail
+        run: |
+          npm run report:prepare
+          rm -f ./docs/reports/index.html
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }} # Run even when postman tests fail
+        with:
+          name: presentations-exchange
+          path: docs/reports/
+
   interop-presentations-verify:
     name: Presentations Verify
     runs-on: ubuntu-latest
