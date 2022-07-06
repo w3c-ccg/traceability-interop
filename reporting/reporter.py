@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 import argparse
+import glob
+import json
 import os
 
 from jinja2 import Environment, FileSystemLoader
-from postman_reporter import (report_config, report_dashboard, report_data,
-                              report_static)
+from postman_reporter import report_config, report_dashboard, report_data, report_static
 
 
 def runData():
@@ -26,6 +27,30 @@ def runHtml():
     template = env.get_template(report_config.TEMPLATE_FILE)
     report_static.generate_html(template)
     return 0
+
+
+def runCi():
+    """
+    runCi prepares report data from local docs/reports folder and uses that
+    data to generate a static interactive HTML report.
+    """
+
+    def _reports_from_file(path):
+        def func():
+            return glob.glob(f"{path}/*.json")
+
+        return func
+
+    def _json_from_file(path):
+        with open(path, "r") as fh:
+            return json.load(fh)
+
+    report_data.getData(
+        get_reports=_reports_from_file(CI_DIR),
+        get_json=_json_from_file,
+    )
+
+    runHtml()
 
 
 def main(args):
@@ -51,6 +76,9 @@ def main(args):
     if args.mode == "all" or args.mode == "dashboard":
         runDash()
 
+    if args.mode == "ci":
+        runCi()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -62,7 +90,7 @@ if __name__ == "__main__":
         default="all",
         const="all",
         nargs="?",
-        choices=["all", "data", "html", "dashboard"],
+        choices=["all", "data", "html", "dashboard", "ci"],
         help="mode to run the reporter in",
     )
 

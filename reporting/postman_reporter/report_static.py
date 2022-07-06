@@ -5,6 +5,7 @@ import plotly
 import postman_reporter.report_charts as report_charts
 import postman_reporter.reporter_util as reporter_util
 from jinja2 import Template
+from postman_reporter.report_config import *
 
 
 def generate_html(template):
@@ -38,7 +39,7 @@ def generate_html(template):
         details=renderTable(detailsDF),
     )
 
-    with open("html/index.html", "wt") as fh:
+    with open(f"{CI_DIR}/index.html", "wt") as fh:
         fh.write(rendered)
 
 
