@@ -669,17 +669,29 @@ jobs:
           name: workflow-instance-join
           path: docs/reports/
 
-      # Build reports index prior to publishing
-      - name: Build reports index
+      # Set up Python 3.9
+      - name: Set up Pyton 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install Python Dependencies
+        run: |
+          # $CONDA points to the root of the miniconda directory
+          $CONDA/bin/conda env update --file reporting/environment.yml --name base
+
+      # Build report index
+      - name: Build JSON Index
         run: npm run report:prepare
 
-      # Build the JSON version of the OpenAPI specification from the YAML source
-      # files prior to publishing.
-      - name: Build Open API Specification JSON
-        run: npm run preserve
+      # Build interactive report
+      - name: Build Interactive Report
+        working-directory: ./reporting
+        run: ./reporter.py --mode ci
 
+      # Publish reports subfolder to GitHub Pages
       - name: Publish Reports
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
+          publish_dir: ./docs/reports
+          destination_dir: reports
