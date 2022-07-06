@@ -46,7 +46,7 @@ def runCi():
             return json.load(fh)
 
     report_data.getData(
-        get_reports=_reports_from_file(CI_DIR),
+        get_reports=_reports_from_file(report_config.CI_DIR),
         get_json=_json_from_file,
     )
 
