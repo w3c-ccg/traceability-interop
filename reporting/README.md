@@ -36,13 +36,13 @@ Test results are sourced from the JSON test results published here:
 To get a list of reporter options, you can execute the reporter with the help parameter:
 ```bash
 $ ./reporter.py -h
-usage: reporter.py [-h] [--mode [{all,data,html,dashboard}]]
+usage: reporter.py [-h] [--mode [{all,data,html,dashboard,ci}]]
 
 Interop test results reporting utility
 
 optional arguments:
   -h, --help            show this help message and exit
-  --mode [{all,data,html,dashboard}]
+  --mode [{all,data,html,dashboard,ci}]
                         mode to run the reporter in
 ```
 
@@ -54,7 +54,7 @@ There are three main modules:
 - `./postman_reporter/report_data.py` — go get the data, link it up, create appropriate data frames, and store them as CSV for easy use
 - `./postman_reporter/report_static.py` — generate a static HTML report for use with gh-pages (IN-PROGRESS)
 - `./postman_reporter/report_dashboard.py` — the latter half of this app that spins up a dash app on flask for actually working with the test results
-- `reporter.py` — the main binary that runs one or more modules as listed above, based on command line arguments 
+- `reporter.py` — the main binary that runs one or more modules as listed above, based on command line arguments
 
 ## Output
 
@@ -67,4 +67,3 @@ In addition to the summary stats multiple drill through visualizations that cros
 
 There is also a searchable and filterable table of all unit test results
 ![image](https://user-images.githubusercontent.com/3495140/174913783-b5fd187d-908c-4c69-a67d-ad0f3dd94100.png)
-

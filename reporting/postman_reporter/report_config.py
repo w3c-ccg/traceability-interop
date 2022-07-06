@@ -1,37 +1,39 @@
 URL = "https://w3id.org/traceability/interoperability/reports/"
-DATA_DIR='./data/'
-DF_PREFIX=''
-DF_EXT='.pkl'
+TEMPLATE_FILE = "./assets/template.j2"
+DATA_DIR = "./data/"
+CI_DIR = "../docs/reports"
+DF_PREFIX = ""
+DF_EXT = ".pkl"
 
 HEADER = [
-    'Testing Application',
-    'Project Name',
-    'Provider',
-    'Test Type',
-    'Test Step',
-    'Assertion',
-    'Result',
-    'Error Message',
-    'Passing'
+    "Testing Application",
+    "Project Name",
+    "Provider",
+    "Test Type",
+    "Test Step",
+    "Assertion",
+    "Result",
+    "Error Message",
+    "Passing",
 ]
 
 COLUMNS_DETAIL = [
-    'Provider',
-    'Test Type',
-    'Test Step',
-    'Assertion',
-    'Result',
-    'Error Message',
-    'Passing'
+    "Provider",
+    "Test Type",
+    "Test Step",
+    "Assertion",
+    "Result",
+    "Error Message",
+    "Passing",
 ]
 
 COLUMNS_MAIN = [
-    'Provider',
-    'Test Type',
-    'Test Step',
-    'Assertion',
-    'Result',
-    'Error Message',
+    "Provider",
+    "Test Type",
+    "Test Step",
+    "Assertion",
+    "Result",
+    "Error Message",
 ]
 
 SIDEBAR_STYLE = {
@@ -49,8 +51,6 @@ CONTENT_STYLE = {
     "padding": "2rem 1rem",
 }
 
-COLOR_MAP = {
-    '(?)': 'darkred', 'Pass': 'darkgreen', 'Fail': 'darkred'
-}
+COLOR_MAP = {"(?)": "darkred", "Pass": "darkgreen", "Fail": "darkred"}
 
-DEFAULT_REPORT_PATH = ["Test Type",  "Provider", "Test Step"]
+DEFAULT_REPORT_PATH = ["Test Type", "Provider", "Test Step"]
