@@ -2,9 +2,9 @@
 import argparse
 import os
 
-from postman_reporter import report_dashboard
-from postman_reporter import report_data
-from postman_reporter import report_static
+from jinja2 import Environment, FileSystemLoader
+from postman_reporter import (report_config, report_dashboard, report_data,
+                              report_static)
 
 
 def runData():
@@ -20,7 +20,11 @@ def runDash():
 
 
 def runHtml():
-    report_static.generate_html()
+    # Create the jinja2 environment.
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    env = Environment(loader=FileSystemLoader(current_directory))
+    template = env.get_template(report_config.TEMPLATE_FILE)
+    report_static.generate_html(template)
     return 0
 
 

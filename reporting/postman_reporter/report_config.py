@@ -1,4 +1,5 @@
 URL = "https://w3id.org/traceability/interoperability/reports/"
+TEMPLATE_FILE='./assets/template.j2'
 DATA_DIR='./data/'
 DF_PREFIX=''
 DF_EXT='.pkl'
