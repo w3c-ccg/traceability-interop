@@ -37,7 +37,8 @@ def runCi():
 
     def _reports_from_file(path):
         def func():
-            return glob.glob(f"{path}/*.json")
+            files = glob.glob(f"{path}/*.json")
+            return [i for i in files if not i.endswith("index.json")]
 
         return func
 
