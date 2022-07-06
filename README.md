@@ -8,6 +8,7 @@
 
 ## Latest Reports
 
+- [Multivendor Interoperability Reporting](https://github.com/w3c-ccg/traceability-interop/tree/main/reporting)
 - [https://w3id.org/traceability/interoperability/reports](https://w3id.org/traceability/interoperability/reports)
 
 ## About
@@ -35,6 +36,18 @@ channel automatically.
 3. Once the last person leaves, everything else is automated (publishing raw IRC
    log, audio, and video). If you want to clean up the minutes, it takes about
    5-10 minutes to clean up the transcription and publish it.
+
+#### Retrieving Minutes
+
+1. Go to [Scribe tool](https://w3c-ccg.github.io/meetings/scribe-tool/)
+2. Select "Traceability" from the drop-down at the bottom right.
+3. Select a day for the call you're interested in.
+4. Click "Retrieve Raw Logs".
+5. The display will then render the minutes.
+
+#### Publishing Minutes
+
+[Publish Instructions](https://github.com/w3c-ccg/meetings#publish-the-minutes-for-ccg-meetings-task-forces-and-other-recorded-meetings)
 
 ## [Open API Specification](https://w3c-ccg.github.io/traceability-interop/)
 
@@ -66,9 +79,18 @@ This implementation will cover all required AND optional APIs and will be used t
 
 ## Postman Interoperability Test Suite
 
-In order to ensure interoperability tests are conducted in a manner consistent with production environments, we will be maintaining postman collections and client credential configuration in github actons.
+In order to ensure interoperability tests are conducted in a manner consistent with production environments, we maintain a set of postman collections and client credential configuration located in the [tutorials](./docs/tutorials/) section of the docs.  These tests are executed in github actons, on demand by implementers, as well as being run on a nightly scheduled basis.
 
-This will allow us to test implementations in production with the appropriate security and authorizaton policies in place.
+This approach allows us to test implementations in production with the appropriate security and authorizaton policies in place.
+
+
+If you would like to register an implementation with to the test suite, please contact one of the editors of the specification as listed here:
+
+- [Orie Steele](mailto:orie@transmute.industries?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
+- [Michael Prorock](mailto:mprorock@mesur.io?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
+- [Mahmoud Alkhraishi](mailto:mahmoud@mavennet.com?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
+
+Test Suite Registration is required for participation in up coming Technical Demonstrations with various government and non-government entities related to trade and import/export data exchange.
 
 ## Development
 
