@@ -2,9 +2,9 @@ name: Conformance Testing
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'tests/**'
+  schedule:
+    # Every day at midnight
+    - cron: '0 0 * * *'
 
 jobs:
   conformance-suite:
@@ -49,3 +49,28 @@ jobs:
           --reporter-htmlextra-skipSensitiveData \
           --reporter-htmlextra-export "newman/${{format('{0}-{1}-{2}.html', github.run_id, github.job, matrix.name)}}" \
           --reporter-json-export "newman/${{format('{0}-{1}-{2}.json', github.run_id, github.job, matrix.name)}}"
+
+      # Build report index
+      - name: Build JSON Index
+        run: npm run report:prepare
+
+      # Set up Python 3.x
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+          cache: pip
+      - run: pip install -r ./reporting/requirements.txt
+
+        # Build interactive report
+      - name: Build Interactive Report
+        working-directory: ./reporting
+        run: ./reporter.py --mode ci
+
+      # Publish reports subfolder to GitHub Pages
+      - name: Publish Reports
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/reports
+          destination_dir: reports/conformance
