@@ -11,7 +11,8 @@
 - [Conformance Test Suite](https://w3id.org/traceability/interoperability/reports/conformance)
 - [Interoperability Test Suite](https://w3id.org/traceability/interoperability/reports/interoperability)
 - [Getting Started](https://github.com/w3c-ccg/traceability-interop/tree/main/reporting)
-- [Test Report Archive](https://w3id.org/traceability/interoperability/reports/index.json)
+- [Conformance Report Archive](https://w3id.org/traceability/interoperability/reports/conformance/index.json)
+- [Interoperability Report Archive](https://w3id.org/traceability/interoperability/reports/interoperability/index.json)
 
 ## About
 

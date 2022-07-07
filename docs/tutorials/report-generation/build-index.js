@@ -70,7 +70,6 @@ const buildReportsIndex = (folder) => {
       alias: 'f',
     })
     .check((args, _) => {
-      console.log(args);
       if (args.index && !args.folder) {
         throw new Error('Missing required argument: folder');
       }
