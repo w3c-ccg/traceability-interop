@@ -19,7 +19,7 @@ function update_postman() {
   FILE=$1; KEY=$2; SCHEMA=$3
   # Using a temp file (vs. in-place update) prevents truncation on failure
   TMP=$(mktemp)
-  jq --arg k "$KEY" --arg s "$SCHEMA" \
+  jq --arg k "$KEY" --arg s "$SCHEMA" --tab \
     '(.variable[] | select(.key==($k))).value=($s)' \
     "$FILE" > "$TMP" && mv "$TMP" "$FILE"
 }
