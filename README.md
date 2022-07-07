@@ -6,10 +6,12 @@
 
 - [https://w3id.org/traceability/interoperability/openapi](https://w3id.org/traceability/interoperability/openapi)
 
-## Latest Reports
+## Traceability Interoperability
 
-- [Multivendor Interoperability Reporting](https://github.com/w3c-ccg/traceability-interop/tree/main/reporting)
-- [https://w3id.org/traceability/interoperability/reports](https://w3id.org/traceability/interoperability/reports)
+- [Conformance Test Suite](https://w3id.org/traceability/interoperability/reports/conformance)
+- [Interoperability Test Suite](https://w3id.org/traceability/interoperability/reports/interoperability)
+- [Getting Started](https://github.com/w3c-ccg/traceability-interop/tree/main/reporting)
+- [Test Report Archive](https://w3id.org/traceability/interoperability/reports/index.json)
 
 ## About
 
