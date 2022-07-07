@@ -56,11 +56,12 @@ jobs:
           --reporter-json-export "newman/${{format('{0}-{1}-{2}.json', github.run_id, github.job, matrix.name)}}"
 
       # Sanitize newman output and write all reports to the `./docs/reports`
-      # folder for publishing. Note that this rebuilds and overwrites the
-      # `index.json` file with each matrix iteration (desired behavior).
+      # folder for publishing. Omit index.json, it will be rebuilt later.
       - name: Sanitize Newman Output
         if: always() # Run even when postman tests fail
-        run: npm run report:prepare
+        run: |
+          npm run report:prepare
+          rm -f ./docs/reports/index.json
 
       # Sanitized reports are needed by subsequent jobs
       - uses: actions/upload-artifact@v3
@@ -83,14 +84,24 @@ jobs:
       - conformance-run
 
     steps:
-      # Check out repo
+      # Check out repo, setup node, and install dependencies.
+      # @see https://github.com/actions/setup-node#usage
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          cache: 'npm'
+      - run: npm ci
 
       # Download 'reports' artifact
       - uses: actions/download-artifact@v3
         with:
           name: reports
           path: docs/reports/
+
+      # Build report index
+      - name: Build JSON Index
+        run: npm run report:prepare
 
       # Set up Python 3.x
       - name: Set up Python 3.x
