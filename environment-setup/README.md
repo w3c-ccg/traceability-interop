@@ -57,16 +57,17 @@ In order to securely transmit the secrets file to a maintainer, you will need to
 
 ```bash
 # Import the public GPG encryption key
-curl -sS https://raw.githubusercontent.com/w3c-ccg/traceability-interop/environment-setup/pubkey.asc | gpg --import -
+curl -sS https://raw.githubusercontent.com/w3c-ccg/traceability-interop/environment-setup/pubkey.asc \
+  | gpg --import -
 
-# Encrypt your secrets file with hidden recipient using the fingerprint of the
-# encryption key you just imported. If you prefer, you can also use `-a` to
-# generate an ASCII output file.
+# Encrypt your secrets file with hidden recipient using the UID of the
+# encryption key you just imported. If you prefer, you can also use `-a`
+# to generate an ASCII output file.
 gpg -e -R w3c-ccg/traceability-interop -o secrets.env.gpg secrets.env
 
-# Whether you use --armor or not, the entire output file must be base64
-# encoded before being sent in for test suite registration. It does not
-# matter if your implementation of `base64` does or does not wrap lines.
+# Whether you use `-a` or not, the entire output file must be base64 encoded
+# before being sent in for test suite registration. It does not matter if your
+# implementation of `base64` does or does not wrap lines.
 cat secrets.gpg | base64 > secrets.gpg.b64
 ```
 
@@ -103,6 +104,7 @@ The following example outlines what you would need to do to add an organization 
 ```yaml
       matrix:
         include:
+
           # Existing
           - name: "mesur.io-Transmute"
             issuer: MESUR_IO_PRODUCTION
@@ -110,6 +112,7 @@ The following example outlines what you would need to do to add an organization 
           - name: "mesur.io-Transmute"
             issuer: MESUR_IO_PRODUCTION
             verifier: TRANSMUTE_PRODUCTION
+
           # You would add
           - name: "mesur.io-Acme"
             issuer: MESUR_IO_PRODUCTION
@@ -125,16 +128,18 @@ The following example outlines what you would need to do to add an organization 
             verifier: TRANSMUTE_PRODUCTION
 ```
 
-Similarly, but less complex, is this example with a single-actor matrix:
+Similar, but less complex, is this example with a single-actor matrix:
 
 ```yaml
       matrix:
         include:
+
           # Existing
           - name: "mesur.io"
             actor: "MESUR_IO_PRODUCTION"
           - name: "Transmute"
             actor: "TRANSMUTE_PRODUCTION"
+
           # You would add
           - name: "Acme"
             actor: "ACME_PRODUCTION"
