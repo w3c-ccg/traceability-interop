@@ -99,7 +99,7 @@ By default, this workflow will not permit you to overwrite existing secrets. Thi
 
 Once secrets have been added ([check the secrets page to confirm](https://github.com/w3c-ccg/traceability-interop/settings/secrets/actions)), you will need to update individual workflows to add the new participating organization to the various test matrices.
 
-The following example outlines what you would need to do to add an organization called `Acme` to a multi-actor matrix (assumes you have used `ACME_PRODUCTION` as the variable prefix):
+The following example outlines what you would need to do to add an organization called `Acme` to a multi-actor matrix (assumes you have used `ACME_PRODUCTION_` as the variable prefix):
 
 ```yaml
       matrix:
