@@ -1,0 +1,86 @@
+# This workflow rotates the GPG key used to encrypt/decrypt secrets files used
+# for test suite registration process.
+#
+# Prerequisites:
+# - Create a GitHub PAT token with `public_repo` scope
+
+name: "Onboard: Rotate"
+
+on:
+  workflow_dispatch:
+    inputs:
+
+      # A GitHub PAT with `public_repo` scope is required in order to manage
+      # the values in GitHub secrets.
+      token:
+        description: GitHub Token
+        required: true
+        type: string
+
+env:
+  GITHUB_TOKEN: ${{ inputs.token }}
+
+jobs:
+  onboard-rotate:
+    runs-on: ubuntu-latest
+    steps:
+
+      # Generate a GPG encryption key with a random passphrase. The key will
+      # have a UID of `w3c-ccg/traceability-interop`.
+      - name: Generate GPG Key
+        id: gpg-generate
+        run: |
+          PASSPHRASE=$(gpg --gen-random --armor 1 32)
+          cat <<- EOF | gpg --batch --generate-key
+            Key-Type: RSA
+            Key-Length: 4096
+            Key-Usage: encrypt
+            Name-Real: w3c-ccg/traceability-interop
+            Name-Comment: test suite registration
+            Passphrase: ${PASSPHRASE}
+            Expire-Date: 0
+          EOF
+          echo "::set-output name=PASSPHRASE::$PASSPHRASE"
+
+      # The key fingerprint is used to refer to the newly generated key in
+      # subsequent commands. This limits the number of edits required if we
+      # choose to change the UID.
+      - name: Set GPG Fingerprint Output
+        id: gpg-fingerprint
+        run: |
+          FINGERPRINT=$(gpg --with-colons --list-keys | awk -F: '/^pub/ { print $5 }')
+          echo "::set-output name=FINGERPRINT::$FINGERPRINT"
+
+      # Store the randomly generated passphrase and the secret key in GitHub
+      # secrets. These will be retrieved and used to bootstrap the GPG agent
+      # in the workflow that imports secrets for test suite registration.
+      - name: Update Secrets
+        run: |
+          gh secret set 'GPG_PASSPHRASE' --body "${PASSPHRASE}" --repo ${{github.repository}}
+          gpg --armor --pinentry-mode loopback --passphrase "${{ env.PASSPHRASE }}" --export-secret-key ${{ env.KEY_ID }} \
+            | gh secret set 'GPG_PRIVATE_KEY' --repo ${{github.repository}}
+        env:
+          KEY_ID: ${{ steps.gpg-fingerprint.outputs.FINGERPRINT }}
+          PASSPHRASE: ${{ steps.gpg-generate.outputs.PASSPHRASE }}
+
+      # The public portion of the GPG key (ascii-armored) is exported so that
+      # it can be access by end-users needing to encrypt secrets for test suite
+      # registration.
+      - uses: actions/checkout@v3
+      - name: Update Public Key
+        working-directory: ./environment-setup
+        run: |
+          gpg --armor --export ${{ env.KEY_ID }} > pubkey.asc
+        env:
+          KEY_ID: ${{ steps.gpg-fingerprint.outputs.FINGERPRINT }}
+
+      # Create an automated git commit to add the exported ASCII public key
+      # to the repository
+      - name: Commit Key Changes
+        working-directory: ./environment-setup
+        run: |
+          git config --global user.name ${GITHUB_ACTOR}
+          git config --global user.email ${GITHUB_ACTOR}@users.noreply.github.com
+          git add . # For first-time key creation
+          git commit -am "chore: automated gpg key rotation"
+          git push
