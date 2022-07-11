@@ -149,7 +149,7 @@ Similar, but less complex, is this example with a single-actor matrix:
 
 In the event that the GPG key used for transmission of secret material during the test suite registration process needs to be rotated, there is a workflow for that.
 
-Again, you will need a GiHub PAT with `public_repo` scope in order to run this workflow - see the documentation above if you need to generate one.
+Again, you will need a GitHub PAT with `public_repo` scope in order to run this workflow - see the documentation above if you need to generate one.
 
 Once you have your PAT, navigate to the `Actions` tab of the repository and click on the `Onboard: Rotate` workflow listed in the left hand navigation. Run this workflow in the `main` branch and, when prompted, provide your PAT.
 
