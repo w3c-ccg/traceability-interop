@@ -126,7 +126,7 @@ def renderSummaryText(df):
     tpl = """
         <p>
             These are the test results for the
-            <a href="https://w3id.org/traceability/interoperability" target="_blank">Traceability Interop Profile</a>
+            <a href="https://w3id.org/traceability/interoperability" target="_blank">Open API for Interoperable Traceability</a>
             as of: {now}
         </p>
         <p>

@@ -32,7 +32,7 @@ def getSummaryText(df, now):
     return [
         html.P([
             "These are the test results for the ",
-            html.A("Traceability Interop Profile",
+            html.A("Open API for Interoperable Traceability",
                    href="https://w3id.org/traceability/interoperability", target="_blank"),
             " as of:" + now
         ]),
