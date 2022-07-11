@@ -109,9 +109,9 @@ The following example outlines what you would need to do to add an organization 
           - name: "mesur.io-Transmute"
             issuer: MESUR_IO_PRODUCTION
             verifier: TRANSMUTE_PRODUCTION
-          - name: "mesur.io-Transmute"
-            issuer: MESUR_IO_PRODUCTION
-            verifier: TRANSMUTE_PRODUCTION
+          - name: "Transmute-mesur.io"
+            issuer: TRANSMUTE_PRODUCTION
+            verifier: MESUR_IO_PRODUCTION
 
           # You would add
           - name: "mesur.io-Acme"
