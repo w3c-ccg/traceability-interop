@@ -36,10 +36,47 @@ channel automatically.
 
 1. Make sure to select "Start Recording" at the beginning of the call and "Stop
    Recording" when you're done.
-2. Make sure to kick everyone out of the room when the meeting is done.
-3. Once the last person leaves, everything else is automated (publishing raw IRC
-   log, audio, and video). If you want to clean up the minutes, it takes about
-   5-10 minutes to clean up the transcription and publish it.
+
+1. Select "Start Recording" to start audio recording
+
+1. Post the agenda link in the meeting chat box
+
+   `Agenda: https://github.com/w3c-ccg/traceability-interop/AGENDA.md`
+1. Address IP note, agenda review, and scribe selection topic
+
+    - Note the topic in the chat box
+
+      `Topic: IP Note, Agenda Review, Scribe Selection`
+    - Announce the agenda for the meeting. Meetings alternate between focus on the trace-interop and trace-vocab repositories.
+    - Read the standard IP note
+
+      > Anyone can participate in these calls. However, all substantive contributors to any CCG Work Items must be members of the CCG with full IPR agreements signed. Information about and links to the required license agreements can be found in the meeting agenda.
+
+1. Move on to GitHub Issue & PR review
+
+    - Note the next topic in the chat box
+
+      `Topic: GitHub Issue & PR review`
+
+    - Review pull requests in order (oldest first)
+
+      For this portion of the meeting, address PRs in the focus repository first, followed by PRs in the other repository.
+
+        - Publish link to sorted PRs in chat box ([trace-interop](https://github.com/w3c-ccg/traceability-interop/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc), [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc))
+
+        - Publish link to each PR being discussed in chat box
+
+    - Review issues in order (least recently updated first)
+
+      For this portion of the meeting, address issues in the focus repository first, followed by issues in the other repository.
+
+        - Publish link to sorted issues in chat box ([trace-interop](https://github.com/w3c-ccg/traceability-interop/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-asc), [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-asc))
+
+        - Publish link to each issue being discussed in chat box
+
+1. Make sure to kick everyone out of the room when the meeting is done.
+
+1. Retrieve and publish meeting minutes
 
 #### Retrieving Minutes
 
