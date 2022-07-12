@@ -62,7 +62,7 @@ channel automatically.
 
       For this portion of the meeting, address PRs in the focus repository first, followed by PRs in the other repository.
 
-        - Publish link to sorted PRs in chat box
+        - Publish link to sorted PRs in chat box ([trace-interop](https://github.com/w3c-ccg/traceability-interop/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc), [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc))
 
         - Publish link to each PR being discussed in chat box
 
@@ -70,7 +70,7 @@ channel automatically.
 
       For this portion of the meeting, address issues in the focus repository first, followed by issues in the other repository.
 
-        - Publish link to sorted issues in chat box
+        - Publish link to sorted issues in chat box ([trace-interop](https://github.com/w3c-ccg/traceability-interop/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-asc), [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-asc))
 
         - Publish link to each issue being discussed in chat box
 
