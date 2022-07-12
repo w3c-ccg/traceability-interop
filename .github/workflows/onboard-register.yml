@@ -1,0 +1,110 @@
+# This workflow will ingest and parse a gpg-encrypted, base64-encoded secrets
+# file used for the test suite registration process.
+#
+# Prerequisites:
+# - Create a GitHub PAT token with `public_repo` scope
+
+name: "Onboard: Register"
+
+on:
+  workflow_dispatch:
+    inputs:
+
+      # A GitHub PAT with `public_repo` scope is required in order to manage
+      # the values in GitHub secrets.
+      token:
+        description: GitHub Token
+        required: true
+        type: string
+
+      # This is a vendor-specific prefix to add to the secret names in the
+      # provided file. This should be unique per vendor, and should include
+      # the trailing underscore.
+      prefix:
+        description: Secret Prefix, e.g., 'VENDOR_SLUG_'
+        required: true
+        type: string
+
+      # This is the base64-encoded GPG file provided by the organization that
+      # is registering for the test suite.
+      dotenv:
+        description: Base64-encoded GPG file
+        required: true
+        type: string
+
+      # Check this box to skip the step that prevents existing secrets from
+      # being overwritten with new data.
+      overwrite:
+        description: Overwrite? (DANGER)
+        required: false
+        type: boolean
+        default: false
+
+env:
+  GITHUB_TOKEN: ${{ inputs.token }}
+
+jobs:
+  onboard-register:
+    runs-on: ubuntu-latest
+    steps:
+
+      # Import the GPG key from GitHub secrets into the gpg keyring on the
+      # test runner. This is required in order to be able to decrypt secrets
+      # files encrypted with the corresponding public key.
+      - name: Import GPG Key
+        run: echo -e '${{ env.PRIVATE_KEY }}' | gpg --import --batch --no-tty
+        env:
+          PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      # To prevent formatting issues when maintainers paste the secrets file
+      # into the workflow input, all data must be base64 encoded. This step
+      # is able to handle both line-wrapped and un-wrapped `base64` output.
+      # Once decoded, the file is passed to GPG to decrypt using the key that
+      # was imported in the previous step and the passphrase from GitHub
+      # secrets.
+      - name: Decode Environment File
+        run: |
+          # Remove whitespace in case base64 is line-wrapped
+          b64=$(echo '${{ inputs.dotenv }}' | tr -d "[:space:]")
+
+          # Decoded dotenv may be binary or ASCII, store to disk
+          echo $b64 | base64 -d > dotenv.gpg
+
+          # Headless decryption of encrypted environment file with no recipient
+          gpg --try-all-secrets --decrypt --pinentry-mode loopback \
+            --passphrase '${{ env.PASSPHRASE }}' --output dotenv.asc dotenv.gpg
+        env:
+          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      # By default, this workflow will fail if any of the keys in the secrets
+      # file (prepended with the `prefix` input) already exist in GitHub secrets.
+      # If you know what you are doing, you can disable this step by checking the
+      # `Overwrite? (DANGER)` checkbox when running this workflow.
+      - name: Check for Overwrites
+        if: ${{ !inputs.overwrite }}
+        run: |
+          SECRETS=($(gh secret list --repo ${{github.repository}} | awk '{print $1}'))
+
+          # Portion of line before '=' may not match an existing key
+          while read -r LINE
+          do
+            SECRET_NAME=${{inputs.prefix}}${LINE%=*}
+            if [[ " ${SECRETS[*]} " =~ " ${SECRET_NAME} " ]]
+            then
+              echo "Refusing to overwrite existing variable '${SECRET_NAME}'"
+              exit 1
+            fi
+          done < dotenv.asc
+
+      # This step parses keys and values from the decrypted secrets files, adds
+      # the provided input `prefix` to the variable name, and stores everything
+      # in GitHub secrets.
+      - name: Set GitHub Secrets
+        run: |
+          while read -r LINE
+          do
+            SECRET_NAME=${{inputs.prefix}}${LINE%=*}
+            SECRET_VALUE=${LINE#*=}
+            gh secret set "${SECRET_NAME}" --body "${SECRET_VALUE}" \
+              --repo ${{github.repository}}
+          done < dotenv.asc

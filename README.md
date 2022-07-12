@@ -87,11 +87,7 @@ In order to ensure interoperability tests are conducted in a manner consistent w
 
 This approach allows us to test implementations in production with the appropriate security and authorization policies in place.
 
-If you would like to register an implementation to be tested against the test suite, please contact one of the editors of the specification as listed here:
-
-- [Orie Steele](mailto:orie@transmute.industries?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
-- [Michael Prorock](mailto:mprorock@mesur.io?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
-- [Mahmoud Alkhraishi](mailto:mahmoud@mavennet.com?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
+If you would like to register an implementation to be tested against the test suite, please [review the step-by-step instructions provided here](./environment-setup/README.md).
 
 Test suite registration is required for participation in upcoming technical demonstrations with various government and non-government entities related to trade and import/export data exchange.
 
