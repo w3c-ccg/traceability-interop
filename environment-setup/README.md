@@ -81,7 +81,7 @@ Attach the encrypted and base64-encoded secrets file to an email and send it to 
 
 # Maintainers
 
-If you are a repository maintainer and receive a request for registration with an attached encrypted secrets file, you can either use the `Onboard: Register` workflow, or the corresponding [`onboard-register.sh`](./onboard-register.sh) script to decrypt and store the provided values in GitHub secrets.
+If you are a repository maintainer and receive a request for registration with an attached encrypted secrets file, you can use either the `Onboard: Register` workflow or the corresponding [`onboard-register.sh`](./onboard-register.sh) script to decrypt and store the provided values in GitHub secrets.
 
 ## Using the script
 
