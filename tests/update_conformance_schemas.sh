@@ -48,7 +48,7 @@ update_postman \
 # Credentials - Issue [201]
 update_postman \
 "conformance_suite.postman_collection.json" \
-  "responseSchema201" \
+  "responseSchema201CredentialsIssue" \
   "$(get_schema '.paths["/credentials/issue"].post.responses["201"].content["application/json"].schema')"
 
 # Credentials - Issue [400]
