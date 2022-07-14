@@ -22,9 +22,20 @@ jobs:
       - name: Update Schemas
         working-directory: ./tests
         run: ./update_conformance_schemas.sh
+      - name: Check for Updates
+        id: update-check
+        shell: bash {0} # Disable -eo pipefail
+        working-directory: ./tests
+        # Using `--exit-code` makes `git diff-index` exits with 1 if there
+        # were differences and 0 if there were no differences.
+        run: |
+          git update-index --refresh conformance_suite.postman_collection.json
+          git diff-index --exit-code HEAD
+          echo "::set-output name=EXIT_CODE::$?"
       - name: Commit Updates
+        if: ${{ steps.update-check.outputs.EXIT_CODE == 1 }}
         run: |
           git config --global user.name ${GITHUB_ACTOR}
           git config --global user.email ${GITHUB_ACTOR}@users.noreply.github.com
-          git commit -am "chore: automated conformance schema updates [skip-ci]"
+          git commit -am "bot: automated conformance schema updates"
           git push
