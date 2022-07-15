@@ -102,7 +102,25 @@ onboard-register.sh -p VENDOR_PREFIX_ -o secrets.b64
 
 ## Using the workflow
 
-### Generate GitHub Personal Access Token (PAT)
+### GitHub Access Token
+
+#### From the command-line using `gh`
+
+If you have the `gh` utility installed locally, you can obtain a GitHub access token via the command line:
+
+```bash
+# First, login
+gh auth login
+
+# Next, obtain the token
+gh auth status -t 2>&1 | grep Token | awk '{print $3}'
+```
+
+Use the output value as the `GitHub Token` input when running the Onboard workflows
+
+#### Generate GitHub Personal Access Token (PAT)
+
+If you are unable to generate a token using the `gh` utility, you can also generate a temporary PAT from the GitHub UI.
 
 First [follow the online documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) to create a PAT. Add any note you like, but be sure to include the `public_repo` scope and use a short expiration time. You will likely not be re-using this PAT very often, and should create and destroy a new PAT each time you need to import a new set of secrets.
 
