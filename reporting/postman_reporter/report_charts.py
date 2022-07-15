@@ -257,12 +257,13 @@ def getSunburst(df, path=DEFAULT_REPORT_PATH):
     df = df.groupby(["Provider", "Test Type", "Test Step"]).agg(["sum", "count"])
     df = df.set_axis(["passed", "tests"], axis="columns").reset_index()
 
-    print(df.head())
-
     # Map number of tests and passing assertions to a status.
     df.loc[df["passed"] == df["tests"], ["status"]] = "Pass"
     df.loc[df["passed"] < df["tests"], ["status"]] = "Partial"
-    df.loc[df["passed"] == 0, ["tests"]] = "Fail"
+    df.loc[df["passed"] == 0, ["status"]] = "Fail"
+
+    # Remove ephemeral columns
+    df = df.drop(columns=["passed", "tests"])
 
     sunburst = px.sunburst(
         df,
@@ -274,15 +275,9 @@ def getSunburst(df, path=DEFAULT_REPORT_PATH):
     sunburst.update_layout(
         height=725,
         font_size=12,
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        margin=dict(
-            l=0,
-            r=0,
-            b=0,
-            t=40,
-            pad=0
-        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        margin=dict(l=0, r=0, b=0, t=40, pad=0),
     )
     return sunburst
 
@@ -296,12 +291,13 @@ def getTree(df, path=DEFAULT_REPORT_PATH):
     df = df.groupby(["Provider", "Test Type", "Test Step"]).agg(["sum", "count"])
     df = df.set_axis(["passed", "tests"], axis="columns").reset_index()
 
-    print(df.head())
-
     # Map number of tests and passing assertions to a status.
     df.loc[df["passed"] == df["tests"], ["status"]] = "Pass"
     df.loc[df["passed"] < df["tests"], ["status"]] = "Partial"
-    df.loc[df["passed"] == 0, ["tests"]] = "Fail"
+    df.loc[df["passed"] == 0, ["status"]] = "Fail"
+
+    # Remove ephemeral columns
+    df = df.drop(columns=["passed", "tests"])
 
     tree = px.treemap(
         df,
