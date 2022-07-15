@@ -186,7 +186,7 @@ def getFacet(df):
         y='Test Step', color='Result',
         x='Provider',
         facet_col='Test Type',
-        size='Size',
+        size='Size', size_max=12,
         symbol='Shape', symbol_sequence=['square'],
         color_discrete_map=COLOR_MAP,
     )
