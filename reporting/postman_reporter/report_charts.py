@@ -188,12 +188,10 @@ def getFacet(df):
     df = df.groupby(["Provider", "Test Type", "Test Step"]).agg(["sum", "count"])
     df = df.set_axis(["passed", "tests"], axis="columns").reset_index()
 
-    print(df.head())
-
     # Map number of tests and passing assertions to a status.
     df.loc[df["passed"] == df["tests"], ["status"]] = "Pass"
-    df.loc[df["passed"] < df["tests"], ["status"]] = "Partial"
-    df.loc[df["passed"] == 0, ["tests"]] = "Fail"
+    df.loc[df["passed"] < df["tests"], ["status"]] = "Fail (Partial)"
+    df.loc[df["passed"] == 0, ["status"]] = "Fail"
 
     # Remove ephemeral columns
     df = df.drop(columns=["passed", "tests"])
@@ -259,7 +257,7 @@ def getSunburst(df, path=DEFAULT_REPORT_PATH):
 
     # Map number of tests and passing assertions to a status.
     df.loc[df["passed"] == df["tests"], ["status"]] = "Pass"
-    df.loc[df["passed"] < df["tests"], ["status"]] = "Partial"
+    df.loc[df["passed"] < df["tests"], ["status"]] = "Fail (Partial)"
     df.loc[df["passed"] == 0, ["status"]] = "Fail"
 
     # Remove ephemeral columns
@@ -293,7 +291,7 @@ def getTree(df, path=DEFAULT_REPORT_PATH):
 
     # Map number of tests and passing assertions to a status.
     df.loc[df["passed"] == df["tests"], ["status"]] = "Pass"
-    df.loc[df["passed"] < df["tests"], ["status"]] = "Partial"
+    df.loc[df["passed"] < df["tests"], ["status"]] = "Fail (Partial)"
     df.loc[df["passed"] == 0, ["status"]] = "Fail"
 
     # Remove ephemeral columns

@@ -55,7 +55,7 @@ COLOR_MAP = {
     "(?)": "darkgoldenrod",
     "Pass": "darkgreen",
     "Fail": "darkred",
-    "Partial": "darkgoldenrod",
+    "Fail (Partial)": "darkgoldenrod",
 }
 
 DEFAULT_REPORT_PATH = ["Test Type", "Provider", "Test Step"]
