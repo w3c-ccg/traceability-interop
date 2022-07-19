@@ -51,6 +51,11 @@ CONTENT_STYLE = {
     "padding": "2rem 1rem",
 }
 
-COLOR_MAP = {"(?)": "darkred", "Pass": "darkgreen", "Fail": "darkred"}
+COLOR_MAP = {
+    "(?)": "darkgoldenrod",
+    "Pass": "darkgreen",
+    "Fail": "darkred",
+    "Fail (Partial)": "darkgoldenrod",
+}
 
 DEFAULT_REPORT_PATH = ["Test Type", "Provider", "Test Step"]

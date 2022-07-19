@@ -181,13 +181,34 @@ def getCards(df):
 
 
 def getFacet(df):
+
+    # Each row in the dataframe maps to a single assertion in the Postman tests.
+    # Group all of the assertions by step and provider so we can count how many
+    # assertions passed and failed for coloring purposes.
+    df = df.groupby(["Provider", "Test Type", "Test Step"]).agg(["sum", "count"])
+    df = df.set_axis(["passed", "tests"], axis="columns").reset_index()
+
+    # Map number of tests and passing assertions to a status.
+    df.loc[df["passed"] == df["tests"], ["status"]] = "Pass"
+    df.loc[df["passed"] < df["tests"], ["status"]] = "Fail (Partial)"
+    df.loc[df["passed"] == 0, ["status"]] = "Fail"
+
+    # Remove ephemeral columns
+    df = df.drop(columns=["passed", "tests"])
+
+    df["Size"] = 12
+    df["Shape"] = "Box"
+
     facet_tests = px.scatter(
         df,
-        y='Test Step', color='Result',
-        x='Provider',
-        facet_col='Test Type',
-        size='Size',
-        symbol='Shape', symbol_sequence=['square'],
+        y="Test Step",
+        color="status",
+        x="Provider",
+        facet_col="Test Type",
+        size="Size",
+        size_max=12,
+        symbol="Shape",
+        symbol_sequence=["square"],
         color_discrete_map=COLOR_MAP,
     )
 
@@ -225,35 +246,61 @@ def getFacet(df):
     return facet_tests
 
 
-def getSunburst(df, path=DEFAULT_REPORT_PATH, color="Result"):
-    subburst = px.sunburst(
+def getSunburst(df, path=DEFAULT_REPORT_PATH):
+
+    # Each row in the dataframe maps to a single assertion in the Postman tests.
+    # Group all of the assertions by step and provider so we can count how many
+    # assertions passed and failed for coloring purposes.
+    df = df[["Provider", "Test Type", "Test Step", "Passing"]].copy()
+    df = df.groupby(["Provider", "Test Type", "Test Step"]).agg(["sum", "count"])
+    df = df.set_axis(["passed", "tests"], axis="columns").reset_index()
+
+    # Map number of tests and passing assertions to a status.
+    df.loc[df["passed"] == df["tests"], ["status"]] = "Pass"
+    df.loc[df["passed"] < df["tests"], ["status"]] = "Fail (Partial)"
+    df.loc[df["passed"] == 0, ["status"]] = "Fail"
+
+    # Remove ephemeral columns
+    df = df.drop(columns=["passed", "tests"])
+
+    sunburst = px.sunburst(
         df,
         path=path,
-        color=color,
+        color="status",
         color_discrete_map=COLOR_MAP,
     )
 
-    subburst.update_layout(
+    sunburst.update_layout(
         height=725,
         font_size=12,
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        margin=dict(
-            l=0,
-            r=0,
-            b=0,
-            t=40,
-            pad=0
-        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        margin=dict(l=0, r=0, b=0, t=40, pad=0),
     )
-    return subburst
+    return sunburst
 
 
-def getTree(df, path=DEFAULT_REPORT_PATH, color="Result"):
+def getTree(df, path=DEFAULT_REPORT_PATH):
+
+    # Each row in the dataframe maps to a single assertion in the Postman tests.
+    # Group all of the assertions by step and provider so we can count how many
+    # assertions passed and failed for coloring purposes.
+    df = df[["Provider", "Test Type", "Test Step", "Passing"]].copy()
+    df = df.groupby(["Provider", "Test Type", "Test Step"]).agg(["sum", "count"])
+    df = df.set_axis(["passed", "tests"], axis="columns").reset_index()
+
+    # Map number of tests and passing assertions to a status.
+    df.loc[df["passed"] == df["tests"], ["status"]] = "Pass"
+    df.loc[df["passed"] < df["tests"], ["status"]] = "Fail (Partial)"
+    df.loc[df["passed"] == 0, ["status"]] = "Fail"
+
+    # Remove ephemeral columns
+    df = df.drop(columns=["passed", "tests"])
+
     tree = px.treemap(
         df,
         path=path,
-        color=color,
+        color="status",
         color_discrete_map=COLOR_MAP,
     )
     tree.update_layout(
