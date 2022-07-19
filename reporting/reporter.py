@@ -131,7 +131,7 @@ if __name__ == "__main__":
         dest="type",
         action="store_const",
         const="conformance",
-        help="generate a report based on the most recently published conformance testing output.",
+        help="generate a report based on the most recently published conformance testing output",
     )
 
     group.add_argument(
@@ -140,7 +140,7 @@ if __name__ == "__main__":
         dest="type",
         action="store_const",
         const="interoperability",
-        help="generate a report based on the most recently publised interoperability testing output.",
+        help="generate a report based on the most recently published interoperability testing output",
     )
 
     args = parser.parse_args()
