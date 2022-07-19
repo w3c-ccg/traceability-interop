@@ -32,6 +32,19 @@ function get_schema() {
    | sed -e 's/,"format":"int32"//'
 }
 
+# API Configuration [200]
+update_postman \
+"conformance_suite.postman_collection.json" \
+  "responseSchema200ApiConfiguration" \
+  "$(get_schema '.paths["/did.json"].get.responses["200"].content["application/json"].schema')"
+
+
+# Identifiers [200]
+update_postman \
+"conformance_suite.postman_collection.json" \
+  "responseSchema200Identifiers" \
+  "$(get_schema '.paths["/identifiers/{did}"].get.responses["200"].content["application/json"].schema')"
+
 # Credentials - Issue [201]
 update_postman \
 "conformance_suite.postman_collection.json" \

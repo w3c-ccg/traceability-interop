@@ -7,6 +7,259 @@
 	},
 	"item": [
 		{
+			"name": "API Configuration",
+			"item": [
+				{
+					"name": "Positive Testing",
+					"item": [
+						{
+							"name": "did_json",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"status code is 200\", function () {",
+											" pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"response validates against schema\", function() {",
+											" const schemaString = pm.collectionVariables.get(\"responseSchema200ApiConfiguration\");",
+											" pm.response.to.have.jsonSchema(JSON.parse(schemaString));",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{API_BASE_URL}}/did.json",
+									"host": [
+										"{{API_BASE_URL}}"
+									],
+									"path": [
+										"did.json"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Resolve Identifiers",
+			"item": [
+				{
+					"name": "Negative Testing",
+					"item": [
+						{
+							"name": "Bad Auth",
+							"item": [
+								{
+									"name": "identifiers:missing_auth",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"status code is 401\", function () {",
+													" pm.response.to.have.status(401);",
+													"});",
+													"",
+													"pm.test(\"response validates against schema\", function() {",
+													" const schemaString = pm.collectionVariables.get(\"responseSchema401\");",
+													" pm.response.to.have.jsonSchema(JSON.parse(schemaString));",
+													"});",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "noauth"
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{API_BASE_URL}}/identifiers/{{ORGANIZATION_DID_WEB}}",
+											"host": [
+												"{{API_BASE_URL}}"
+											],
+											"path": [
+												"identifiers",
+												"{{ORGANIZATION_DID_WEB}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "identifiers:missing_scope:resolve:dids",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"status code is 403\", function () {",
+													" pm.response.to.have.status(403);",
+													"});",
+													"",
+													"pm.test(\"response validates against schema\", function() {",
+													" const schemaString = pm.collectionVariables.get(\"responseSchema403\");",
+													" pm.response.to.have.jsonSchema(JSON.parse(schemaString));",
+													"});",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"// Obtain an access token without the required \"resolve:dids\" scope",
+													"utils(pm).getAccessToken('', (err, res) => {",
+													"    pm.expect(err).to.be.null;",
+													"    pm.variables.set('currentAccessToken', res.json().access_token)",
+													"});",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{API_BASE_URL}}/identifiers/{{ORGANIZATION_DID_WEB}}",
+											"host": [
+												"{{API_BASE_URL}}"
+											],
+											"path": [
+												"identifiers",
+												"{{ORGANIZATION_DID_WEB}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Positive Testing",
+					"item": [
+						{
+							"name": "identifiers",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"status code is 200\", function () {",
+											" pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"response validates against schema\", function() {",
+											" const schemaString = pm.collectionVariables.get(\"responseSchema200Identifiers\");",
+											" pm.response.to.have.jsonSchema(JSON.parse(schemaString), {",
+											"     strict: true,",
+											"     strictSchema: true,",
+											" });",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{API_BASE_URL}}/identifiers/{{ORGANIZATION_DID_WEB}}",
+									"host": [
+										"{{API_BASE_URL}}"
+									],
+									"path": [
+										"identifiers",
+										"{{ORGANIZATION_DID_WEB}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{currentAccessToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"// Obtain an access token with the required \"resolve:dids\" scope",
+							"if (!pm.variables.get('currentAccessToken')) {",
+							"    utils(pm).getAccessToken('resolve:dids', (err, res) => {",
+							"        pm.expect(err).to.be.null;",
+							"        pm.variables.set('currentAccessToken', res.json().access_token)",
+							"    });",
+							"}"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
 			"name": "Issue Credential",
 			"item": [
 				{
@@ -2776,6 +3029,16 @@
 		{
 			"key": "responseSchema500",
 			"value": "{\"type\":\"object\",\"required\":[\"code\",\"message\"],\"properties\":{\"code\":{\"type\":\"integer\"},\"message\":{\"type\":\"string\"},\"details\":{\"type\":\"object\"}}}",
+			"type": "string"
+		},
+		{
+			"key": "responseSchema200Identifiers",
+			"value": "{\"type\":\"object\",\"required\":[\"didDocument\"],\"properties\":{\"didDocument\":{\"type\":\"object\",\"required\":[\"alsoKnownAs\",\"service\"],\"properties\":{\"alsoKnownAs\":{\"type\":\"array\",\"minItems\":2,\"uniqueItems\":true,\"items\":{\"type\":\"string\"}},\"service\":{\"type\":\"array\",\"minItems\":1,\"items\":{\"type\":\"object\",\"required\":[\"type\",\"serviceEndpoint\"],\"properties\":{\"type\":{\"type\":\"string\"},\"serviceEndpoint\":{\"type\":\"string\"}}}}}},\"didResolutionMetadata\":{\"type\":\"object\"},\"didDocumentMetadata\":{\"type\":\"object\"}}}",
+			"type": "string"
+		},
+		{
+			"key": "responseSchema200ApiConfiguration",
+			"value": "{\"title\":\"Traceability API DID Web Document\",\"type\":\"object\",\"properties\":{\"@context\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"id\":{\"type\":\"string\"},\"alsoKnownAs\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"service\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\"},\"type\":{\"type\":\"string\"},\"serviceEndpoint\":{\"type\":\"string\"}}}}},\"example\":{\"@context\":[\"https://www.w3.org/ns/did/v1\",{\"@vocab\":\"https://www.w3.org/ns/did/#\"}],\"id\":\"did:web:api.did.actor:api\",\"alsoKnownAs\":[\"did:key:z6MktiSzqF9kqwdU8VkdBKx56EYzXfpgnNPUAGznpicNiWfn\"],\"service\":[{\"id\":\"did:web:api.did.actor:api#traceability-api\",\"type\":\"TraceabilityAPI\",\"serviceEndpoint\":\"https://api.did.actor/api\"}]}}",
 			"type": "string"
 		}
 	]
