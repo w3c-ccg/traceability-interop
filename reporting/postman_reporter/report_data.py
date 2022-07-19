@@ -5,7 +5,6 @@ import warnings
 from datetime import datetime
 
 import pandas as pd
-import requests
 
 # disable warnings
 warnings.filterwarnings("ignore")
@@ -17,25 +16,8 @@ from tqdm import tqdm
 tqdm.pandas()
 
 
-def _json_from_url(url):
-    return json.loads(requests.get(url).text)
-
-
-def _reports_from_url(url):
-    def func():
-        data = json.loads(requests.get(url).text)
-        items = data["items"]
-        report_sources = []
-        for item in items:
-            if ".json" in item:
-                report_sources.append(item)
-        return report_sources
-
-    return func
-
-
 # %% process initial json
-def getData(get_reports=_reports_from_url(URL), get_json=_json_from_url):
+def getData(get_reports, get_json):
 
     report_sources = get_reports()
 

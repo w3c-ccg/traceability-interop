@@ -4,12 +4,34 @@ import glob
 import json
 import os
 
+import requests
 from jinja2 import Environment, FileSystemLoader
 from postman_reporter import report_config, report_dashboard, report_data, report_static
 
 
-def runData():
-    report_data.getData()
+def runData(args):
+    def _json_from_url(url):
+        return json.loads(requests.get(url).text)
+
+    def _reports_from_url(url):
+        def func():
+            data = json.loads(requests.get(url).text)
+            items = data["items"]
+            report_sources = []
+            for item in items:
+                if ".json" in item:
+                    report_sources.append(item)
+            return report_sources
+
+        return func
+
+    url = os.path.join(report_config.REPORTS_BASE_URL, args.type, "index.json")
+
+    report_data.getData(
+        get_reports=_reports_from_url(url),
+        get_json=_json_from_url,
+    )
+
     return 0
 
 
@@ -69,7 +91,7 @@ def main(args):
 
     # now check args
     if args.mode == "all" or args.mode == "data":
-        runData()
+        runData(args)
 
     if args.mode == "all" or args.mode == "html":
         runHtml()
@@ -93,6 +115,32 @@ if __name__ == "__main__":
         nargs="?",
         choices=["all", "data", "html", "dashboard", "ci"],
         help="mode to run the reporter in",
+    )
+
+    # Mutually-exclusive group must be nested in an argument group in order to
+    # support providing a title and description in help output.
+    group = parser.add_argument_group(
+        "Report Type",
+        "One of the following options MUST be specified.",
+    )
+    group = group.add_mutually_exclusive_group(required=True)
+
+    group.add_argument(
+        "-c",
+        "--conformance",
+        dest="type",
+        action="store_const",
+        const="conformance",
+        help="generate a report based on the most recently published conformance testing output",
+    )
+
+    group.add_argument(
+        "-i",
+        "--interoperability",
+        dest="type",
+        action="store_const",
+        const="interoperability",
+        help="generate a report based on the most recently published interoperability testing output",
     )
 
     args = parser.parse_args()
