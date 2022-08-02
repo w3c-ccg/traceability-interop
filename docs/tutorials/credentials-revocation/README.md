@@ -2,7 +2,7 @@
 
 If you wish to bypass this tutorial and simply want to import the postman collection locally, copy the "Raw" [link](https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/credentials-revocation/credentials-revocation.postman_collection.json) to your clipboard and In Postman, Import -> Link -> Paste the "Raw" link. Otherwise, please continue with the rest of the tutorial.
 
-#
+---
 
 If you have not done so already, please review and complete the previous tutorials which form the foundation for the material presented in this tutorial.
 
