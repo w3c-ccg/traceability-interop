@@ -76,19 +76,7 @@ channel automatically.
 
 1. Make sure to kick everyone out of the room when the meeting is done.
 
-1. Retrieve and publish meeting minutes
-
-#### Retrieving Minutes
-
-1. Go to [Scribe tool](https://w3c-ccg.github.io/meetings/scribe-tool/)
-2. Select "Traceability" from the drop-down at the bottom right.
-3. Select a day for the call you're interested in.
-4. Click "Retrieve Raw Logs".
-5. The display will then render the minutes.
-
-#### Publishing Minutes
-
-[Publish Instructions](https://github.com/w3c-ccg/meetings#publish-the-minutes-for-ccg-meetings-task-forces-and-other-recorded-meetings)
+1. [Retrieve and publish meeting minutes](docs/weekly-minutes/)
 
 ## [Open API Specification](https://w3c-ccg.github.io/traceability-interop/)
 
