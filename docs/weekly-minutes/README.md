@@ -2,11 +2,11 @@
 
 
 
-Published meeting minutes consist of three files which need to be prepared and added to the [w3c-ccg/meetings GitHub repository](https://github.com/w3c-ccg/meetings). This document outlines the procedures required to prepare these files and add them to the repository.
+Published meeting minutes consist of three files which need to be prepared and added to the [`w3c-ccg/meetings` GitHub repository](https://github.com/w3c-ccg/meetings). This document outlines the procedures required to prepare these files and add them to the repository.
 
-- irc.log
-- audio.ogg
-- group.txt
+- `irc.log`
+- `audio.ogg`
+- `group.txt`
 
 ## Download IRC Logs
 
