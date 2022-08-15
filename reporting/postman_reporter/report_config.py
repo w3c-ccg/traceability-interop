@@ -1,5 +1,4 @@
 REPORTS_BASE_URL = "https://w3id.org/traceability/interoperability/reports"
-TEMPLATE_FILE = "./assets/template.j2"
 DATA_DIR = "./data/"
 CI_DIR = "../docs/reports"
 DF_PREFIX = ""
