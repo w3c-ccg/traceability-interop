@@ -45,6 +45,18 @@ update_postman \
   "responseSchema200Identifiers" \
   "$(get_schema '.paths["/identifiers/{did}"].get.responses["200"].content["application/json"].schema')"
 
+# Identifiers [400]
+update_postman \
+"conformance_suite.postman_collection.json" \
+  "responseSchema400Identifiers" \
+  "$(get_schema '.paths["/identifiers/{did}"].get.responses["400"].content["application/json"].schema')"
+
+# Identifiers [404]
+update_postman \
+"conformance_suite.postman_collection.json" \
+  "responseSchema404" \
+  "$(get_schema '.paths["/identifiers/{did}"].get.responses["404"].content["application/json"].schema')"
+
 # Credentials - Issue [201]
 update_postman \
 "conformance_suite.postman_collection.json" \
