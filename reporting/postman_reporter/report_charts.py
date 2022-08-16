@@ -1,7 +1,7 @@
+import dash_bootstrap_components as dbc
 import plotly.express as px
 import plotly.graph_objects as go
-import dash_bootstrap_components as dbc
-from dash import html, dash_table
+from dash import dash_table, html
 from postman_reporter.report_config import *
 
 
@@ -212,9 +212,17 @@ def getFacet(df):
         color_discrete_map=COLOR_MAP,
     )
 
+    # Height needs to be dynamic based on number of rows in the figure in order
+    # to prevent overlapping marks.
+
+    nRows  = len(df["Test Step"].unique())
+    height = nRows * 20               # 20px line height
+    height = height + (nRows - 1) * 2 # 2px gutter
+    height = height + 330             # Extra space for labels
+
     facet_tests.update_layout(
         showlegend=False,
-        height=1200,
+        height=height,
         font_size=12,
         font_color='white',
         paper_bgcolor='rgba(0,0,0,0)',
