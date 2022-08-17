@@ -26,7 +26,7 @@ With the "Weekly Meeting" and date picker elements still properly filled out, cl
 
 You will be redirected to a new page, which will begin playing the audio from the selected meeting. Listen for a moment to ensure that the meeting was properly recorded, then click on the vertical ellipses and select "Download" to save the `.ogg` file.
 
-The downloaded file will have a name like `w3c-ccg-traceability-2022-08-09`, rename this file to `audio.ogg`.
+The downloaded file will have a name like `w3c-ccg-traceability-2022-08-09.ogg`, rename this file to `audio.ogg`.
 
 <img src="./resources/play-audio.png"/>
 <img src="./resources/download-audio.png"/>
@@ -43,9 +43,13 @@ In the `Name your file...` text box, add both a directory name and file name for
 
 <img src="./resources/add-group-file-name.png"/>
 
+Be sure to commit the new `group.txt` file by clicking the "Commit new file" button at the bottom of the page.
+
+<img src="./resources/commit-group-file.png"/>
+
 ## Upload `irc.log` and `audio.ogg` to GitHub
 
-From within the newly creted folder (`2022-08-09-traceability` in this example), select "Add file" -> "Upload Files"
+From within the newly created folder (`2022-08-09-traceability` in this example), select "Add file" -> "Upload Files"
 
 <img src="./resources/upload-files.png"/>
 
