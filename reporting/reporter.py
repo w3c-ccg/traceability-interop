@@ -53,7 +53,7 @@ def runHtml(args):
     return 0
 
 
-def runCi():
+def runCi(args):
     """
     runCi prepares report data from local docs/reports folder and uses that
     data to generate a static interactive HTML report.
@@ -75,7 +75,7 @@ def runCi():
         get_json=_json_from_file,
     )
 
-    runHtml()
+    runHtml(args)
 
 
 def main(args):
@@ -102,7 +102,7 @@ def main(args):
         runDash()
 
     if args.mode == "ci":
-        runCi()
+        runCi(args)
 
 
 if __name__ == "__main__":
