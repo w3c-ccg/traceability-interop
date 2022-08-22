@@ -57,7 +57,7 @@ In order to securely transmit the secrets file to a maintainer, you will need to
 
 ```bash
 # Import the public GPG encryption key
-curl -sS https://raw.githubusercontent.com/w3c-ccg/traceability-interop/environment-setup/pubkey.asc \
+curl -sS https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/environment-setup/pubkey.asc \
   | gpg --import -
 
 # Encrypt your secrets file with hidden recipient using the UID of the
@@ -68,7 +68,7 @@ gpg -e -R w3c-ccg/traceability-interop -o secrets.env.gpg secrets.env
 # Whether you use `-a` or not, the entire output file must be base64 encoded
 # before being sent in for test suite registration. It does not matter if your
 # implementation of `base64` does or does not wrap lines.
-cat secrets.gpg | base64 > secrets.gpg.b64
+cat secrets.env.gpg | base64 > secrets.env.gpg.b64
 ```
 
 ### Email Your Registration Request
@@ -81,15 +81,52 @@ Attach the encrypted and base64-encoded secrets file to an email and send it to 
 
 # Maintainers
 
-If you are a repository maintainer and receive a request for registration with an attached encrypted secrets file, you must use the `Onboard: Register` workflow to decrypt and store the provided values in GitHub secrets.
+If you are a repository maintainer and receive a request for registration with an attached encrypted secrets file, you can use either the `Onboard: Register` workflow or the corresponding [`onboard-register.sh`](./onboard-register.sh) script to decrypt and store the provided values in GitHub secrets.
 
-## Generate GitHub Personal Access Token (PAT)
+## Using the script
+
+If you opt to use the `onboard-register.sh` script, you will first need to ensure that you have the `gh` command line tool installed and working locally.
+
+_Examples:_
+```bash
+# Register contents of secrets.b64 under prefix VENDOR_PREFIX_. This will
+# fail if the secrets being registered already exist.
+
+onboard-register.sh -p VENDOR_PREFIX_ secrets.b64
+
+# Register contents of secrets.b64 under prefix VENDOR_PREFIX_ and
+# overwrite any existing values for those secrets.
+
+onboard-register.sh -p VENDOR_PREFIX_ -o secrets.b64
+```
+
+## Using the workflow
+
+### GitHub Access Token
+
+#### From the command-line using `gh`
+
+If you have the `gh` utility installed locally, you can obtain a GitHub access token via the command line:
+
+```bash
+# First, login
+gh auth login
+
+# Next, obtain the token
+gh auth status -t 2>&1 | grep Token | awk '{print $3}'
+```
+
+Use the output value as the `GitHub Token` input when running the Onboard workflows
+
+#### Generate GitHub Personal Access Token (PAT)
+
+If you are unable to generate a token using the `gh` utility, you can also generate a temporary PAT from the GitHub UI.
 
 First [follow the online documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) to create a PAT. Add any note you like, but be sure to include the `public_repo` scope and use a short expiration time. You will likely not be re-using this PAT very often, and should create and destroy a new PAT each time you need to import a new set of secrets.
 
 <img src="./create-pat.png"/>
 
-## Import Secrets
+### Import Secrets
 
 Navigate to the `Actions` tab of the repository and click on the `Onboard: Register` workflow listed in the left hand navigation. Run this workflow in the `main` branch and, when prompted, provide your PAT, a prefix for the new variables, and the base64-encoded secrets file.
 
@@ -147,7 +184,19 @@ Similar, but less complex, is this example with a single-actor matrix:
 
 ## GPG Rotation
 
-In the event that the GPG key used for transmission of secret material during the test suite registration process needs to be rotated, there is a workflow for that.
+In the event that the GPG key used for transmission of secret material during the test suite registration process needs to be rotated, there is a workflow and a script for that.
+
+### Using the script
+
+If you opt to use the [`onboard-rotate.sh`](./onboard-rotate.sh) script, you will first need to ensure that you have the `gh` command line tool installed and working locally.
+
+_Examples:_
+```bash
+# Rotate the GPG key and passphrase, and publish the public key.
+onboard-rotate.sh
+```
+
+### Using the workflow
 
 Again, you will need a GitHub PAT with `public_repo` scope in order to run this workflow - see the documentation above if you need to generate one.
 

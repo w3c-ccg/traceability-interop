@@ -1,5 +1,9 @@
 # Authentication Tutorial
 
+If you wish to bypass this tutorial and simply want to import the postman collection locally, copy the "Raw" [link](https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/authentication/authentication.postman_collection.json) to your clipboard and In Postman, Import -> Link -> Paste the "Raw" link. Otherwise, please continue with the rest of the tutorial.
+
+---
+
 This tutorial describes how to obtain an access token for use in making authenticated requests to a VC API endpoint.
 
 ## Prerequisites

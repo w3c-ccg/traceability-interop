@@ -32,10 +32,35 @@ function get_schema() {
    | sed -e 's/,"format":"int32"//'
 }
 
+# API Configuration [200]
+update_postman \
+"conformance_suite.postman_collection.json" \
+  "responseSchema200ApiConfiguration" \
+  "$(get_schema '.paths["/did.json"].get.responses["200"].content["application/json"].schema')"
+
+
+# Identifiers [200]
+update_postman \
+"conformance_suite.postman_collection.json" \
+  "responseSchema200Identifiers" \
+  "$(get_schema '.paths["/identifiers/{did}"].get.responses["200"].content["application/json"].schema')"
+
+# Identifiers [400]
+update_postman \
+"conformance_suite.postman_collection.json" \
+  "responseSchema400Identifiers" \
+  "$(get_schema '.paths["/identifiers/{did}"].get.responses["400"].content["application/json"].schema')"
+
+# Identifiers [404]
+update_postman \
+"conformance_suite.postman_collection.json" \
+  "responseSchema404" \
+  "$(get_schema '.paths["/identifiers/{did}"].get.responses["404"].content["application/json"].schema')"
+
 # Credentials - Issue [201]
 update_postman \
 "conformance_suite.postman_collection.json" \
-  "responseSchema201" \
+  "responseSchema201CredentialsIssue" \
   "$(get_schema '.paths["/credentials/issue"].post.responses["201"].content["application/json"].schema')"
 
 # Credentials - Issue [400]

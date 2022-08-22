@@ -1,5 +1,4 @@
-URL = "https://w3id.org/traceability/interoperability/reports/"
-TEMPLATE_FILE = "./assets/template.j2"
+REPORTS_BASE_URL = "https://w3id.org/traceability/interoperability/reports"
 DATA_DIR = "./data/"
 CI_DIR = "../docs/reports"
 DF_PREFIX = ""
@@ -51,6 +50,11 @@ CONTENT_STYLE = {
     "padding": "2rem 1rem",
 }
 
-COLOR_MAP = {"(?)": "darkred", "Pass": "darkgreen", "Fail": "darkred"}
+COLOR_MAP = {
+    "(?)": "darkgoldenrod",
+    "Pass": "darkgreen",
+    "Fail": "darkred",
+    "Fail (Partial)": "darkgoldenrod",
+}
 
 DEFAULT_REPORT_PATH = ["Test Type", "Provider", "Test Step"]

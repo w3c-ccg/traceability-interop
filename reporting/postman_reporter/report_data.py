@@ -5,7 +5,6 @@ import warnings
 from datetime import datetime
 
 import pandas as pd
-import requests
 
 # disable warnings
 warnings.filterwarnings("ignore")
@@ -17,25 +16,8 @@ from tqdm import tqdm
 tqdm.pandas()
 
 
-def _json_from_url(url):
-    return json.loads(requests.get(url).text)
-
-
-def _reports_from_url(url):
-    def func():
-        data = json.loads(requests.get(url).text)
-        items = data["items"]
-        report_sources = []
-        for item in items:
-            if ".json" in item:
-                report_sources.append(item)
-        return report_sources
-
-    return func
-
-
 # %% process initial json
-def getData(get_reports=_reports_from_url(URL), get_json=_json_from_url):
+def getData(get_reports, get_json):
 
     report_sources = get_reports()
 
@@ -112,11 +94,12 @@ def getData(get_reports=_reports_from_url(URL), get_json=_json_from_url):
     df_failed = df_details.loc[df_details["Result"] == "Fail"].copy()
 
     # %% groupings
-    df_inter = df_details[["Provider", "Test Type", "Test Step", "Result"]]
-    df_inter["Size"] = 18
-    df_inter["Shape"] = "Box"
-    df_inter_full = df_inter.copy()
+    df_inter = df_details[["Provider", "Test Type", "Test Step", "Passing"]]
     df_inter = df_inter.loc[~df_inter["Provider"].str.contains(" - ")].copy()
+
+    df_inter_full = df_details[["Provider", "Test Type", "Test Step", "Passing"]].copy()
+    df_inter_full["Size"] = 12
+    df_inter_full["Shape"] = "Box"
 
     df_summary_test = (
         df_details.groupby(["Test Type", "Provider"])["Passing"]
