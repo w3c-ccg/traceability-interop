@@ -11,12 +11,12 @@ In order to register to participate in the test suite, please perform the follow
 Create a text file called `secrets.env` with the following contents, replacing `value` with values appropriate for your organization as defined below.
 
 ```bash
-CLIENT_ID="value"
-CLIENT_SECRET="value"
-TOKEN_AUDIENCE="value"
-TOKEN_ENDPOINT="value"
-API_BASE_URL="value"
-ORGANIZATION_DID_WEB="value"
+CLIENT_ID=value
+CLIENT_SECRET=value
+TOKEN_AUDIENCE=value
+TOKEN_ENDPOINT=value
+API_BASE_URL=value
+ORGANIZATION_DID_WEB=value
 ```
 
 <dl>
