@@ -43,12 +43,12 @@ ORGANIZATION_DID_WEB=value
 Here is an example of what the file should look like when you are done.
 
 ```bash
-ORGANIZATION_DID_WEB="did:web:vc.mesur.io"
-CLIENT_ID="5SiSCaj8rkfbahG2xrg6nOhxVPKwDwnv"
-CLIENT_SECRET="**REDACTED**"
-TOKEN_AUDIENCE="https://vc.mesur.io/"
-TOKEN_ENDPOINT="https://mesur.auth0.com/oauth/token"
-API_BASE_URL="https://vc.mesur.io"
+ORGANIZATION_DID_WEB=did:web:vc.mesur.io:v1
+CLIENT_ID=5SiSCaj8rkfbahG2xrg6nOhxVPKwDwnv
+CLIENT_SECRET=**REDACTED**
+TOKEN_AUDIENCE=https://vc.mesur.io/
+TOKEN_ENDPOINT=https://mesur.auth0.com/oauth/token
+API_BASE_URL=https://vc.mesur.io/v1
 ```
 
 ### Encrypt Secrets File
