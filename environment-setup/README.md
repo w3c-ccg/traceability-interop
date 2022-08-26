@@ -73,8 +73,9 @@ cat secrets.env.gpg | base64 > secrets.env.gpg.b64
 
 ### Email Your Registration Request
 
-Attach the encrypted and base64-encoded secrets file to an email and send it to one of the editors of the specification as listed here:
+Attach the encrypted and base64-encoded secrets file to an email and send it to one of the maintainers listed here:
 
+- [Chris Abernethy](mailto:cabernet@mesur.io?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
 - [Orie Steele](mailto:orie@transmute.industries?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
 - [Michael Prorock](mailto:mprorock@mesur.io?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
 - [Mahmoud Alkhraishi](mailto:mahmoud@mavennet.com?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
