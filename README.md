@@ -23,10 +23,10 @@ An enterprise grade HTTP API for leveraging [W3C Decentralized Identifiers](http
 
 Meetings are held
 
-- Tuesdays at 1.30pm ET/10.30pm PT
-- on jitsi using this link: [meet.w3c-ccg.org/traceability](https://meet.w3c-ccg.org/traceability)
-- with standing agenda to review open [Pull Requests](https://github.com/w3c-ccg/traceability-interop/pulls),
-  then [open Issues](https://github.com/w3c-ccg/traceability-interop/issues), unless otherwise noted on the mailing list
+- Tuesdays at [13:30 ET/10:30pm PT](http://www.timebie.com/std/newyork.php?q=13.5)
+- Via [Jitsi](https://github.com/jitsi) in browser or [standalone app](https://github.com/jitsi/jitsi-meet-electron/releases) using this link: [meet.w3c-ccg.org/traceability](https://meet.w3c-ccg.org/traceability)
+- with standing agenda to review open Pull Requests ([trace-interop](https://github.com/w3c-ccg/traceability-interop/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-asc), [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-asc)),
+  then open Issues ([trace-interop](https://github.com/w3c-ccg/traceability-interop/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-asc), [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-asc)), unless otherwise noted on the [mailing list](https://lists.w3.org/Archives/Public/public-credentials/)
 
 ### Hosting instructions
 
@@ -39,13 +39,13 @@ channel automatically.
 
 1. Select "Start Recording" to start audio recording
 
-1. Post the agenda link in the meeting chat box
+1. Post the agenda link (if non-standing) in the meeting chat box
 
    `Agenda: https://github.com/w3c-ccg/traceability-interop/AGENDA.md`
+
 1. Address IP note, agenda review, and scribe selection topic
 
     - Note the topic in the chat box
-
       `Topic: IP Note, Agenda Review, Scribe Selection`
     - Announce the agenda for the meeting. Meetings alternate between focus on the trace-interop and trace-vocab repositories.
     - Read the standard IP note
@@ -58,11 +58,11 @@ channel automatically.
 
       `Topic: GitHub Issue & PR review`
 
-    - Review pull requests in order (oldest first)
+    - Review pull requests in order (least recently updated first)
 
       For this portion of the meeting, address PRs in the focus repository first, followed by PRs in the other repository.
 
-        - Publish link to sorted PRs in chat box ([trace-interop](https://github.com/w3c-ccg/traceability-interop/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc), [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc))
+        - Publish link to sorted PRs in chat box ([trace-interop](https://github.com/w3c-ccg/traceability-interop/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-asc), [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-asc))
 
         - Publish link to each PR being discussed in chat box
 
@@ -98,17 +98,19 @@ If you are using Postman, you can import all of the available API endpoints into
 
 You should see something like this in your collections once you have succesffuly imported the spec:
 
-![Postman collection](./docs/imported-collection.png)
+<p align="center">
+<a href="./docs/imported-collection.png"><img src="./docs/imported-collection.png" width="25%" height="25%" align="center"></a>
+</p>
 
 ## Reference Implementation
 
-In order to simplify the creation of test vectors for the spec, we intend to provide a reference implementation.
+To simplify the creation of test vectors for the spec, we intend to provide a reference implementation.
 
-This implementation will cover all required AND optional APIs and will be used to ensure no breaking changes are accidentaly contributed to the spec.
+This implementation will cover all required AND optional APIs, and will be used to ensure no breaking changes are accidentaly contributed to the spec.
 
 ## Postman Interoperability Test Suite
 
-In order to ensure interoperability tests are conducted in a manner consistent with production environments, we maintain a set of Postman collections and client credential configuration located in the [tutorials](./docs/tutorials/) section of the docs.  These tests are executed via GitHub actions, on demand by implementers, as well as being run on a nightly scheduled basis.
+To ensure interoperability, tests are conducted in a manner consistent with production environments. We maintain a set of Postman collections and client credential configuration located in the [tutorials](./docs/tutorials/) section of the docs.  These tests are executed via GitHub actions, on demand by implementers, and on a nightly scheduled basis.
 
 This approach allows us to test implementations in production with the appropriate security and authorization policies in place.
 
