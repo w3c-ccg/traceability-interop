@@ -41,7 +41,7 @@ channel automatically.
 
 1. Post the agenda link (if non-standing) in the meeting chat box
 
-   `Agenda: https://github.com/w3c-ccg/traceability-interop/AGENDA.md`
+   `Agenda: https://github.com/w3c-ccg/traceability-interop/blob/main/AGENDA.md`
 
 1. Address IP note, agenda review, and scribe selection topic
 
