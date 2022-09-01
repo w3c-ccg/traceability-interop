@@ -40,8 +40,9 @@ channel automatically.
 1. Select "Start Recording" to start audio recording
 
 1. Post the link to today's agenda in the meeting chat box. The link below leads 
-   to the default "standing" agenda, and should be posted only if a date-specific 
-   agenda was not sent to the mailing list.
+   to the default "standing" agenda. If a date-specific agenda was sent to the
+   mailing list prior to the meeting, a link to that archived email should be used
+   instead.
 
    `Agenda: https://github.com/w3c-ccg/traceability-interop/blob/main/AGENDA.md`
 
