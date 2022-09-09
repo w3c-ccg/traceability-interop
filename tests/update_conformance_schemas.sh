@@ -27,9 +27,12 @@ function update_postman() {
 # get_schema extracts stringified JSON schema from openapi schema file
 # $1 - JQ selector string for the schema to extract
 function get_schema() {
+  SCHEMA=$(echo $JSON_SCHEMA | jq -c $1)
+  # Examples should be excluded from schema
+  SCHEMA=$(echo $SCHEMA | jq -c 'del(..|.example?)')
   # JSON schema does not support "format" keyword for "integer" type
-  echo $JSON_SCHEMA | jq -r -c $1 \
-   | sed -e 's/,"format":"int32"//'
+  SCHEMA=$(echo $SCHEMA | sed -e 's/,"format":"int32"//')
+  echo $SCHEMA
 }
 
 # API Configuration [200]
@@ -37,7 +40,6 @@ update_postman \
 "conformance_suite.postman_collection.json" \
   "responseSchema200ApiConfiguration" \
   "$(get_schema '.paths["/did.json"].get.responses["200"].content["application/json"].schema')"
-
 
 # Identifiers [200]
 update_postman \
