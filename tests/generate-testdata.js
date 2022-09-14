@@ -19,16 +19,19 @@ const suitePromise = (async () => {
 // documentLoaderPromise generates a promise that resolves to the
 // @digitalbazaar/vc default secure document loader implementation.
 const documentLoaderPromise = (async () => {
-  const vc = await import('@digitalbazaar/vc');
-  const { defaultDocumentLoader } = vc;
+  // const vc = await import('@digitalbazaar/vc');
+  // const { defaultDocumentLoader } = vc;
 
-  // const defaultDocumentLoader = async function documentLoader(url) {
-  //   return {
-  //     contextUrl: null,
-  //     documentUrl: url,
-  //     document: require('./context.json'),
-  //   };
-  // };
+  const defaultDocumentLoader = async function documentLoader(url) {
+    if (url === 'https://www.w3.org/2018/credentials/v1') {
+      return {
+        contextUrl: null,
+        documentUrl: url,
+        document: require('./context.json'),
+      };
+    }
+    throw new Error(`Document loader unable to load URL "${url}".`);
+  };
 
   return jsigs.extendContextLoader(defaultDocumentLoader);
 })();
@@ -69,96 +72,105 @@ const addProof = async ({ document }) => {
 };
 
 (async () => {
-  const baseCredential = require('./base_credential.json');
+  const sampleVCs = {};
 
-  // {
-  //   const document = klona(baseCredential);
-  //   delete document['@context'];
-  //   const vc = await addProof({ document });
-  //   console.log(JSON.stringify(vc, null, 2));
-  // }
-
-  // {
-  //   const invalidValues = {
-  //     '@context:boolean': false,
-  //     '@context:integer': 4,
-  //     '@context:null': null,
-  //     '@context:object': { '@vocab': 'https://www.w3.org/2018/credentials/v1/#' },
-  //     '@context:string': 'https://www.w3.org/2018/credentials/v1',
-  //   };
-  //   for (const [description, invalidValue] of Object.entries(invalidValues)) {
-  //     const document = klona(baseCredential);
-  //     document['@context'] = invalidValue;
-  //     const vc = await addProof({ document });
-  //     console.log(JSON.stringify(vc, null, 2));
-  //   }
-  // }
-
-  // {
-  //   const invalidValues = {
-  //     '@context:item:array': ['https://www.w3.org/2018/credentials/v1', []],
-  //     '@context:item:boolean': ['https://www.w3.org/2018/credentials/v1', false],
-  //     '@context:item:integer': ['https://www.w3.org/2018/credentials/v1', 4],
-  //     '@context:item:null': ['https://www.w3.org/2018/credentials/v1', null],
-  //     '@context:item:object': ['https://www.w3.org/2018/credentials/v1', { '@vocab': 'https://www.w3.org/2018/credentials/v1/#' }],
-  //   };
-  //   for (const [description, invalidValue] of Object.entries(invalidValues)) {
-  //     const document = klona(baseCredential);
-  //     document['@context'] = invalidValue;
-  //     const vc = await addProof({ document });
-  //     console.log(JSON.stringify(vc, null, 2));
-  //   }
-  // }
-
-  // {
-  //   const invalidValues = {
-  //     'id:array': ['urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded'],
-  //     'id:boolean': false,
-  //     'id:integer': 123,
-  //     'id:null': null,
-  //     'id:object': { key: 'urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded' },
-  //   };
-  //   for (const [description, invalidValue] of Object.entries(invalidValues)) {
-  //     const document = klona(baseCredential);
-  //     document.id = invalidValue;
-  //     const vc = await addProof({ document });
-  //     console.log(JSON.stringify(vc, null, 2));
-  //   }
-  // }
-
-  // {
-  //   const document = klona(baseCredential);
-  //   delete document.type;
-  //   const vc = await addProof({ document });
-  //   console.log(JSON.stringify(vc, null, 2));
-  // }
-
-  // {
-  //   const invalidValues = {
-  //     'type:boolean': false,
-  //     'type:integer': 123,
-  //     'type:null': null,
-  //     'type:object': { key: 'VerifiableCredential' },
-  //     'type:string': 'VerifiableCredential',
-  //     'type:item:array': ['VerifiableCredential', []],
-  //     'type:item:boolean': ['VerifiableCredential', false],
-  //     'type:item:integer': ['VerifiableCredential', 4],
-  //     'type:item:null': ['VerifiableCredential', null],
-  //     'type:item:object': ['VerifiableCredential', { foo: true }],
-  //   };
-  //   for (const [description, invalidValue] of Object.entries(invalidValues)) {
-  //     const document = klona(baseCredential);
-  //     document.type = invalidValue;
-  //     const vc = await addProof({ document });
-  //     console.log(JSON.stringify(vc, null, 2));
-  //   }
-  // }
+  const baseCredential = {
+    '@context': ['https://www.w3.org/2018/credentials/v1'],
+    credentialSubject: {
+      id: 'did:example:123',
+    },
+    issuanceDate: '2006-01-02T15:04:05Z',
+    issuer: 'did:web:example.com',
+    type: 'VerifiableCredential',
+  };
 
   {
+    const description = '@context:missing';
+    const document = klona(baseCredential);
+    delete document['@context'];
+    sampleVCs[description] = await addProof({ document });
+  }
+
+  {
+    const invalidValues = {
+      // '@context:boolean': false,
+      // '@context:integer': 4,
+      // '@context:null': null,
+      '@context:object': { '@vocab': 'https://www.w3.org/2018/credentials/v1/#' },
+      '@context:string': 'https://www.w3.org/2018/credentials/v1',
+    };
+    for (const [description, invalidValue] of Object.entries(invalidValues)) {
+      const document = klona(baseCredential);
+      document['@context'] = invalidValue;
+      sampleVCs[description] = await addProof({ document });
+    }
+  }
+
+  {
+    const invalidValues = {
+      // '@context:item:array': ['https://www.w3.org/2018/credentials/v1', []],
+      // '@context:item:boolean': ['https://www.w3.org/2018/credentials/v1', false],
+      // '@context:item:integer': ['https://www.w3.org/2018/credentials/v1', 4],
+      // '@context:item:null': ['https://www.w3.org/2018/credentials/v1', null],
+      '@context:item:object': [
+        'https://www.w3.org/2018/credentials/v1',
+        { '@vocab': 'https://www.w3.org/2018/credentials/v1/#' },
+      ],
+    };
+    for (const [description, invalidValue] of Object.entries(invalidValues)) {
+      const document = klona(baseCredential);
+      document['@context'] = invalidValue;
+      sampleVCs[description] = await addProof({ document });
+    }
+  }
+
+  {
+    const invalidValues = {
+      // 'id:array': ['urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded'],
+      // 'id:boolean': false,
+      // 'id:integer': 123,
+      // 'id:null': null,
+      // 'id:object': { key: 'urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded' },
+    };
+    for (const [description, invalidValue] of Object.entries(invalidValues)) {
+      const document = klona(baseCredential);
+      document.id = invalidValue;
+      sampleVCs[description] = await addProof({ document });
+    }
+  }
+
+  {
+    const description = 'type:missing';
+    const document = klona(baseCredential);
+    delete document.type;
+    sampleVCs[description] = await addProof({ document });
+  }
+
+  {
+    const invalidValues = {
+      // 'type:boolean': false,
+      // 'type:integer': 123,
+      // 'type:null': null,
+      // 'type:object': { key: 'VerifiableCredential' },
+      'type:string': 'VerifiableCredential',
+      // 'type:item:array': ['VerifiableCredential', []],
+      // 'type:item:boolean': ['VerifiableCredential', false],
+      // 'type:item:integer': ['VerifiableCredential', 4],
+      // 'type:item:null': ['VerifiableCredential', null],
+      // 'type:item:object': ['VerifiableCredential', { foo: true }],
+    };
+    for (const [description, invalidValue] of Object.entries(invalidValues)) {
+      const document = klona(baseCredential);
+      document.type = invalidValue;
+      sampleVCs[description] = await addProof({ document });
+    }
+  }
+
+  {
+    const description = 'issuer:missing';
     const document = klona(baseCredential);
     delete document.issuer;
-    const vc = await addProof({ document });
-    console.log(JSON.stringify(vc, null, 2));
+    sampleVCs[description] = await addProof({ document });
   }
 
   {
@@ -168,7 +180,7 @@ const addProof = async ({ document }) => {
       'issuer:integer': 123,
       'issuer:null': null,
       'issuer:string': 'VerifiableCredential',
-      // 'issuer:id:missing': {},
+      'issuer:id:missing': {},
       // 'issuer:id:array': { id: ['did:example:123'] },
       // 'issuer:id:boolean': { id: false },
       // 'issuer:id:integer': { id: 123 },
@@ -178,16 +190,15 @@ const addProof = async ({ document }) => {
     for (const [description, invalidValue] of Object.entries(invalidValues)) {
       const document = klona(baseCredential);
       document.issuer = invalidValue;
-      const vc = await addProof({ document });
-      console.log(JSON.stringify(vc, null, 2));
+      sampleVCs[description] = await addProof({ document });
     }
   }
 
   {
+    const description = 'issuanceDate:missing';
     const document = klona(baseCredential);
     delete document.issuanceDate;
-    const vc = await addProof({ document });
-    console.log(JSON.stringify(vc, null, 2));
+    sampleVCs[description] = await addProof({ document });
   }
 
   {
@@ -202,16 +213,15 @@ const addProof = async ({ document }) => {
     for (const [description, invalidValue] of Object.entries(invalidValues)) {
       const document = klona(baseCredential);
       document.issuanceDate = invalidValue;
-      const vc = await addProof({ document });
-      console.log(JSON.stringify(vc, null, 2));
+      sampleVCs[description] = await addProof({ document });
     }
   }
 
   {
+    const description = 'credentialSubject:missing';
     const document = klona(baseCredential);
     delete document.credentialSubject;
-    const vc = await addProof({ document });
-    console.log(JSON.stringify(vc, null, 2));
+    sampleVCs[description] = await addProof({ document });
   }
 
   {
@@ -230,8 +240,11 @@ const addProof = async ({ document }) => {
     for (const [description, invalidValue] of Object.entries(invalidValues)) {
       const document = klona(baseCredential);
       document.credentialSubject = invalidValue;
-      const vc = await addProof({ document });
-      console.log(JSON.stringify(vc, null, 2));
+      sampleVCs[description] = await addProof({ document });
     }
   }
+
+  const iterationData = require('./iteration-data.json');
+  iterationData[0].sampleVCs = sampleVCs;
+  console.log(JSON.stringify(iterationData, null, 2));
 })();
