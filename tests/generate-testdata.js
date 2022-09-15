@@ -12,7 +12,7 @@ const suitePromise = (async () => {
 
   const keyPair = await Ed25519VerificationKey2018.generate();
   keyPair.id = `did:key:${keyPair.fingerprint()}#${keyPair.fingerprint()}`;
-  keyPair.controller = 'did:key${keyPair.fingerprint()';
+  keyPair.controller = `did:key${keyPair.fingerprint()}`;
   return new Ed25519Signature2018({ key: keyPair });
 })();
 
