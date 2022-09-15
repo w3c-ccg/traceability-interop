@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /* eslint-disable no-await-in-loop */
-const { klona } = require('klona/json');
-const jsigs = require('jsonld-signatures');
+const { CONTEXT_URL, CONTEXT } = require('credentials-context');
 const jsonld = require('jsonld');
+const { strictDocumentLoader } = require('jsonld-signatures');
+const { klona } = require('klona/json');
 
 // suitePromise generates promise that resolves to an Ed25519Signature2018
 // signature suite implementation to use for issuing verifiable credentials.
@@ -16,25 +17,21 @@ const suitePromise = (async () => {
   return new Ed25519Signature2018({ key: keyPair });
 })();
 
-// documentLoaderPromise generates a promise that resolves to the
-// @digitalbazaar/vc default secure document loader implementation.
-const documentLoaderPromise = (async () => {
-  // const vc = await import('@digitalbazaar/vc');
-  // const { defaultDocumentLoader } = vc;
+// noopMutator returns the input without any mutation.
+const noopMutator = (input) => input;
 
-  const defaultDocumentLoader = async function documentLoader(url) {
-    if (url === 'https://www.w3.org/2018/credentials/v1') {
-      return {
-        contextUrl: null,
-        documentUrl: url,
-        document: require('./context.json'),
-      };
+// mutatingDocumentLoader is a document loader implementation that allows mutation of
+// the https://www.w3.org/2018/credentials/v1 context via a given mutation
+// function.
+const mutatingDocumentLoader = async ({ mutate = noopMutator } = {}) => {
+  const document = mutate(CONTEXT);
+  return async (documentUrl) => {
+    if (documentUrl === CONTEXT_URL) {
+      return { contextUrl: null, documentUrl, document };
     }
-    throw new Error(`Document loader unable to load URL "${url}".`);
+    return strictDocumentLoader(documentUrl);
   };
-
-  return jsigs.extendContextLoader(defaultDocumentLoader);
-})();
+};
 
 // w3cDate converts a given date-like argument into W3C datetime format with
 // seconds resolution.
@@ -49,9 +46,10 @@ const w3cDate = (date) => {
   return `${str.substr(0, str.length - 5)}Z`;
 };
 
-const addProof = async ({ document }) => {
+const addProof = async ({ credentialMutator = noopMutator, contextMutator = noopMutator } = {}) => {
   const suite = await suitePromise;
-  const documentLoader = await documentLoaderPromise;
+  const document = credentialMutator(require('./valid-credential.json'));
+  const documentLoader = await mutatingDocumentLoader({ mutate: contextMutator });
 
   let proof = {
     created: w3cDate(),
@@ -74,177 +72,243 @@ const addProof = async ({ document }) => {
 (async () => {
   const sampleVCs = {};
 
-  const baseCredential = {
-    '@context': ['https://www.w3.org/2018/credentials/v1'],
-    credentialSubject: {
-      id: 'did:example:123',
-    },
-    issuanceDate: '2006-01-02T15:04:05Z',
-    issuer: 'did:web:example.com',
-    type: 'VerifiableCredential',
-  };
-
   {
     const description = '@context:missing';
-    const document = klona(baseCredential);
-    delete document['@context'];
-    sampleVCs[description] = await addProof({ document });
+    const credentialMutator = (credential) => {
+      const doc = klona(credential);
+      delete doc['@context'];
+      return doc;
+    };
+    sampleVCs[description] = await addProof({ credentialMutator });
   }
 
   {
-    const invalidValues = {
-      // '@context:boolean': false,
-      // '@context:integer': 4,
-      // '@context:null': null,
-      '@context:object': { '@vocab': 'https://www.w3.org/2018/credentials/v1/#' },
-      '@context:string': 'https://www.w3.org/2018/credentials/v1',
-    };
-    for (const [description, invalidValue] of Object.entries(invalidValues)) {
-      const document = klona(baseCredential);
-      document['@context'] = invalidValue;
-      sampleVCs[description] = await addProof({ document });
+    const invalidValues = new Map([
+      // ['@context:boolean', false],
+      // ['@context:integer', 4],
+      // ['@context:null', null],
+      ['@context:object', { '@vocab': 'https://www.w3.org/2018/credentials/v1/#' }],
+      ['@context:string', 'https://www.w3.org/2018/credentials/v1'],
+    ]);
+    for (const [description, invalidValue] of invalidValues) {
+      const credentialMutator = (credential) => {
+        const doc = klona(credential);
+        doc['@context'] = invalidValue;
+        return doc;
+      };
+      sampleVCs[description] = await addProof({ credentialMutator });
     }
   }
 
   {
-    const invalidValues = {
-      // '@context:item:array': ['https://www.w3.org/2018/credentials/v1', []],
-      // '@context:item:boolean': ['https://www.w3.org/2018/credentials/v1', false],
-      // '@context:item:integer': ['https://www.w3.org/2018/credentials/v1', 4],
-      // '@context:item:null': ['https://www.w3.org/2018/credentials/v1', null],
-      '@context:item:object': [
-        'https://www.w3.org/2018/credentials/v1',
-        { '@vocab': 'https://www.w3.org/2018/credentials/v1/#' },
+    const invalidValues = new Map([
+      // ['@context:item:array', ['https://www.w3.org/2018/credentials/v1', []]],
+      // ['@context:item:boolean', ['https://www.w3.org/2018/credentials/v1', false]],
+      // ['@context:item:integer', ['https://www.w3.org/2018/credentials/v1', 4]],
+      // ['@context:item:null', ['https://www.w3.org/2018/credentials/v1', null]],
+      [
+        '@context:item:object',
+        ['https://www.w3.org/2018/credentials/v1', { '@vocab': 'https://www.w3.org/2018/credentials/v1/#' }],
       ],
-    };
-    for (const [description, invalidValue] of Object.entries(invalidValues)) {
-      const document = klona(baseCredential);
-      document['@context'] = invalidValue;
-      sampleVCs[description] = await addProof({ document });
+    ]);
+    for (const [description, invalidValue] of invalidValues) {
+      const credentialMutator = (credential) => {
+        const doc = klona(credential);
+        doc['@context'] = invalidValue;
+        return doc;
+      };
+      sampleVCs[description] = await addProof({ credentialMutator });
     }
   }
 
   {
-    const invalidValues = {
-      // 'id:array': ['urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded'],
-      // 'id:boolean': false,
-      // 'id:integer': 123,
-      // 'id:null': null,
-      // 'id:object': { key: 'urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded' },
-    };
-    for (const [description, invalidValue] of Object.entries(invalidValues)) {
-      const document = klona(baseCredential);
-      document.id = invalidValue;
-      sampleVCs[description] = await addProof({ document });
+    const invalidValues = new Map([
+      ['id:array', ['urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded']],
+      ['id:boolean', false],
+      ['id:integer', 123],
+      ['id:null', null],
+      ['id:object', { key: 'urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded' }],
+    ]);
+    for (const [description, invalidValue] of invalidValues) {
+      const credentialMutator = (credential) => {
+        const doc = klona(credential);
+        doc.id = invalidValue;
+        return doc;
+      };
+
+      const contextMutator = (context) => {
+        // Prevent 'protected term redefinition' error when mutating `id`
+        delete context['@context']['@protected'];
+        // Change `id` from `@id` to `xsd:string` to allow invalid values.
+        context['@context'].VerifiableCredential['@context'].id = 'xsd:string';
+        return context;
+      };
+
+      sampleVCs[description] = await addProof({ credentialMutator, contextMutator });
     }
   }
 
   {
     const description = 'type:missing';
-    const document = klona(baseCredential);
-    delete document.type;
-    sampleVCs[description] = await addProof({ document });
+    const credentialMutator = (credential) => {
+      const doc = klona(credential);
+      delete doc.type;
+      return doc;
+    };
+    sampleVCs[description] = await addProof({ credentialMutator });
   }
 
   {
-    const invalidValues = {
-      // 'type:boolean': false,
-      // 'type:integer': 123,
-      // 'type:null': null,
-      // 'type:object': { key: 'VerifiableCredential' },
-      'type:string': 'VerifiableCredential',
-      // 'type:item:array': ['VerifiableCredential', []],
-      // 'type:item:boolean': ['VerifiableCredential', false],
-      // 'type:item:integer': ['VerifiableCredential', 4],
-      // 'type:item:null': ['VerifiableCredential', null],
-      // 'type:item:object': ['VerifiableCredential', { foo: true }],
-    };
-    for (const [description, invalidValue] of Object.entries(invalidValues)) {
-      const document = klona(baseCredential);
-      document.type = invalidValue;
-      sampleVCs[description] = await addProof({ document });
+    const invalidValues = new Map([
+      // ['type:boolean', false],
+      // ['type:integer', 123],
+      // ['type:null', null],
+      // ['type:object', { key: 'VerifiableCredential' }],
+      ['type:string', 'VerifiableCredential'],
+      // ['type:item:array', ['VerifiableCredential', []]],
+      // ['type:item:boolean', ['VerifiableCredential', false]],
+      // ['type:item:integer', ['VerifiableCredential', 4]],
+      // ['type:item:null', ['VerifiableCredential', null]],
+      // ['type:item:object', ['VerifiableCredential', { foo: true }]],
+    ]);
+    for (const [description, invalidValue] of invalidValues) {
+      const credentialMutator = (credential) => {
+        const doc = klona(credential);
+        doc.type = invalidValue;
+        return doc;
+      };
+
+      const contextMutator = (context) => {
+        // Prevent 'protected term redefinition' error when mutating `type`
+        delete context['@context']['@protected'];
+        // Change `type` from `@type` to `xsd:string` to allow invalid values.
+        context['@context'].VerifiableCredential['@context'].type = 'xsd:string';
+        return context;
+      };
+
+      sampleVCs[description] = await addProof({ credentialMutator, contextMutator });
     }
   }
 
   {
     const description = 'issuer:missing';
-    const document = klona(baseCredential);
-    delete document.issuer;
-    sampleVCs[description] = await addProof({ document });
+    const credentialMutator = (credential) => {
+      const doc = klona(credential);
+      delete doc.issuer;
+      return doc;
+    };
+    sampleVCs[description] = await addProof({ credentialMutator });
   }
 
   {
-    const invalidValues = {
-      'issuer:array': ['did:example:123'],
-      'issuer:boolean': false,
-      'issuer:integer': 123,
-      'issuer:null': null,
-      'issuer:string': 'VerifiableCredential',
-      'issuer:id:missing': {},
-      // 'issuer:id:array': { id: ['did:example:123'] },
-      // 'issuer:id:boolean': { id: false },
-      // 'issuer:id:integer': { id: 123 },
-      // 'issuer:id:null': { id: null },
-      // 'issuer:id:object': { id: { key: 'did:example:123' } },
-    };
-    for (const [description, invalidValue] of Object.entries(invalidValues)) {
-      const document = klona(baseCredential);
-      document.issuer = invalidValue;
-      sampleVCs[description] = await addProof({ document });
+    const invalidValues = new Map([
+      ['issuer:array', ['did:example:123']],
+      ['issuer:boolean', false],
+      ['issuer:integer', 123],
+      ['issuer:null', null],
+      ['issuer:string', 'VerifiableCredential'],
+      ['issuer:id:missing', {}],
+      ['issuer:id:array', { id: ['did:example:123'] }],
+      ['issuer:id:boolean', { id: false }],
+      ['issuer:id:integer', { id: 123 }],
+      ['issuer:id:null', { id: null }],
+      ['issuer:id:object', { id: { key: 'did:example:123' } }],
+    ]);
+    for (const [description, invalidValue] of invalidValues) {
+      const credentialMutator = (credential) => {
+        const doc = klona(credential);
+        doc.issuer = invalidValue;
+        return doc;
+      };
+
+      // Context must be mutated to prevent nested `issuer.id` from being
+      // treated as a default `@id` element.
+      const contextMutator = (context) => {
+        context['@context'].VerifiableCredential['@context'].issuer = {
+          '@id': 'cred:issuer',
+          '@type': '@id',
+          '@context': { id: 'xsd:string' },
+        };
+        return context;
+      };
+
+      sampleVCs[description] = await addProof({ credentialMutator, contextMutator });
     }
   }
 
   {
     const description = 'issuanceDate:missing';
-    const document = klona(baseCredential);
-    delete document.issuanceDate;
-    sampleVCs[description] = await addProof({ document });
+    const credentialMutator = (credential) => {
+      const doc = klona(credential);
+      delete doc.issuanceDate;
+      return doc;
+    };
+    sampleVCs[description] = await addProof({ credentialMutator });
   }
 
   {
-    const invalidValues = {
-      'issuanceDate:array': ['2010-01-01T19:23:24Z'],
-      'issuanceDate:boolean': false,
-      'issuanceDate:integer': 123,
-      'issuanceDate:null': null,
-      'issuanceDate:object': { key: '2010-01-01T19:23:24Z' },
-      'issuanceDate:string': 'not a valid XML Date Time string',
-    };
-    for (const [description, invalidValue] of Object.entries(invalidValues)) {
-      const document = klona(baseCredential);
-      document.issuanceDate = invalidValue;
-      sampleVCs[description] = await addProof({ document });
+    const invalidValues = new Map([
+      ['issuanceDate:array', ['2010-01-01T19:23:24Z']],
+      ['issuanceDate:boolean', false],
+      ['issuanceDate:integer', 123],
+      ['issuanceDate:null', null],
+      ['issuanceDate:object', { key: '2010-01-01T19:23:24Z' }],
+      ['issuanceDate:string', 'not a valid XML Date Time string'],
+    ]);
+    for (const [description, invalidValue] of invalidValues) {
+      const credentialMutator = (credential) => {
+        const doc = klona(credential);
+        doc.issuanceDate = invalidValue;
+        return doc;
+      };
+      sampleVCs[description] = await addProof({ credentialMutator });
     }
   }
 
   {
     const description = 'credentialSubject:missing';
-    const document = klona(baseCredential);
-    delete document.credentialSubject;
-    sampleVCs[description] = await addProof({ document });
+    const credentialMutator = (credential) => {
+      const doc = klona(credential);
+      delete doc.credentialSubject;
+      return doc;
+    };
+    sampleVCs[description] = await addProof({ credentialMutator });
   }
 
   {
-    const invalidValues = {
-      'credentialSubject:array': ['did:example:123'],
-      'credentialSubject:boolean': false,
-      'credentialSubject:integer': 123,
-      'credentialSubject:null': null,
-      'credentialSubject:string': 'did:example:123',
-      // 'credentialSubject:id:array': { id: ['did:example:123'] },
-      // 'credentialSubject:id:boolean': { id: false },
-      // 'credentialSubject:id:integer': { id: 123 },
-      // 'credentialSubject:id:null': { id: null },
-      // 'credentialSubject:id:object': { id: { key: 'did:example:123' } },
-    };
-    for (const [description, invalidValue] of Object.entries(invalidValues)) {
-      const document = klona(baseCredential);
-      document.credentialSubject = invalidValue;
-      sampleVCs[description] = await addProof({ document });
+    const invalidValues = new Map([
+      ['credentialSubject:array', ['did:example:123']],
+      ['credentialSubject:boolean', false],
+      ['credentialSubject:integer', 123],
+      ['credentialSubject:null', null],
+      ['credentialSubject:string', 'did:example:123'],
+      ['credentialSubject:id:array', { id: ['did:example:123'] }],
+      ['credentialSubject:id:boolean', { id: false }],
+      ['credentialSubject:id:integer', { id: 123 }],
+      ['credentialSubject:id:null', { id: null }],
+      ['credentialSubject:id:object', { id: { key: 'did:example:123' } }],
+    ]);
+    for (const [description, invalidValue] of invalidValues) {
+      const credentialMutator = (credential) => {
+        const doc = klona(credential);
+        doc.credentialSubject = invalidValue;
+        return doc;
+      };
+
+      // Context must be mutated to prevent nested `credentialSubject.id` from
+      // being treated as a default `@id` element.
+      const contextMutator = (context) => {
+        context['@context'].VerifiableCredential['@context'].credentialSubject = {
+          '@id': 'cred:credentialSubject',
+          '@type': '@id',
+          '@context': { id: 'xsd:string' },
+        };
+        return context;
+      };
+
+      sampleVCs[description] = await addProof({ credentialMutator, contextMutator });
     }
   }
 
-  const iterationData = require('./iteration-data.json');
-  iterationData[0].sampleVCs = sampleVCs;
-  console.log(JSON.stringify(iterationData, null, 2));
+  console.log(JSON.stringify(sampleVCs, null, 2));
 })();
