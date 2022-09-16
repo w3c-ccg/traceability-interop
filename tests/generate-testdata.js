@@ -92,6 +92,11 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
 
   {
     const invalidValues = new Map([
+      // Some mutations cause errors to be thrown when signing credentials. If a
+      // suitable context mutator can be found that will allow these to be signed,
+      // it should be implemented and these should be added to the suite. For
+      // now, these are left inline to indicate which mutations are outstanding.
+      //
       // ['vc:@context:boolean', false],
       // ['vc:@context:integer', 4],
       // ['vc:@context:null', null],
@@ -110,6 +115,11 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
 
   {
     const invalidValues = new Map([
+      // Some mutations cause errors to be thrown when signing credentials. If a
+      // suitable context mutator can be found that will allow these to be signed,
+      // it should be implemented and these should be added to the suite. For
+      // now, these are left inline to indicate which mutations are outstanding.
+      //
       // ['vc:@context:item:array', ['https://www.w3.org/2018/credentials/v1', []]],
       // ['vc:@context:item:boolean', ['https://www.w3.org/2018/credentials/v1', false]],
       // ['vc:@context:item:integer', ['https://www.w3.org/2018/credentials/v1', 4]],
@@ -168,6 +178,11 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
 
   {
     const invalidValues = new Map([
+      // Some mutations cause errors to be thrown when signing credentials. If a
+      // suitable context mutator can be found that will allow these to be signed,
+      // it should be implemented and these should be added to the suite. For
+      // now, these are left inline to indicate which mutations are outstanding.
+      //
       // ['vc:type:boolean', false],
       // ['vc:type:integer', 123],
       // ['vc:type:null', null],
@@ -185,16 +200,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
         doc.type = invalidValue;
         return doc;
       };
-
-      const contextMutator = (context) => {
-        // Prevent 'protected term redefinition' error when mutating `type`
-        delete context['@context']['@protected'];
-        // Change `type` from `@type` to `xsd:string` to allow invalid values.
-        context['@context'].VerifiableCredential['@context'].type = 'xsd:string';
-        return context;
-      };
-
-      sampleVCs.set(description, await addProof({ credentialMutator, contextMutator }));
+      sampleVCs.set(description, await addProof({ credentialMutator }));
     }
   }
 
