@@ -18,7 +18,7 @@ const suitePromise = (async () => {
 })();
 
 // noopMutator returns the input without any mutation.
-const noopMutator = (input) => input;
+const noopMutator = (input) => klona(input);
 
 // mutatingDocumentLoader is a document loader implementation that allows mutation of
 // the https://www.w3.org/2018/credentials/v1 context via a given mutation
@@ -71,6 +71,11 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
 
 (async () => {
   const sampleVCs = {};
+
+  {
+    const description = 'valid_vc';
+    sampleVCs[description] = await addProof();
+  }
 
   {
     const description = '@context:missing';
@@ -206,7 +211,6 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
       ['issuer:boolean', false],
       ['issuer:integer', 123],
       ['issuer:null', null],
-      ['issuer:string', 'VerifiableCredential'],
       ['issuer:id:missing', {}],
       ['issuer:id:array', { id: ['did:example:123'] }],
       ['issuer:id:boolean', { id: false }],
