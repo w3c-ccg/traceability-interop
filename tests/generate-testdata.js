@@ -317,5 +317,19 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
     }
   }
 
-  console.log(JSON.stringify(sampleVCs, null, 2));
+  const suite = require('./conformance_suite.postman_collection.json');
+  let node = suite.item.find((e) => e.name === 'Credentials - Verify');
+  node = node.item.find((e) => e.name === 'Negative Testing');
+  node = node.item.find((e) => e.name === 'Bad Request');
+
+  for (const [description, vc] of sampleVCs) {
+    const name = `credentials_verify:${description}`;
+    const test = node.item.find((e) => e.name === name);
+    if (test) {
+      const json = JSON.stringify({ verifiableCredential: vc }, null, 4).replace(/[\n]/g, '\n');
+      test.request.body.raw = json;
+    }
+  }
+
+  console.log(JSON.stringify(suite, null, '\t'));
 })();
