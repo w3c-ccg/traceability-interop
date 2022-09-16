@@ -70,11 +70,11 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
 };
 
 (async () => {
-  const sampleVCs = {};
+  const sampleVCs = new Map();
 
   {
     const description = 'valid_vc';
-    sampleVCs[description] = await addProof();
+    sampleVCs.set(description, await addProof());
   }
 
   {
@@ -84,7 +84,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
       delete doc['@context'];
       return doc;
     };
-    sampleVCs[description] = await addProof({ credentialMutator });
+    sampleVCs.set(description, await addProof({ credentialMutator }));
   }
 
   {
@@ -101,7 +101,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
         doc['@context'] = invalidValue;
         return doc;
       };
-      sampleVCs[description] = await addProof({ credentialMutator });
+      sampleVCs.set(description, await addProof({ credentialMutator }));
     }
   }
 
@@ -122,7 +122,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
         doc['@context'] = invalidValue;
         return doc;
       };
-      sampleVCs[description] = await addProof({ credentialMutator });
+      sampleVCs.set(description, await addProof({ credentialMutator }));
     }
   }
 
@@ -149,7 +149,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
         return context;
       };
 
-      sampleVCs[description] = await addProof({ credentialMutator, contextMutator });
+      sampleVCs.set(description, await addProof({ credentialMutator, contextMutator }));
     }
   }
 
@@ -160,7 +160,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
       delete doc.type;
       return doc;
     };
-    sampleVCs[description] = await addProof({ credentialMutator });
+    sampleVCs.set(description, await addProof({ credentialMutator }));
   }
 
   {
@@ -191,7 +191,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
         return context;
       };
 
-      sampleVCs[description] = await addProof({ credentialMutator, contextMutator });
+      sampleVCs.set(description, await addProof({ credentialMutator, contextMutator }));
     }
   }
 
@@ -202,7 +202,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
       delete doc.issuer;
       return doc;
     };
-    sampleVCs[description] = await addProof({ credentialMutator });
+    sampleVCs.set(description, await addProof({ credentialMutator }));
   }
 
   {
@@ -236,7 +236,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
         return context;
       };
 
-      sampleVCs[description] = await addProof({ credentialMutator, contextMutator });
+      sampleVCs.set(description, await addProof({ credentialMutator, contextMutator }));
     }
   }
 
@@ -247,7 +247,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
       delete doc.issuanceDate;
       return doc;
     };
-    sampleVCs[description] = await addProof({ credentialMutator });
+    sampleVCs.set(description, await addProof({ credentialMutator }));
   }
 
   {
@@ -265,7 +265,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
         doc.issuanceDate = invalidValue;
         return doc;
       };
-      sampleVCs[description] = await addProof({ credentialMutator });
+      sampleVCs.set(description, await addProof({ credentialMutator }));
     }
   }
 
@@ -276,7 +276,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
       delete doc.credentialSubject;
       return doc;
     };
-    sampleVCs[description] = await addProof({ credentialMutator });
+    sampleVCs.set(description, await addProof({ credentialMutator }));
   }
 
   {
@@ -310,7 +310,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
         return context;
       };
 
-      sampleVCs[description] = await addProof({ credentialMutator, contextMutator });
+      sampleVCs.set(description, await addProof({ credentialMutator, contextMutator }));
     }
   }
 
