@@ -78,7 +78,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
   }
 
   {
-    const description = '@context:missing';
+    const description = 'vc:@context:missing';
     const credentialMutator = (credential) => {
       const doc = klona(credential);
       delete doc['@context'];
@@ -89,11 +89,11 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
 
   {
     const invalidValues = new Map([
-      // ['@context:boolean', false],
-      // ['@context:integer', 4],
-      // ['@context:null', null],
-      ['@context:object', { '@vocab': 'https://www.w3.org/2018/credentials/v1/#' }],
-      ['@context:string', 'https://www.w3.org/2018/credentials/v1'],
+      // ['vc:@context:boolean', false],
+      // ['vc:@context:integer', 4],
+      // ['vc:@context:null', null],
+      ['vc:@context:object', { '@vocab': 'https://www.w3.org/2018/credentials/v1/#' }],
+      ['vc:@context:string', 'https://www.w3.org/2018/credentials/v1'],
     ]);
     for (const [description, invalidValue] of invalidValues) {
       const credentialMutator = (credential) => {
@@ -107,12 +107,12 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
 
   {
     const invalidValues = new Map([
-      // ['@context:item:array', ['https://www.w3.org/2018/credentials/v1', []]],
-      // ['@context:item:boolean', ['https://www.w3.org/2018/credentials/v1', false]],
-      // ['@context:item:integer', ['https://www.w3.org/2018/credentials/v1', 4]],
-      // ['@context:item:null', ['https://www.w3.org/2018/credentials/v1', null]],
+      // ['vc:@context:item:array', ['https://www.w3.org/2018/credentials/v1', []]],
+      // ['vc:@context:item:boolean', ['https://www.w3.org/2018/credentials/v1', false]],
+      // ['vc:@context:item:integer', ['https://www.w3.org/2018/credentials/v1', 4]],
+      // ['vc:@context:item:null', ['https://www.w3.org/2018/credentials/v1', null]],
       [
-        '@context:item:object',
+        'vc:@context:item:object',
         ['https://www.w3.org/2018/credentials/v1', { '@vocab': 'https://www.w3.org/2018/credentials/v1/#' }],
       ],
     ]);
@@ -128,11 +128,11 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
 
   {
     const invalidValues = new Map([
-      ['id:array', ['urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded']],
-      ['id:boolean', false],
-      ['id:integer', 123],
-      ['id:null', null],
-      ['id:object', { key: 'urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded' }],
+      ['vc:id:array', ['urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded']],
+      ['vc:id:boolean', false],
+      ['vc:id:integer', 123],
+      ['vc:id:null', null],
+      ['vc:id:object', { key: 'urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded' }],
     ]);
     for (const [description, invalidValue] of invalidValues) {
       const credentialMutator = (credential) => {
@@ -154,7 +154,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
   }
 
   {
-    const description = 'type:missing';
+    const description = 'vc:type:missing';
     const credentialMutator = (credential) => {
       const doc = klona(credential);
       delete doc.type;
@@ -165,16 +165,16 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
 
   {
     const invalidValues = new Map([
-      // ['type:boolean', false],
-      // ['type:integer', 123],
-      // ['type:null', null],
-      // ['type:object', { key: 'VerifiableCredential' }],
-      ['type:string', 'VerifiableCredential'],
-      // ['type:item:array', ['VerifiableCredential', []]],
-      // ['type:item:boolean', ['VerifiableCredential', false]],
-      // ['type:item:integer', ['VerifiableCredential', 4]],
-      // ['type:item:null', ['VerifiableCredential', null]],
-      // ['type:item:object', ['VerifiableCredential', { foo: true }]],
+      // ['vc:type:boolean', false],
+      // ['vc:type:integer', 123],
+      // ['vc:type:null', null],
+      // ['vc:type:object', { key: 'VerifiableCredential' }],
+      ['vc:type:string', 'VerifiableCredential'],
+      // ['vc:type:item:array', ['VerifiableCredential', []]],
+      // ['vc:type:item:boolean', ['VerifiableCredential', false]],
+      // ['vc:type:item:integer', ['VerifiableCredential', 4]],
+      // ['vc:type:item:null', ['VerifiableCredential', null]],
+      // ['vc:type:item:object', ['VerifiableCredential', { foo: true }]],
     ]);
     for (const [description, invalidValue] of invalidValues) {
       const credentialMutator = (credential) => {
@@ -196,7 +196,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
   }
 
   {
-    const description = 'issuer:missing';
+    const description = 'vc:issuer:missing';
     const credentialMutator = (credential) => {
       const doc = klona(credential);
       delete doc.issuer;
@@ -207,16 +207,16 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
 
   {
     const invalidValues = new Map([
-      ['issuer:array', ['did:example:123']],
-      ['issuer:boolean', false],
-      ['issuer:integer', 123],
-      ['issuer:null', null],
-      ['issuer:id:missing', {}],
-      ['issuer:id:array', { id: ['did:example:123'] }],
-      ['issuer:id:boolean', { id: false }],
-      ['issuer:id:integer', { id: 123 }],
-      ['issuer:id:null', { id: null }],
-      ['issuer:id:object', { id: { key: 'did:example:123' } }],
+      ['vc:issuer:array', ['did:example:123']],
+      ['vc:issuer:boolean', false],
+      ['vc:issuer:integer', 123],
+      ['vc:issuer:null', null],
+      ['vc:issuer:id:missing', {}],
+      ['vc:issuer:id:array', { id: ['did:example:123'] }],
+      ['vc:issuer:id:boolean', { id: false }],
+      ['vc:issuer:id:integer', { id: 123 }],
+      ['vc:issuer:id:null', { id: null }],
+      ['vc:issuer:id:object', { id: { key: 'did:example:123' } }],
     ]);
     for (const [description, invalidValue] of invalidValues) {
       const credentialMutator = (credential) => {
@@ -241,7 +241,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
   }
 
   {
-    const description = 'issuanceDate:missing';
+    const description = 'vc:issuanceDate:missing';
     const credentialMutator = (credential) => {
       const doc = klona(credential);
       delete doc.issuanceDate;
@@ -252,12 +252,12 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
 
   {
     const invalidValues = new Map([
-      ['issuanceDate:array', ['2010-01-01T19:23:24Z']],
-      ['issuanceDate:boolean', false],
-      ['issuanceDate:integer', 123],
-      ['issuanceDate:null', null],
-      ['issuanceDate:object', { key: '2010-01-01T19:23:24Z' }],
-      ['issuanceDate:string', 'not a valid XML Date Time string'],
+      ['vc:issuanceDate:array', ['2010-01-01T19:23:24Z']],
+      ['vc:issuanceDate:boolean', false],
+      ['vc:issuanceDate:integer', 123],
+      ['vc:issuanceDate:null', null],
+      ['vc:issuanceDate:object', { key: '2010-01-01T19:23:24Z' }],
+      ['vc:issuanceDate:string', 'not a valid XML Date Time string'],
     ]);
     for (const [description, invalidValue] of invalidValues) {
       const credentialMutator = (credential) => {
@@ -270,7 +270,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
   }
 
   {
-    const description = 'credentialSubject:missing';
+    const description = 'vc:credentialSubject:missing';
     const credentialMutator = (credential) => {
       const doc = klona(credential);
       delete doc.credentialSubject;
@@ -281,16 +281,16 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
 
   {
     const invalidValues = new Map([
-      ['credentialSubject:array', ['did:example:123']],
-      ['credentialSubject:boolean', false],
-      ['credentialSubject:integer', 123],
-      ['credentialSubject:null', null],
-      ['credentialSubject:string', 'did:example:123'],
-      ['credentialSubject:id:array', { id: ['did:example:123'] }],
-      ['credentialSubject:id:boolean', { id: false }],
-      ['credentialSubject:id:integer', { id: 123 }],
-      ['credentialSubject:id:null', { id: null }],
-      ['credentialSubject:id:object', { id: { key: 'did:example:123' } }],
+      ['vc:credentialSubject:array', ['did:example:123']],
+      ['vc:credentialSubject:boolean', false],
+      ['vc:credentialSubject:integer', 123],
+      ['vc:credentialSubject:null', null],
+      ['vc:credentialSubject:string', 'did:example:123'],
+      ['vc:credentialSubject:id:array', { id: ['did:example:123'] }],
+      ['vc:credentialSubject:id:boolean', { id: false }],
+      ['vc:credentialSubject:id:integer', { id: 123 }],
+      ['vc:credentialSubject:id:null', { id: null }],
+      ['vc:credentialSubject:id:object', { id: { key: 'did:example:123' } }],
     ]);
     for (const [description, invalidValue] of invalidValues) {
       const credentialMutator = (credential) => {
