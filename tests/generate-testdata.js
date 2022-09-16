@@ -11,7 +11,9 @@ const suitePromise = (async () => {
   const { Ed25519VerificationKey2018 } = await import('@digitalbazaar/ed25519-verification-key-2018');
   const { Ed25519Signature2018 } = await import('@digitalbazaar/ed25519-signature-2018');
 
-  const keyPair = await Ed25519VerificationKey2018.generate();
+  const seed = Buffer.from('9b937b81322d816cfab9d5a3baacc9b2');
+  const keyPair = await Ed25519VerificationKey2018.generate({ seed });
+
   keyPair.id = `did:key:${keyPair.fingerprint()}#${keyPair.fingerprint()}`;
   keyPair.controller = `did:key${keyPair.fingerprint()}`;
   return new Ed25519Signature2018({ key: keyPair });
@@ -52,7 +54,8 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
   const documentLoader = await mutatingDocumentLoader({ mutate: contextMutator });
 
   let proof = {
-    created: w3cDate(),
+    // Using a specific date allows proof creation to be idempotent.
+    created: w3cDate('2006-01-02T15:04:05Z'),
     verificationMethod: suite.verificationMethod,
     proofPurpose: 'assertionMethod',
     type: 'Ed25519Signature2018',
