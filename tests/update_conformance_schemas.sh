@@ -88,3 +88,9 @@ update_postman \
 "conformance_suite.postman_collection.json" \
   "responseSchema500" \
   "$(get_schema '.paths["/credentials/issue"].post.responses["500"].content["application/json"].schema')"
+
+# Credentials - Verify [200]
+update_postman \
+"conformance_suite.postman_collection.json" \
+  "responseSchema200CredentialsVerify" \
+  "$(get_schema '.paths["/credentials/verify"].post.responses["200"].content["application/json"].schema')"
