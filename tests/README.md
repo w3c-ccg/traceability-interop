@@ -8,10 +8,10 @@ bodies against configured schemas. Schemas are maintained in the Postman collect
 by the `update_conformance_schemas.sh` script, which is run by a workflow triggered
 by changes to files in the `docs/openapi` folder.
 
-Request bodies for the "Bad Request" series of negative tests for the `/credentials/verify` endpoint are generated using the `generate-testdata.js` script. This will dynamically generate invalid credentials with valid signatures, and inject them directly into the Postman suite. Output is written to standard out, and should be redirected to a temporary file before overwriting the existing Postman suite, for example:
+Request bodies for the "Bad Request" series of negative tests for the `/credentials/verify` endpoint are generated using the `update_conformance_vcs.js` script. This will dynamically generate invalid credentials with valid signatures, and inject them directly into the Postman suite. Output is written to standard out, and should be redirected to a temporary file before overwriting the existing Postman suite, for example:
 
 ```bash
-./generate-testdata.js > tmp.json
+./update_conformance_vcs.js > tmp.json
 mv tmp.json conformance_suite.postman_collection.json
 ```
 

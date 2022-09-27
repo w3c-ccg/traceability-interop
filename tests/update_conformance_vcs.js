@@ -5,17 +5,19 @@ const jsonld = require('jsonld');
 const { strictDocumentLoader } = require('jsonld-signatures');
 const { klona } = require('klona/json');
 
+// If this changes, the `issuer` in `valid-credential.json` must be updated to
+// match. In order for signed credentials to be valid, the controller for a
+// verification method must match the credential `issuer`.
+const seed = Buffer.from('9b937b81322d816cfab9d5a3baacc9b2');
+
 // suitePromise generates promise that resolves to an Ed25519Signature2018
 // signature suite implementation to use for issuing verifiable credentials.
 const suitePromise = (async () => {
   const { Ed25519VerificationKey2018 } = await import('@digitalbazaar/ed25519-verification-key-2018');
   const { Ed25519Signature2018 } = await import('@digitalbazaar/ed25519-signature-2018');
-
-  const seed = Buffer.from('9b937b81322d816cfab9d5a3baacc9b2');
   const keyPair = await Ed25519VerificationKey2018.generate({ seed });
-
   keyPair.id = `did:key:${keyPair.fingerprint()}#${keyPair.fingerprint()}`;
-  keyPair.controller = `did:key${keyPair.fingerprint()}`;
+  keyPair.controller = `did:key:${keyPair.fingerprint()}`;
   return new Ed25519Signature2018({ key: keyPair });
 })();
 
@@ -26,36 +28,44 @@ const noopMutator = (input) => klona(input);
 // the https://www.w3.org/2018/credentials/v1 context via a given mutation
 // function.
 const mutatingDocumentLoader = async ({ mutate = noopMutator } = {}) => {
-  const document = mutate(CONTEXT);
-  return async (documentUrl) => {
-    if (documentUrl === CONTEXT_URL) {
-      return { contextUrl: null, documentUrl, document };
-    }
-    return strictDocumentLoader(documentUrl);
-  };
-};
+  const didKey = await import('@digitalbazaar/did-method-key');
 
-// w3cDate converts a given date-like argument into W3C datetime format with
-// seconds resolution.
-const w3cDate = (date) => {
-  let d = date;
-  if (date === undefined || date === null) {
-    d = new Date();
-  } else if (typeof date === 'number' || typeof date === 'string') {
-    d = new Date(date);
-  }
-  const str = d.toISOString();
-  return `${str.substr(0, str.length - 5)}Z`;
+  // The default value is `Ed25519VerificationKey2020`, but we are using the
+  // `Ed25519VerificationKey2018` verification suite.
+  const didKeyDriver = didKey.driver('Ed25519VerificationKey2018');
+
+  return async (url) => {
+    if (url && url.startsWith('did:key')) {
+      const document = await didKeyDriver.get({ url });
+      return {
+        contextUrl: null,
+        document,
+        documentUrl: url,
+        tag: 'static',
+      };
+    }
+
+    if (url && url === CONTEXT_URL) {
+      return {
+        contextUrl: null,
+        document: mutate(klona(CONTEXT)),
+        documentUrl: url,
+      };
+    }
+
+    return strictDocumentLoader(url);
+  };
 };
 
 const addProof = async ({ credentialMutator = noopMutator, contextMutator = noopMutator } = {}) => {
   const suite = await suitePromise;
-  const document = credentialMutator(require('./valid-credential.json'));
+  const validVC = require('./valid-credential.json');
+  const document = credentialMutator(klona(validVC));
   const documentLoader = await mutatingDocumentLoader({ mutate: contextMutator });
 
   let proof = {
     // Using a specific date allows proof creation to be idempotent.
-    created: w3cDate('2006-01-02T15:04:05Z'),
+    created: '2006-01-02T15:04:05Z',
     verificationMethod: suite.verificationMethod,
     proofPurpose: 'assertionMethod',
     type: 'Ed25519Signature2018',
@@ -72,13 +82,8 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
   return document;
 };
 
-(async () => {
+const addNegativeTesting = async (suiteJson) => {
   const sampleVCs = new Map();
-
-  {
-    const description = 'valid_vc';
-    sampleVCs.set(description, await addProof());
-  }
 
   {
     const description = 'vc:@context:missing';
@@ -323,8 +328,7 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
     }
   }
 
-  const suite = require('./conformance_suite.postman_collection.json');
-  let node = suite.item.find((e) => e.name === 'Credentials - Verify');
+  let node = suiteJson.item.find((e) => e.name === 'Credentials - Verify');
   node = node.item.find((e) => e.name === 'Negative Testing');
   node = node.item.find((e) => e.name === 'Bad Request');
 
@@ -336,6 +340,53 @@ const addProof = async ({ credentialMutator = noopMutator, contextMutator = noop
       test.request.body.raw = json;
     }
   }
+};
+
+const addPositiveTesting = async (suiteJson) => {
+  const sampleVCs = new Map();
+
+  {
+    const description = 'credentials_verify';
+    sampleVCs.set(description, await addProof());
+  }
+
+  {
+    const description = 'credentials_verify:id';
+    const credentialMutator = (credential) => {
+      const doc = klona(credential);
+      doc.id = 'urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded';
+      return doc;
+    };
+    sampleVCs.set(description, await addProof({ credentialMutator }));
+  }
+
+  {
+    const description = 'credentials_verify:issuer:object';
+    const credentialMutator = (credential) => {
+      const doc = klona(credential);
+      doc.issuer = { id: doc.issuer };
+      return doc;
+    };
+    sampleVCs.set(description, await addProof({ credentialMutator }));
+  }
+
+  let node = suiteJson.item.find((e) => e.name === 'Credentials - Verify');
+  node = node.item.find((e) => e.name === 'Positive Testing');
+
+  for (const [description, vc] of sampleVCs) {
+    const test = node.item.find((e) => e.name === description);
+    if (test) {
+      const json = JSON.stringify({ verifiableCredential: vc }, null, 4).replace(/[\n]/g, '\n');
+      test.request.body.raw = json;
+    }
+  }
+};
+
+(async () => {
+  const suite = require('./conformance_suite.postman_collection.json');
+
+  await addNegativeTesting(suite);
+  await addPositiveTesting(suite);
 
   console.log(JSON.stringify(suite, null, '\t'));
 })();
