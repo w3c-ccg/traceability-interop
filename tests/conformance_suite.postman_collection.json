@@ -2287,7 +2287,7 @@
 									"response": []
 								},
 								{
-									"name": "credentials_issue:options.created:wrong_type",
+									"name": "credentials_issue:options.credentialStatus:wrong_type",
 									"event": [
 										{
 											"listen": "test",
@@ -2313,8 +2313,8 @@
 												"exec": [
 													"let rawBody = pm.variables.get(\"rawBody\");",
 													"",
-													"// options.created must be a string when present",
-													"rawBody.options.created = [\"an\", \"array\"];",
+													"// options.credentialStatus must be an object when present",
+													"rawBody.options.credentialStatus = \"a string\";",
 													"",
 													"// Request body must be serialized before sending over the wire.",
 													"pm.variables.set(\"requestBody\", JSON.stringify(rawBody));"
@@ -2324,16 +2324,6 @@
 										}
 									],
 									"request": {
-										"auth": {
-											"type": "bearer",
-											"bearer": [
-												{
-													"key": "token",
-													"value": "{{access_token}}",
-													"type": "string"
-												}
-											]
-										},
 										"method": "POST",
 										"header": [
 											{
@@ -2365,7 +2355,7 @@
 									"response": []
 								},
 								{
-									"name": "credentials_issue:options.credentialStatus:wrong_type",
+									"name": "credentials_issue:options.credentialStatus.type:missing",
 									"event": [
 										{
 											"listen": "test",
@@ -2391,8 +2381,8 @@
 												"exec": [
 													"let rawBody = pm.variables.get(\"rawBody\");",
 													"",
-													"// options.credentialStatus must be an object when present",
-													"rawBody.options.credentialStatus = \"a string\";",
+													"// options.credentialStatus must contain \"type\" when present",
+													"rawBody.options.credentialStatus = {};",
 													"",
 													"// Request body must be serialized before sending over the wire.",
 													"pm.variables.set(\"requestBody\", JSON.stringify(rawBody));"
@@ -2792,6 +2782,13 @@
 											" const { issuanceDate } = pm.response.json();",
 											" pm.expect(issuanceDate).to.equal(pm.variables.get(\"issuance_date\"))",
 											"});",
+											"",
+											"pm.test(\"response proof.created is close to 'now'\", function() {",
+											" const { proof } = pm.response.json();",
+											" const delta = Math.abs(Date.parse(proof.created) - Date.now());",
+											" const tenSecondsInMs = 10000;",
+											" pm.expect(delta).to.be.lessThan(tenSecondsInMs);",
+											"});",
 											""
 										],
 										"type": "text/javascript"
@@ -3151,73 +3148,6 @@
 											"let rawBody = pm.variables.get(\"rawBody\");",
 											"",
 											"// options.credentialStatus can be an optional object",
-											"rawBody.options.credentialStatus = {};",
-											"",
-											"// Request body must be serialized before sending over the wire.",
-											"pm.variables.set(\"requestBody\", JSON.stringify(rawBody));"
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Accept",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{{requestBody}}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{API_BASE_URL}}/credentials/issue",
-									"host": [
-										"{{API_BASE_URL}}"
-									],
-									"path": [
-										"credentials",
-										"issue"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "credentials_issue:options:opt.credentialStatus.type",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"pm.test(\"status code is 201\", function () {",
-											" pm.response.to.have.status(201);",
-											"});",
-											"",
-											"pm.test(\"response validates against schema\", function() {",
-											" const schemaString = pm.collectionVariables.get(\"responseSchema201CredentialsIssue\");",
-											" pm.response.to.have.jsonSchema(JSON.parse(schemaString));",
-											"});",
-											""
-										],
-										"type": "text/javascript"
-									}
-								},
-								{
-									"listen": "prerequest",
-									"script": {
-										"exec": [
-											"let rawBody = pm.variables.get(\"rawBody\");",
-											"",
-											"// options.credentialStatus.type can specific string",
 											"rawBody.options.credentialStatus = {\"type\": \"RevocationList2020Status\"};",
 											"",
 											"// Request body must be serialized before sending over the wire.",
@@ -3311,21 +3241,17 @@
 							"        \"type\": [",
 							"            \"VerifiableCredential\"",
 							"        ],",
-							"        \"issuer\": \"{{credential_issuer_id}}\",",
+							"        \"issuer\": \"{{ORGANIZATION_DID_WEB}}\",",
 							"        \"issuanceDate\": \"{{issuance_date}}\",",
 							"        \"credentialSubject\": {}",
 							"    },",
 							"    \"options\": {",
-							"        \"type\": \"Ed25519Signature2018\",",
-							"        \"created\": \"2020-04-02T18:48:36Z\"",
+							"        \"type\": \"Ed25519Signature2018\"",
 							"    }",
 							"});",
 							"",
 							"// Obtain an access token with the required \"issue:credentials\" scope",
 							"utils(pm).getAccessToken('issue:credentials');",
-							"",
-							"// Obtain the credential issuer ID via did:web resolution",
-							"utils(pm).getIssuerId();",
 							"",
 							"// Set the credential subject to use for testing",
 							"if (!pm.variables.get('credential_subject')) {",
@@ -3789,7 +3715,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..V5PnQzCWxrPiCYT-WAyKAnypebgwYeD7lX_hyIjFa_lbJje23pZAfFdgnlqBnXLd19Ksa8fZpCE9TN7kAjzxDA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..V5PnQzCWxrPiCYT-WAyKAnypebgwYeD7lX_hyIjFa_lbJje23pZAfFdgnlqBnXLd19Ksa8fZpCE9TN7kAjzxDA\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3995,7 +3921,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": {\n            \"@vocab\": \"https://www.w3.org/2018/credentials/v1/#\"\n        },\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..RJunbl8K6pk5JyKv0VkmdJT4I8sfatEPdbup0RAYKU6F1fDvEZ8j0xFlr1ocpNQGIi4H5cufTCRE3Fi45ZQ-CA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": {\n            \"@vocab\": \"https://www.w3.org/2018/credentials/v1/#\"\n        },\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..zF1sQbNclnV5pE5MfuXqMaTVBquwie4ctwzSdbC_LJ1Lx5qRK6V-y9wl5oTvN_GpuOvMIvlG3kQdjgqL3GBKDw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4042,7 +3968,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": \"https://www.w3.org/2018/credentials/v1\",\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..33cnhPeRXCGz478h0OHf8saAVLVXrxpUI5wG_hdHUWjqKz-bnw2xRGx837FIMgC5jICPlDjEQl1c_durehmQBg\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": \"https://www.w3.org/2018/credentials/v1\",\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Csadnd3P2WqJLxAeXMkyx4nkvXvSEssOQriVuwYK0_6zyssqkkuAcKpkUFh8rf4J5JVpng9yvb_2263dLMLZCw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4301,7 +4227,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\",\n            {\n                \"@vocab\": \"https://www.w3.org/2018/credentials/v1/#\"\n            }\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..33cnhPeRXCGz478h0OHf8saAVLVXrxpUI5wG_hdHUWjqKz-bnw2xRGx837FIMgC5jICPlDjEQl1c_durehmQBg\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\",\n            {\n                \"@vocab\": \"https://www.w3.org/2018/credentials/v1/#\"\n            }\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Csadnd3P2WqJLxAeXMkyx4nkvXvSEssOQriVuwYK0_6zyssqkkuAcKpkUFh8rf4J5JVpng9yvb_2263dLMLZCw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4348,7 +4274,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"id\": [\n            \"urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..CaZ2UcTNDOTCXaDXAclLPy7_3rpuf2sbL5xwaMnN2abolieE_C7fB7RsmZ7i5_6CoKRhGnrM3_YkAms8IlObCQ\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"id\": [\n            \"urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..iom-sOLAz9-9FhadLRpqOYXXBhx4Rgwa3I3w1oh087xFQqIMhVTzcSpHCGdGWu2QT1KwrrgVAXPeTT2EthmxBg\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4395,7 +4321,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"id\": false,\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..yonwdW7r7YFAAjZZxjVrYPkLVrbLR5TMZ3bkWN1uo2UbUi5tgtlikoyyHlj8QD0MPA7xd4Jv-1PlryIVOqtUCw\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"id\": false,\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..xftqB9cBFsSe226cWEZ4wr5sfxlAOJYYo6yjwPCVeHDdk6OoWGjZQGO7xXpSidrrr6e1imP18LiFK34xtRWADQ\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4442,7 +4368,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"id\": 123,\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..TRCl90uRMmkycDvfeHw1S7yxyAVl1-Vc2SfwwDzXkn1SqfCJxptwVsgJWwr3gQRAqveZR0xrxQczy4tWHq2FDw\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"id\": 123,\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..ZqV-qqLOh_Kb4vAdXKBfmFdNyv3FzXJAIYV9JltcYGDAefU3OUOnoaAU2WSEufkuYkvczxfRLhrMKgkoVoIRAA\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4489,7 +4415,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"id\": null,\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..33cnhPeRXCGz478h0OHf8saAVLVXrxpUI5wG_hdHUWjqKz-bnw2xRGx837FIMgC5jICPlDjEQl1c_durehmQBg\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"id\": null,\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Csadnd3P2WqJLxAeXMkyx4nkvXvSEssOQriVuwYK0_6zyssqkkuAcKpkUFh8rf4J5JVpng9yvb_2263dLMLZCw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4536,7 +4462,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"id\": {\n            \"key\": \"urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded\"\n        },\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Ymo0kNnQ9mVHr1RKpfCuR_ekUAXzNEM7stSEtbbFv4ZPZb6NK7kUBkckgwrZyBp8re9RQEedJ9yiyfzTL41dCg\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"id\": {\n            \"key\": \"urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded\"\n        },\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..5J-iTBtI5WNIe9L3kLF22cjjDx6iQuJAgl6yYYoIGMC-X_crKNlSlB5bRJsrb2MV-NDlWMtHe0grtMqRG1N0Bw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4583,7 +4509,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..V5PnQzCWxrPiCYT-WAyKAnypebgwYeD7lX_hyIjFa_lbJje23pZAfFdgnlqBnXLd19Ksa8fZpCE9TN7kAjzxDA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..V5PnQzCWxrPiCYT-WAyKAnypebgwYeD7lX_hyIjFa_lbJje23pZAfFdgnlqBnXLd19Ksa8fZpCE9TN7kAjzxDA\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4842,7 +4768,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": \"VerifiableCredential\",\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..J3mhnnbzRyvk8fyfh7fwzuuznEROTdVRM_MrdE-HV93WdGfTdgVhebmdmVZHmvmJiQaxYiIuD-natToEB7xvCg\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": \"VerifiableCredential\",\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Csadnd3P2WqJLxAeXMkyx4nkvXvSEssOQriVuwYK0_6zyssqkkuAcKpkUFh8rf4J5JVpng9yvb_2263dLMLZCw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5207,7 +5133,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..xkCnC0dheSr9rWQn6uxLta6CXejSLy7FIQkZT2rYiOV0jmWW8SWcCdLqHg2gJ3WyBBmxj_zRwNBpFIUvsLCDBw\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..pq8DsjUrDW8TnVRuS8CwfW5Y4dnqYcGsGryNh1gi-BW7vK0_f3gcnDpwJ0HTiHuNm_AyIVWJUPC2ZQHeiCB6CA\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5254,7 +5180,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": [\n            \"did:example:123\"\n        ],\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..bgY03ZzK02APUHCDiqUVMYbbvu4mSPNC1sGY3lTC8ko7j5oZDB4rB8FRzsXCc9L0O4nHx4UNJURCsRZUErbRCg\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": [\n            \"did:example:123\"\n        ],\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..x7a3s_8HfmUqGT6SDkktN-jeRmBR2xQ_9tOhJx4kEG3SCsRTySfDxya9yy57LNv__qbY1eMkm9SNrwdYiqlBAA\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5301,7 +5227,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": false,\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..2Mu6q2PaIBjmfXHqLuT7XIFthDHboV4bdlIdLFY9KxapUXic6uhoefYFrarss-AN_5dUHdjWnHEMCoWYjW4MAg\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": false,\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..mMaPSvG48oEf3bv0t-6eLR3zvU3_BKoRIkgzkuZfm8zvjqbI7iy05D8k1mTeoSZEw3xYV-_sH1rChqGmmp7KDQ\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5348,7 +5274,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": 123,\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..L3RWLJfQzaffmRy3vXZF_7gfdlR-iQbA_8TjGFaBCmaOqm8R7Qi0B6JivEqshh8MZWufDitgO-r6ASk2iaGVDA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": 123,\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..rAVfo-Gnj0vUX6yDAr7pslI6XAAyF2LHTXpiZEmnH5Hb4RsKcmDZZawaLSCg931y1cBUgZ1PQvGbJEdb094ZDQ\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5395,7 +5321,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": null,\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..xkCnC0dheSr9rWQn6uxLta6CXejSLy7FIQkZT2rYiOV0jmWW8SWcCdLqHg2gJ3WyBBmxj_zRwNBpFIUvsLCDBw\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": null,\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..pq8DsjUrDW8TnVRuS8CwfW5Y4dnqYcGsGryNh1gi-BW7vK0_f3gcnDpwJ0HTiHuNm_AyIVWJUPC2ZQHeiCB6CA\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5442,7 +5368,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": {},\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..n0Ffdz9nyzKuJw3OlGpU5h8clE5I6MFEFEEobztPABGQn1hFRN7CBx_BmDMsT7KF3jSLl008sTJ3RllFql5QBA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": {},\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..BECBu6If6NVwC5rval2DG_n1znlYEyuy8m-akfpYk2JLDVw5zV_d62YTgwyA0q5zzmWDep8TALuV5n5sSdJFCw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5489,7 +5415,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": {\n            \"id\": [\n                \"did:example:123\"\n            ]\n        },\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..E4WypAOLo4KNTnvHucei_9yLEMdlq_UwhS7mexlp5i3hF8SfBAlLv2scHANd3Ikhtqr9JIyaXuDnIN2LsaVFCA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": {\n            \"id\": [\n                \"did:example:123\"\n            ]\n        },\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..vv4qa5LGRlgeMxW5G5VjEKDfjKKosQnvpx6oapYDlfUSWVagQsDoDcRmkotKzFHDcTh-opjGLp__agL6_d4OCw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5536,7 +5462,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": {\n            \"id\": false\n        },\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..rnEgkKo3EQPiGixl67oPIFuZ7H9zueq0ELswP2p_FdahgJooIojScCnp-AcxeC_G6YDtLUbsNlVy0SkDvTnwBw\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": {\n            \"id\": false\n        },\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..TTwcmWS6_0_t8XPlAGXbzWVSL_dL7OeYojY0FZz1WXCFvDfeAQtMh3dcIxuCeDqON6St3PODGfxluO_q1vWCDw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5583,7 +5509,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": {\n            \"id\": 123\n        },\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..nK8J_eHLw18__7Byp9ohgpDCHY1-Wfpw8vk-8k-nw4ezzjlwYoYjbo9x_xx3ES0WY0aCN2Xr9SbRoZHr78P0CQ\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": {\n            \"id\": 123\n        },\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..wpkNYYEOCjKMWm9xTYNn0J7IgXZQbbkEoohMQbloz_Zxb15UVu6DqiqsENotAeHvlRWd7RH2O9v4FwWBeqvPDw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5630,7 +5556,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": {\n            \"id\": null\n        },\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..n0Ffdz9nyzKuJw3OlGpU5h8clE5I6MFEFEEobztPABGQn1hFRN7CBx_BmDMsT7KF3jSLl008sTJ3RllFql5QBA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": {\n            \"id\": null\n        },\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..BECBu6If6NVwC5rval2DG_n1znlYEyuy8m-akfpYk2JLDVw5zV_d62YTgwyA0q5zzmWDep8TALuV5n5sSdJFCw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5677,7 +5603,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": {\n            \"id\": {\n                \"key\": \"did:example:123\"\n            }\n        },\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..GEyy2tqmKf8AzHhXY06veUbSRVk9uoQIu21GZlYtcdMGh-VrTjvfVg2R8DAFtCBe6tEUL4dnsM87mT-20nG5Dg\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": {\n            \"id\": {\n                \"key\": \"did:example:123\"\n            }\n        },\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..bHJmwuqqXWMdd298m7RCTGyGoAzsCx1y9tewaHukqaJJoPn2-TLDCQuXvlnFeAYAE_Cy3j1UScfoVx5k-eclAQ\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5724,7 +5650,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..WtxX0aIcE2JJ6T-a5nqfvElr_E5NwRYeOJgRBqeAVVFNJJaQJh6rz1V6nZsDl2xsblGQxCAaWQq9V6SphImACA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..QU131f8dSzen-Dpxf0_p8mCPqhRA6wTO_1rRT4HbsYg0OuRNx_b4x8UtsOoeyuA38K5aL9p7xKeRYf19mmbZDw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5771,7 +5697,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": [\n            \"2010-01-01T19:23:24Z\"\n        ],\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..vuVI_mdt7bpVwmKIsmIusWlCbj-wk33p6_FC2COcGBKzh9m5jxydHlDRIM6YoJQJWpS8_EavVFKwQvPuLuwNDA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": [\n            \"2010-01-01T19:23:24Z\"\n        ],\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..OzKfWk00QpV3_FJru3xJ3_ktwlU4O68prZWWCmdy3mQTbCz2lPFRl2sB4AkdD3AZUFMAnwxhscd9B0UnqxTZCw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5818,7 +5744,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": false,\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..jurLQ2KXgTdIxIAB1dwcysrBFVMT95g3Mn2SuyxAubRWS8Rbe-dFsoVG24kxo5wE6EZVYEuES8uHwNX_SSrvBQ\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": false,\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..1W7WM5cXb0daWooGxEOYn_zm72mkmpF_tu8Fij39luQwNGDgK7h4nZGBFcS80HTVqiBKxzlhGq1yNnpUlLG-Ag\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5865,7 +5791,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": 123,\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..HyTRfrVnRzNCXO3qmmbQnmtXYV_bAdmZg-27bnuBGqQScL87kkmPfY3CpSTLN_8aV72mVBkvy1-uvYhkQotmDg\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": 123,\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..dkiU2sStrvQWiNFK8cKmCbAcRGsC9kbDdKyr-NRlPc9ORQczitwUEymjviemIi1Oot23VohpyMcSFvgFIKIFDA\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5912,7 +5838,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": null,\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..WtxX0aIcE2JJ6T-a5nqfvElr_E5NwRYeOJgRBqeAVVFNJJaQJh6rz1V6nZsDl2xsblGQxCAaWQq9V6SphImACA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": null,\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..QU131f8dSzen-Dpxf0_p8mCPqhRA6wTO_1rRT4HbsYg0OuRNx_b4x8UtsOoeyuA38K5aL9p7xKeRYf19mmbZDw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5959,7 +5885,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": {\n            \"key\": \"2010-01-01T19:23:24Z\"\n        },\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..5NhiK8XqFDY7TB3l0Mli_VAhnflErggK8zlj71jNg6F5WD4eNAVufeVLhK8HtvGaC-7R7nQzQfzkCH9692DUAQ\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": {\n            \"key\": \"2010-01-01T19:23:24Z\"\n        },\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..pNIbeUn6DL71QxEWTF1wQTqKfAJET5JB9FlmoLXk4-rv1owG68DqQY6qwcPx6fUbMijsWsXlvaFvzND0jAg1AA\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6006,7 +5932,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"not a valid XML Date Time string\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..1phNak29yV9Dt7ljiilV_cD1b78U9dV8Zhwjgrocc4Nahxchof8QHmEAFjfupRQZ71WIBpW-VGUtW-OwUu6eDA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"not a valid XML Date Time string\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Z0P0ndVABJRB7mCsv4C-EgB-1SxgnfrU2uQBDSwKm2KfB1jBnzsEzY9enxOn7V1lBAPNxELTEaxPCAK7_n3bBg\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6053,7 +5979,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..jbb-uyU5OrakaqoC-9v-KQVdCXvOfr4Vjxox8hwFNP6qggsTP9NhHuq-T2Vdyag8BweIFTykT0SR_jAgtOxKDA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..PbhlE_UhX8MVQULs7DoRe-QWk8PcmupGNRf8qCZbMwRE6bP7wyTCcJBQ-XD3Erp2cW9EjVHihTA_VsHi-02WAA\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6100,7 +6026,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": [\n            \"did:example:123\"\n        ],\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..J3mhnnbzRyvk8fyfh7fwzuuznEROTdVRM_MrdE-HV93WdGfTdgVhebmdmVZHmvmJiQaxYiIuD-natToEB7xvCg\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": [\n            \"did:example:123\"\n        ],\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Csadnd3P2WqJLxAeXMkyx4nkvXvSEssOQriVuwYK0_6zyssqkkuAcKpkUFh8rf4J5JVpng9yvb_2263dLMLZCw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6147,7 +6073,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": false,\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..j1W65DhMkwul7bodXfKrVNsT_27QIFO7rI-8TDk0-ef-wu4PU7OuA8MFAOXfx-HdVf5KdqVu0BB1ITE6WjIXCw\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": false,\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..IXaPbANtKFiA3Sh28esCkg9kdwpHScJg3bOCF7Phmb5n9RC981EeIobgDnMzWIjP4v0S92FDEcZqA_XbW43GDA\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6194,7 +6120,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": 123,\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Wm4yBzXF87zLmyA0LMEwHSWs-2EfPpdN2yJstmvPJkPVLFdXKUdjh7lZuHNVtTkAMGNT8Wi_RZ5Q1BWAY054Cw\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": 123,\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..iM5Xr2lBqwFIQhq9RI7Dv4K0dzdQ0z7i5YN4ELsstv9vDC9xA-GY2Ft-PsfubsbgVyQsQYjchCv23GULmhauCg\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6241,7 +6167,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": null,\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..jbb-uyU5OrakaqoC-9v-KQVdCXvOfr4Vjxox8hwFNP6qggsTP9NhHuq-T2Vdyag8BweIFTykT0SR_jAgtOxKDA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": null,\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..PbhlE_UhX8MVQULs7DoRe-QWk8PcmupGNRf8qCZbMwRE6bP7wyTCcJBQ-XD3Erp2cW9EjVHihTA_VsHi-02WAA\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6288,7 +6214,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": \"did:example:123\",\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..J3mhnnbzRyvk8fyfh7fwzuuznEROTdVRM_MrdE-HV93WdGfTdgVhebmdmVZHmvmJiQaxYiIuD-natToEB7xvCg\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": \"did:example:123\",\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Csadnd3P2WqJLxAeXMkyx4nkvXvSEssOQriVuwYK0_6zyssqkkuAcKpkUFh8rf4J5JVpng9yvb_2263dLMLZCw\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6335,7 +6261,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": [\n                \"did:example:123\"\n            ]\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..VDVadt3rnBQ7P8dSYyZU5RHdfxVBWz3liR1wKbXbfBuaNT-rJYOoUCLQj-7IQ2elQaB4Fhp2nsgul9ZQmZc1CA\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": [\n                \"did:example:123\"\n            ]\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..GBcSurXcOJcVinhthkmqvV40OS1rN2fY57Kad0HMLUuykp14JJCtNw_gmtf6SwZxhB860OVsUmuNbZXsMCi-DQ\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6382,7 +6308,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": false\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Kz272GRCnCfgHy4D8txIaM1bY5O5vW8iFfQrL2B8a7OnaVTcq6nF-dhqnoMLHPEbrUNzHK7spVAZG05Njl6CDQ\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": false\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..VWowmcXQAjabeJENG3aOcLzQ9HrvmSIs2pOWcaEMLdJtvJfP7oWohIBiqp94-eo1pd4Ocgk3hT0cLvS5qKBYAg\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6429,7 +6355,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": 123\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..P9pVMuK8IN7B38_-uHlTyqAeQFcasIOW06wJWEZDZLPpaeLA4L-S6ee-tZsbGmM0QoSr8WTkbqkhiXpEhuIbAg\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": 123\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..-awe55AAvkjymZEpagD4fdSQk0uCGFfjyFwg7upmg_CISWk12JfezKe-N3hjTwYKCSCjScynLGvlH2x4iSgbDg\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6476,7 +6402,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": null\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..rdlyOsz8ZwKwD5_CacS7c9iPQnRUIywCc_sHdyJlADD9Cq4cRwRw0wwJ7OZtLDylbm512V0s3Cn69i1qMWc8Bw\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": null\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..NDwZvVUWw-xG0zU8VsWhiXPWrYycgK_zwN8zZts05DTw23rOTd9IOXQxqhEMzo_X0c25jzowIbpDfEFxqfmnAA\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6523,7 +6449,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": {\n                \"key\": \"did:example:123\"\n            }\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:web:example.com\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..YXI2e8nVY98qybXn64g4bOG063TH6yjKFmSF9gRq0MtX3q3cex1t5ayc38JjZSBEgoJTKQzUTbL71FOukoNrAw\"\n        }\n    }\n}",
+											"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": {\n                \"key\": \"did:example:123\"\n            }\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..y_7VEjN1ENYoedOrj2jsIqgL7FSYelxGgFZD5ckqKvSDM5BVEWiEctD24BWppCndRR7WR9_1ByBm2F1yBSaoCA\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6819,6 +6745,59 @@
 													"",
 													"// credential.proof is required to be an object for embedded proof VCs",
 													"rawBody.proof = \"string\";",
+													"",
+													"// Request body must be serialized before sending over the wire.",
+													"pm.variables.set(\"requestBody\", JSON.stringify(rawBody));"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"verifiableCredential\": {{requestBody}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{API_BASE_URL}}/credentials/verify",
+											"host": [
+												"{{API_BASE_URL}}"
+											],
+											"path": [
+												"credentials",
+												"verify"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "credentials_verify:proof:type:missing",
+									"event": [
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"let rawBody = pm.variables.get(\"valid_vc\");",
+													"",
+													"// credential.proof.type is required for embedded proof VCs",
+													"delete rawBody.proof.type",
 													"",
 													"// Request body must be serialized before sending over the wire.",
 													"pm.variables.set(\"requestBody\", JSON.stringify(rawBody));"
@@ -8478,6 +8457,194 @@
 							]
 						}
 					]
+				},
+				{
+					"name": "Positive Testing",
+					"item": [
+						{
+							"name": "credentials_verify",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"status code is 200\", function () {",
+											" pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"response validates against schema\", function() {",
+											" const schemaString = pm.collectionVariables.get(\"responseSchema200CredentialsVerify\");",
+											" pm.response.to.have.jsonSchema(JSON.parse(schemaString));",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Csadnd3P2WqJLxAeXMkyx4nkvXvSEssOQriVuwYK0_6zyssqkkuAcKpkUFh8rf4J5JVpng9yvb_2263dLMLZCw\"\n        }\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{API_BASE_URL}}/credentials/verify",
+									"host": [
+										"{{API_BASE_URL}}"
+									],
+									"path": [
+										"credentials",
+										"verify"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "credentials_verify:id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"status code is 200\", function () {",
+											" pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"response validates against schema\", function() {",
+											" const schemaString = pm.collectionVariables.get(\"responseSchema200CredentialsVerify\");",
+											" pm.response.to.have.jsonSchema(JSON.parse(schemaString));",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"id\": \"urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded\",\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..mvbcalofPOi7o7nxByyxXCuSOKXuGFM7_W9a8N62-EERarrH4p4T_0c2ZfGnGLiHOvY6Q-dyy38t9HPvXy-MBg\"\n        }\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{API_BASE_URL}}/credentials/verify",
+									"host": [
+										"{{API_BASE_URL}}"
+									],
+									"path": [
+										"credentials",
+										"verify"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "credentials_verify:issuer:object",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"status code is 200\", function () {",
+											" pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"response validates against schema\", function() {",
+											" const schemaString = pm.collectionVariables.get(\"responseSchema200CredentialsVerify\");",
+											" pm.response.to.have.jsonSchema(JSON.parse(schemaString));",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"verifiableCredential\": {\n        \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\"\n        ],\n        \"credentialSubject\": {\n            \"id\": \"did:example:123\"\n        },\n        \"issuanceDate\": \"2006-01-02T15:04:05Z\",\n        \"issuer\": {\n            \"id\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\"\n        },\n        \"type\": [\n            \"VerifiableCredential\"\n        ],\n        \"proof\": {\n            \"created\": \"2006-01-02T15:04:05Z\",\n            \"verificationMethod\": \"did:key:z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn#z6MkgVHZNqLBqoQAoGxRiSJP5gLgVEDCJJzT5ZsGEabKtfyn\",\n            \"proofPurpose\": \"assertionMethod\",\n            \"type\": \"Ed25519Signature2018\",\n            \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Csadnd3P2WqJLxAeXMkyx4nkvXvSEssOQriVuwYK0_6zyssqkkuAcKpkUFh8rf4J5JVpng9yvb_2263dLMLZCw\"\n        }\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{API_BASE_URL}}/credentials/verify",
+									"host": [
+										"{{API_BASE_URL}}"
+									],
+									"path": [
+										"credentials",
+										"verify"
+									]
+								}
+							},
+							"response": []
+						}
+					]
 				}
 			],
 			"auth": {
@@ -9057,7 +9224,11 @@
 					"    // Local variables do not persist across requests, but globals do.",
 					"    let tokenCache = {};",
 					"    if (pm.globals.has(\"tokenCache\")) {",
-					"        tokenCache = JSON.parse(pm.globals.get(\"tokenCache\"))",
+					"        try {",
+					"            tokenCache = JSON.parse(pm.globals.get(\"tokenCache\"))",
+					"        } catch(e) {",
+					"            console.log(\"could not parse token cache\");",
+					"        }",
 					"    }",
 					"    return {",
 					"        getAccessToken: (scope) => {",
@@ -9088,17 +9259,6 @@
 					"                });",
 					"            }",
 					"        },",
-					"        getIssuerId: () => {",
-					"            const request = {",
-					"                url: pm.environment.get(\"API_BASE_URL\") + \"/did.json\",",
-					"                method: 'GET',",
-					"            };",
-					"            pm.sendRequest(request, (err, res) => {",
-					"                pm.expect(err).to.be.null;",
-					"                const { id } = res.json();",
-					"                pm.variables.set(\"credential_issuer_id\", id);",
-					"            });",
-					"        },",
 					"    };",
 					"};"
 				]
@@ -9122,22 +9282,22 @@
 		},
 		{
 			"key": "responseSchema400",
-			"value": "{\"allOf\":[{\"type\":\"object\",\"required\":[\"message\"],\"properties\":{\"message\":{\"type\":\"string\"},\"details\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"items\":{\"type\":\"string\"}},{\"type\":\"object\",\"additionalProperties\":true}]}}},{\"type\":\"object\",\"properties\":{\"code\":{\"enum\":[400]},\"message\":{\"enum\":[\"Bad Request: Your request body does not conform to the required schema\"]}}}]}",
+			"value": "{\"allOf\":[{\"type\":\"object\",\"required\":[\"message\"],\"properties\":{\"message\":{\"type\":\"string\"},\"details\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"items\":{\"type\":\"string\"}},{\"type\":\"object\",\"additionalProperties\":true}]}}},{\"type\":\"object\",\"properties\":{\"message\":{\"enum\":[\"Bad Request: Your request body does not conform to the required schema\"]}}}]}",
 			"type": "string"
 		},
 		{
 			"key": "responseSchema401",
-			"value": "{\"allOf\":[{\"type\":\"object\",\"required\":[\"message\"],\"properties\":{\"message\":{\"type\":\"string\"},\"details\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"items\":{\"type\":\"string\"}},{\"type\":\"object\",\"additionalProperties\":true}]}}},{\"type\":\"object\",\"properties\":{\"code\":{\"enum\":[401]},\"message\":{\"enum\":[\"Unauthorized: This endpoint requires an OAuth2 bearer token\"]}}}]}",
+			"value": "{\"allOf\":[{\"type\":\"object\",\"required\":[\"message\"],\"properties\":{\"message\":{\"type\":\"string\"},\"details\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"items\":{\"type\":\"string\"}},{\"type\":\"object\",\"additionalProperties\":true}]}}},{\"type\":\"object\",\"properties\":{\"message\":{\"enum\":[\"Unauthorized: This endpoint requires an OAuth2 bearer token\"]}}}]}",
 			"type": "string"
 		},
 		{
 			"key": "responseSchema403",
-			"value": "{\"allOf\":[{\"type\":\"object\",\"required\":[\"message\"],\"properties\":{\"message\":{\"type\":\"string\"},\"details\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"items\":{\"type\":\"string\"}},{\"type\":\"object\",\"additionalProperties\":true}]}}},{\"type\":\"object\",\"properties\":{\"code\":{\"enum\":[403]},\"message\":{\"enum\":[\"Forbidden: OAuth2 bearer token does not have the required scope\"]}}}]}",
+			"value": "{\"allOf\":[{\"type\":\"object\",\"required\":[\"message\"],\"properties\":{\"message\":{\"type\":\"string\"},\"details\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"items\":{\"type\":\"string\"}},{\"type\":\"object\",\"additionalProperties\":true}]}}},{\"type\":\"object\",\"properties\":{\"message\":{\"enum\":[\"Forbidden: OAuth2 bearer token does not have the required scope\"]}}}]}",
 			"type": "string"
 		},
 		{
 			"key": "responseSchema404",
-			"value": "{\"allOf\":[{\"type\":\"object\",\"required\":[\"message\"],\"properties\":{\"message\":{\"type\":\"string\"},\"details\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"items\":{\"type\":\"string\"}},{\"type\":\"object\",\"additionalProperties\":true}]}}},{\"type\":\"object\",\"properties\":{\"code\":{\"enum\":[404]},\"message\":{\"enum\":[\"Not Found: The requested resource could not be found\"]}}}]}",
+			"value": "{\"allOf\":[{\"type\":\"object\",\"required\":[\"message\"],\"properties\":{\"message\":{\"type\":\"string\"},\"details\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"items\":{\"type\":\"string\"}},{\"type\":\"object\",\"additionalProperties\":true}]}}},{\"type\":\"object\",\"properties\":{\"message\":{\"enum\":[\"Not Found: The requested resource could not be found\"]}}}]}",
 			"type": "string"
 		},
 		{
@@ -9147,17 +9307,22 @@
 		},
 		{
 			"key": "responseSchema200Identifiers",
-			"value": "{\"type\":\"object\",\"required\":[\"didDocument\"],\"properties\":{\"didDocument\":{\"type\":\"object\",\"required\":[\"service\"],\"properties\":{\"service\":{\"type\":\"array\",\"minItems\":1,\"items\":{\"type\":\"object\",\"required\":[\"type\",\"serviceEndpoint\"],\"properties\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"items\":{\"type\":\"string\"}}],\"serviceEndpoint\":{\"type\":\"string\"}}}}}},\"didResolutionMetadata\":{\"type\":\"object\"},\"didDocumentMetadata\":{\"type\":\"object\"}}}",
+			"value": "{\"type\":\"object\",\"required\":[\"didDocument\"],\"properties\":{\"didDocument\":{\"type\":\"object\",\"required\":[\"service\"],\"properties\":{\"service\":{\"type\":\"array\",\"minItems\":1,\"items\":{\"type\":\"object\",\"required\":[\"type\",\"serviceEndpoint\"],\"properties\":{\"type\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"items\":{\"type\":\"string\"}}]},\"serviceEndpoint\":{\"type\":\"string\"}}}}}},\"didResolutionMetadata\":{\"type\":\"object\"},\"didDocumentMetadata\":{\"type\":\"object\"}}}",
 			"type": "string"
 		},
 		{
 			"key": "responseSchema400Identifiers",
-			"value": "{\"allOf\":[{\"description\":\"Bad Request\",\"content\":{\"application/json\":{\"schema\":{\"allOf\":[{\"type\":\"object\",\"required\":[\"message\"],\"properties\":{\"message\":{\"type\":\"string\"},\"details\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"items\":{\"type\":\"string\"}},{\"type\":\"object\",\"additionalProperties\":true}]}}},{\"type\":\"object\",\"properties\":{\"code\":{\"enum\":[400]},\"message\":{\"enum\":[\"Bad Request: Your request body does not conform to the required schema\"]}}}]}}}},{\"type\":\"object\",\"properties\":{\"message\":{\"enum\":[\"Bad Request: Invalid DID\"]}}}]}",
+			"value": "{\"description\":\"ErrInvalidDID is returned when the request path contains an invalid DID\\nparameter.\\n\",\"allOf\":[{\"type\":\"object\",\"required\":[\"message\"],\"properties\":{\"message\":{\"type\":\"string\"},\"details\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"items\":{\"type\":\"string\"}},{\"type\":\"object\",\"additionalProperties\":true}]}}},{\"type\":\"object\",\"properties\":{\"message\":{\"enum\":[\"Bad Request: Invalid DID\"]}}}]}",
 			"type": "string"
 		},
 		{
 			"key": "responseSchema200ApiConfiguration",
 			"value": "{\"title\":\"Traceability API DID Web Document\",\"type\":\"object\",\"properties\":{\"@context\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"uniqueItems\":true,\"items\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"object\"}]}}]},\"id\":{\"type\":\"string\"},\"service\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\"},\"type\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"serviceEndpoint\":{\"type\":\"string\"}}}}}}",
+			"type": "string"
+		},
+		{
+			"key": "responseSchema200CredentialsVerify",
+			"value": "{\"title\":\"Verification Result\",\"type\":\"object\",\"properties\":{\"verified\":{\"type\":\"boolean\"},\"verifications\":{\"type\":\"array\",\"items\":{\"title\":\"Verification\",\"type\":\"object\",\"properties\":{\"title\":{\"type\":\"string\",\"enum\":[\"Proof\",\"Activation\",\"Expired\",\"Revocation\"]},\"status\":{\"type\":\"string\",\"enum\":[\"good\",\"bad\"]},\"description\":{\"type\":\"string\"}},\"required\":[\"title\",\"status\"]}}},\"required\":[\"verified\"]}",
 			"type": "string"
 		}
 	]
