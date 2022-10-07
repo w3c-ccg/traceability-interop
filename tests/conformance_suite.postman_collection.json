@@ -37,18 +37,59 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{API_BASE_URL}}/did.json",
+									"raw": "{{did_web_endpoint}}",
 									"host": [
-										"{{API_BASE_URL}}"
-									],
-									"path": [
-										"did.json"
+										"{{did_web_endpoint}}"
 									]
 								}
 							},
 							"response": []
 						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
 					]
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"// Discovery requires a multi-tenant aware did web endpoint",
+							"const did_web = pm.environment.get(\"ORGANIZATION_DID_WEB\");",
+							"const did_web_endpoint = utils(pm).convertDidWebToEndpoint(did_web);",
+							"pm.variables.set('did_web_endpoint', did_web_endpoint);",
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
 				}
 			]
 		},
@@ -8716,6 +8757,10 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
+													"// Get multi-tenant aware presentations base URL from cached did:web document",
+													"const didDoc = pm.variables.get(\"currentDidWeb\");",
+													"const service = didDoc.service.find((s) => s.type.includes('TraceabilityAPI'));",
+													"pm.variables.set(\"presentations_base_url\", service.serviceEndpoint);",
 													""
 												],
 												"type": "text/javascript"
@@ -8743,9 +8788,9 @@
 										"method": "POST",
 										"header": [],
 										"url": {
-											"raw": "{{API_BASE_URL}}/presentations",
+											"raw": "{{presentations_base_url}}/presentations",
 											"host": [
-												"{{API_BASE_URL}}"
+												"{{presentations_base_url}}"
 											],
 											"path": [
 												"presentations"
@@ -8763,6 +8808,11 @@
 												"exec": [
 													"// Obtain an access token without the required \"submit:presentations\" scope",
 													"utils(pm).getAccessToken('');",
+													"",
+													"// Get multi-tenant aware presentations base URL from cached did:web document",
+													"const didDoc = pm.variables.get(\"currentDidWeb\");",
+													"const service = didDoc.service.find((s) => s.type.includes('TraceabilityAPI'));",
+													"pm.variables.set(\"presentations_base_url\", service.serviceEndpoint);",
 													""
 												],
 												"type": "text/javascript"
@@ -8800,9 +8850,9 @@
 										"method": "POST",
 										"header": [],
 										"url": {
-											"raw": "{{API_BASE_URL}}/presentations",
+											"raw": "{{presentations_base_url}}/presentations",
 											"host": [
-												"{{API_BASE_URL}}"
+												"{{presentations_base_url}}"
 											],
 											"path": [
 												"presentations"
@@ -8855,8 +8905,15 @@
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"// Obtain an access token with the required \"submit:presentations\" scope",
+							"// Obtain an access token with the required \"submit:presentations\" scope.  This",
+							"// fires off an async sendRequest() that Postman will wait for before running",
+							"// any requests in the collection.",
 							"utils(pm).getAccessToken('submit:presentations');",
+							"",
+							"// Presentations requires a multi-tenant aware presentation endpoint. This",
+							"// fires off an async sendRequest() that Postman will wait for before running",
+							"// any requests in the collection.",
+							"utils(pm).populateCurrentDidWeb(pm.environment.get(\"ORGANIZATION_DID_WEB\"));",
 							""
 						]
 					}
@@ -8888,6 +8945,10 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
+													"// Get multi-tenant aware presentations base URL from cached did:web document",
+													"const didDoc = pm.variables.get(\"currentDidWeb\");",
+													"const service = didDoc.service.find((s) => s.type.includes('TraceabilityAPI'));",
+													"pm.variables.set(\"presentations_base_url\", service.serviceEndpoint);",
 													""
 												],
 												"type": "text/javascript"
@@ -8915,9 +8976,9 @@
 										"method": "POST",
 										"header": [],
 										"url": {
-											"raw": "{{API_BASE_URL}}/presentations/prove",
+											"raw": "{{presentations_base_url}}/presentations/prove",
 											"host": [
-												"{{API_BASE_URL}}"
+												"{{presentations_base_url}}"
 											],
 											"path": [
 												"presentations",
@@ -8936,6 +8997,11 @@
 												"exec": [
 													"// Obtain an access token without the required \"prove:presentations\" scope",
 													"utils(pm).getAccessToken('');",
+													"",
+													"// Get multi-tenant aware presentations base URL from cached did:web document",
+													"const didDoc = pm.variables.get(\"currentDidWeb\");",
+													"const service = didDoc.service.find((s) => s.type.includes('TraceabilityAPI'));",
+													"pm.variables.set(\"presentations_base_url\", service.serviceEndpoint);",
 													""
 												],
 												"type": "text/javascript"
@@ -8973,9 +9039,9 @@
 										"method": "POST",
 										"header": [],
 										"url": {
-											"raw": "{{API_BASE_URL}}/presentations/prove",
+											"raw": "{{presentations_base_url}}/presentations/prove",
 											"host": [
-												"{{API_BASE_URL}}"
+												"{{presentations_base_url}}"
 											],
 											"path": [
 												"presentations",
@@ -9022,8 +9088,16 @@
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"// Obtain an access token with the required \"prove:presentations\" scope",
-							"utils(pm).getAccessToken('prove:presentations');"
+							"// Obtain an access token with the required \"prove:presentations\" scope.  This",
+							"// fires off an async sendRequest() that Postman will wait for before running",
+							"// any requests in the collection.",
+							"utils(pm).getAccessToken('prove:presentations');",
+							"",
+							"// Presentations requires a multi-tenant aware presentation endpoint. This",
+							"// fires off an async sendRequest() that Postman will wait for before running",
+							"// any requests in the collection.",
+							"utils(pm).populateCurrentDidWeb(pm.environment.get(\"ORGANIZATION_DID_WEB\"));",
+							""
 						]
 					}
 				},
@@ -9054,6 +9128,10 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
+													"// Get multi-tenant aware presentations base URL from cached did:web document",
+													"const didDoc = pm.variables.get(\"currentDidWeb\");",
+													"const service = didDoc.service.find((s) => s.type.includes('TraceabilityAPI'));",
+													"pm.variables.set(\"presentations_base_url\", service.serviceEndpoint);",
 													""
 												],
 												"type": "text/javascript"
@@ -9081,9 +9159,9 @@
 										"method": "POST",
 										"header": [],
 										"url": {
-											"raw": "{{API_BASE_URL}}/presentations/verify",
+											"raw": "{{presentations_base_url}}/presentations/verify",
 											"host": [
-												"{{API_BASE_URL}}"
+												"{{presentations_base_url}}"
 											],
 											"path": [
 												"presentations",
@@ -9102,6 +9180,11 @@
 												"exec": [
 													"// Obtain an access token without the required \"verify:presentations\" scope",
 													"utils(pm).getAccessToken('');",
+													"",
+													"// Get multi-tenant aware presentations base URL from cached did:web document",
+													"const didDoc = pm.variables.get(\"currentDidWeb\");",
+													"const service = didDoc.service.find((s) => s.type.includes('TraceabilityAPI'));",
+													"pm.variables.set(\"presentations_base_url\", service.serviceEndpoint);",
 													""
 												],
 												"type": "text/javascript"
@@ -9139,9 +9222,9 @@
 										"method": "POST",
 										"header": [],
 										"url": {
-											"raw": "{{API_BASE_URL}}/presentations/verify",
+											"raw": "{{presentations_base_url}}/presentations/verify",
 											"host": [
-												"{{API_BASE_URL}}"
+												"{{presentations_base_url}}"
 											],
 											"path": [
 												"presentations",
@@ -9188,8 +9271,16 @@
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"// Obtain an access token with the required \"verify:presentations\" scope",
-							"utils(pm).getAccessToken('verify:presentations');"
+							"// Obtain an access token with the required \"verify:presentations\" scope.  This",
+							"// fires off an async sendRequest() that Postman will wait for before running",
+							"// any requests in the collection.",
+							"utils(pm).getAccessToken('verify:presentations');",
+							"",
+							"// Presentations requires a multi-tenant aware presentation endpoint. This",
+							"// fires off an async sendRequest() that Postman will wait for before running",
+							"// any requests in the collection.",
+							"utils(pm).populateCurrentDidWeb(pm.environment.get(\"ORGANIZATION_DID_WEB\"));",
+							""
 						]
 					}
 				},
@@ -9206,11 +9297,59 @@
 		},
 		{
 			"name": "Presentations - Notify",
-			"item": []
+			"item": [],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"// Presentations requires a multi-tenant aware presentation endpoint. This",
+							"// fires off an async sendRequest() that Postman will wait for before running",
+							"// any requests in the collection.",
+							"utils(pm).populateCurrentDidWeb(pm.environment.get(\"ORGANIZATION_DID_WEB\"));",
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
 		},
 		{
 			"name": "Presentations - Submit",
-			"item": []
+			"item": [],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"// Presentations requires a multi-tenant aware presentation endpoint. This",
+							"// fires off an async sendRequest() that Postman will wait for before running",
+							"// any requests in the collection.",
+							"utils(pm).populateCurrentDidWeb(pm.environment.get(\"ORGANIZATION_DID_WEB\"));",
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
 		}
 	],
 	"event": [
@@ -9219,19 +9358,68 @@
 			"script": {
 				"type": "text/javascript",
 				"exec": [
+					"    // hydrateCache retrieves a cache from global scope. Caches are stored",
+					"    // in global scope so that they will persist across requests.",
+					"    const hydrateCache = (cacheName) => {",
+					"        if (!pm.globals.has(cacheName)) {",
+					"            return {};",
+					"        }",
+					"        try {",
+					"            const cache = pm.globals.get(cacheName);",
+					"            return JSON.parse(cache)",
+					"        } catch(e) {",
+					"            console.warn(`ignoring invalid cache \"${cacheName}\"`);",
+					"        }",
+					"        return {}",
+					"    }",
+					"",
+					"    const tokenCache = hydrateCache(\"tokenCache\");",
+					"    const didWebCache = hydrateCache(\"didWebCache\");",
+					"",
+					"    // convertDidWebToEndpoint produces a URL to the DID document for a given",
+					"    // `did:web` DID.",
+					"    const convertDidWebToEndpoint = (did) => {",
+					"        const re = /did:web:(?<host>[a-zA-Z0-9/.\\-_]+)(?:%3[aA](?<port>[0-9]+))?(?<path>:[a-zA-Z0-9/.:\\-_]+)?/",
+					"        const match = did.match(re);",
+					"        if (!match) {",
+					"            throw new Error('DID is not a valid did:web');",
+					"        }",
+					"        const { host, port, path } = match.groups;",
+					"        const hostport = port ? `${host}:${port}` : `${host}`",
+					"        const pathname = path?.split(':').join('/') || '/.well-known';",
+					"        return `https://${hostport}${pathname}/did.json`;",
+					"    };",
+					"",
+					"",
 					"// The pm variable is not available inside global methods.",
 					"utils = (pm) => {",
-					"    // Local variables do not persist across requests, but globals do.",
-					"    let tokenCache = {};",
-					"    if (pm.globals.has(\"tokenCache\")) {",
-					"        try {",
-					"            tokenCache = JSON.parse(pm.globals.get(\"tokenCache\"))",
-					"        } catch(e) {",
-					"            console.log(\"could not parse token cache\");",
-					"        }",
-					"    }",
+					"",
+					"    // NB: The main Postman request will not be sent until the pre-request script",
+					"    //     is determined to be finished with all callbacks, including sendRequest.",
+					"",
 					"    return {",
+					"        convertDidWebToEndpoint,",
+					"        populateCurrentDidWeb: (did) => {",
+					"            if (didWebCache[did]) {",
+					"                pm.variables.set(\"currentDidWeb\", didWebCache[did]);",
+					"                return;",
+					"            }",
+					"            const didWebRequest = {",
+					"                url: convertDidWebToEndpoint(did),",
+					"                method: 'GET',",
+					"            };",
+					"            pm.sendRequest(didWebRequest, (err, res) => {",
+					"                pm.expect(err).to.be.null;",
+					"                didWebCache[did] = res.json();",
+					"                pm.globals.set(\"didWebCache\", JSON.stringify(didWebCache));",
+					"                pm.variables.set(\"currentDidWeb\", didWebCache[did]);",
+					"            });",
+					"        },",
 					"        getAccessToken: (scope) => {",
+					"            if (tokenCache[scope]) {",
+					"                pm.variables.set('currentAccessToken', tokenCache[scope]);",
+					"                return;",
+					"            }",
 					"            const accessTokenRequest = {",
 					"                url: pm.environment.get(\"TOKEN_ENDPOINT\"),",
 					"                method: 'POST',",
@@ -9246,18 +9434,12 @@
 					"                    ],",
 					"                }",
 					"            };",
-					"            if (tokenCache[scope]) {",
-					"                pm.variables.set('currentAccessToken', tokenCache[scope])",
-					"            } else {",
-					"                // NB: The main Postman request will not be sent until the pre-request script",
-					"                //     is determined to be finished with all callbacks, including sendRequest.",
-					"                pm.sendRequest(accessTokenRequest, (err, res) => {",
-					"                    pm.expect(err).to.be.null;",
-					"                    tokenCache[scope] = res.json().access_token;",
-					"                    pm.globals.set(\"tokenCache\", JSON.stringify(tokenCache));",
-					"                    pm.variables.set(\"currentAccessToken\", tokenCache[scope]);",
-					"                });",
-					"            }",
+					"            pm.sendRequest(accessTokenRequest, (err, res) => {",
+					"                pm.expect(err).to.be.null;",
+					"                tokenCache[scope] = res.json().access_token;",
+					"                pm.globals.set(\"tokenCache\", JSON.stringify(tokenCache));",
+					"                pm.variables.set(\"currentAccessToken\", tokenCache[scope]);",
+					"            });",
 					"        },",
 					"    };",
 					"};"
