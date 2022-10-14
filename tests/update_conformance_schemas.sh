@@ -83,6 +83,12 @@ update_postman \
   "responseSchema403" \
   "$(get_schema '.paths["/credentials/issue"].post.responses["403"].content["application/json"].schema')"
 
+# Credentials - Issue [422]
+update_postman \
+"conformance_suite.postman_collection.json" \
+  "responseSchema422CredentialsIssue" \
+  "$(get_schema '.paths["/credentials/issue"].post.responses["422"].content["application/json"].schema')"
+
 # Credentials - Issue [500]
 update_postman \
 "conformance_suite.postman_collection.json" \
