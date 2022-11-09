@@ -111,9 +111,9 @@ To simplify the creation of test vectors for the spec, we intend to provide a re
 
 This implementation will cover all required AND optional APIs, and will be used to ensure no breaking changes are accidentaly contributed to the spec.
 
-## Postman Interoperability Test Suite
+## Postman Test Suites
 
-To ensure interoperability, tests are conducted in a manner consistent with production environments. We maintain a set of Postman collections and client credential configuration located in the [tutorials](./docs/tutorials/) section of the docs.  These tests are executed via GitHub actions, on demand by implementers, and on a nightly scheduled basis.
+To ensure conformance and interoperability, tests are conducted in a manner consistent with production environments. We maintain a set of Postman collections and client credential configurations containing [conformance](./tests) and [interoperability](./docs/tutorials) test suites. These tests are executed via GitHub actions, on demand by implementers, and on a nightly scheduled basis. Please review the linked documentation for instructions on importing these test suites into your own local Postman environment.
 
 This approach allows us to test implementations in production with the appropriate security and authorization policies in place.
 
