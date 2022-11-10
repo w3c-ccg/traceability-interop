@@ -19,67 +19,36 @@
 
 An enterprise grade HTTP API for leveraging [W3C Decentralized Identifiers](https://www.w3.org/TR/did-core/) and [W3C Verifiable Credentials](https://www.w3.org/TR/vc-data-model/) with [W3C CCG Traceability Vocabulary](https://w3c-ccg.github.io/traceability-vocab/) and the [VC API](https://w3c-ccg.github.io/vc-api/) when possible.
 
+
 ## Meetings
 
 Meetings are held
 
 - Tuesdays at [13:30 ET/10:30pm PT](http://www.timebie.com/std/newyork.php?q=13.5)
 - Via [Jitsi](https://github.com/jitsi) in browser or [standalone app](https://github.com/jitsi/jitsi-meet-electron/releases) using this link: [meet.w3c-ccg.org/traceability](https://meet.w3c-ccg.org/traceability)
-- with standing agenda to review open Pull Requests ([trace-interop](https://github.com/w3c-ccg/traceability-interop/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-asc), [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-asc)),
+- With standing agenda to review open Pull Requests ([trace-interop](https://github.com/w3c-ccg/traceability-interop/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-asc), [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-asc)),
   then open Issues ([trace-interop](https://github.com/w3c-ccg/traceability-interop/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-asc), [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-asc)), unless otherwise noted on the [mailing list](https://lists.w3.org/Archives/Public/public-credentials/)
 
-### Hosting instructions
+Historical archives for meetings [can be found here](https://github.com/w3c-ccg/meetings).
 
-Any chair, editor, or other party authorized by CCG to manage recordings and
-minutes can do the following. A scribe-bot will show up in the main #ccg IRC
-channel automatically.
+### Before the Meeting
 
-1. Make sure to select "Start Recording" at the beginning of the call and "Stop
-   Recording" when you're done.
+- Open the [W3C-CCG Traceability Agenda Email Draft](https://docs.google.com/document/d/1Se_PIZNhIzZrwVftbYi-Z3oEMXvucQ7jNjxzjMVWCm4/edit) in Google Docs
+- Update all the items highlighted in yellow, in particular adding new agenda items for week starting with item 7.
+- If there are presentation materials, add them to the appropriate [dated meeting archives folder](https://github.com/w3c-ccg/meetings/) before the meeting.
+- Send agenda to public-credentials@w3.org before each meeting
+- Confirm in the CCG mail archives that the agenda was sent correctly
 
-1. Select "Start Recording" to start audio recording
+### During the Meeting
+- Be sure to click "Start Recording" and then "Stop Subtitles"
+- Make sure to link to the agenda at the beginning of the meeting ("Agenda: ...")
+- Make sure the scribe is identified ("Scribe: ...")
+- Make sure topics are labeled when the topic changes ("Topic: ...")
+- Make sure that action items are listed so that they can be added to issues later ("Action: ...")
 
-1. Post the link to today's agenda in the meeting chat box. The link below leads 
-   to the default "standing" agenda. If a date-specific agenda was sent to the
-   mailing list prior to the meeting, a link to that archived email should be used
-   instead.
-
-   `Agenda: https://github.com/w3c-ccg/traceability-interop/blob/main/AGENDA.md`
-
-1. Address IP note, agenda review, and scribe selection topic
-
-    - Note the topic in the chat box
-      `Topic: IP Note, Agenda Review, Scribe Selection`
-    - Announce the agenda for the meeting. Meetings alternate between focus on the trace-interop and trace-vocab repositories.
-    - Read the standard IP note
-
-      > Anyone can participate in these calls. However, all substantive contributors to any CCG Work Items must be members of the CCG with full IPR agreements signed. Information about and links to the required license agreements can be found in the meeting agenda.
-
-1. Move on to GitHub Issue & PR review
-
-    - Note the next topic in the chat box
-
-      `Topic: GitHub Issue & PR review`
-
-    - Review pull requests in order (least recently updated first)
-
-      For this portion of the meeting, address PRs in the focus repository first, followed by PRs in the other repository.
-
-        - Publish link to sorted PRs in chat box ([trace-interop](https://github.com/w3c-ccg/traceability-interop/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-asc), [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-asc))
-
-        - Publish link to each PR being discussed in chat box
-
-    - Review issues in order (least recently updated first)
-
-      For this portion of the meeting, address issues in the focus repository first, followed by issues in the other repository.
-
-        - Publish link to sorted issues in chat box ([trace-interop](https://github.com/w3c-ccg/traceability-interop/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-asc), [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-asc))
-
-        - Publish link to each issue being discussed in chat box
-
-1. Make sure to kick everyone out of the room when the meeting is done.
-
-1. [Retrieve and publish meeting minutes](docs/weekly-minutes/)
+### After the Meeting
+- Be sure to kick everyone from the meeting and "Stop Recording"
+- [How to publish the minutes](https://github.com/w3c-ccg/traceability-interop/tree/main/docs/weekly-minutes)
 
 ## [Open API Specification](https://w3c-ccg.github.io/traceability-interop/)
 
