@@ -42,7 +42,7 @@ Historical archives for meetings [can be found here](https://github.com/w3c-ccg/
 ### During the Meeting
 - Be sure to click "Start Recording" and then "Stop Subtitles"
 - Make sure to link to the agenda at the beginning of the meeting ("Agenda: ...")
-- Make sure the scribe is identified ("Scribe: ..." or `scribe+ ...` identifying someone else, or `scribe+` identifying oneself
+- Make sure the scribe is identified ("Scribe: ..." or `scribe+ ...` identifying someone else, or `scribe+` identifying oneself). Scribes, please familiarize yourself with general scribing guidance [here](https://www.w3.org/2008/04/scribe.html) and [here](https://www.w3.org/2008/xmlsec/Group/Scribe-Instructions.html).
 - Make sure topics are labeled when the topic changes ("Topic: ...")
 - Make sure that action items are listed so that they can be added to issues later ("Action: ...")
 
