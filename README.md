@@ -33,10 +33,13 @@ Historical archives for meetings [can be found here](https://github.com/w3c-ccg/
 ### Before the Meeting
 
 - Duplicate the [W3C-CCG Traceability Agenda Email Draft](https://docs.google.com/document/d/1Se_PIZNhIzZrwVftbYi-Z3oEMXvucQ7jNjxzjMVWCm4/edit) in Google Docs
-- Update all the items highlighted in yellow, in particular adding new agenda items for week starting with item 7.
+- Update all the items highlighted in yellow, in particular adding new agenda items for week starting with item 6.
 - If there are presentation materials, add them to the appropriate [dated meeting archives folder](https://github.com/w3c-ccg/meetings/) before the meeting.
-- Send agenda to public-credentials@w3.org before each meeting
-- Confirm in the CCG mail archives that the agenda was sent correctly
+- Send agenda to public-credentials@w3.org before each meeting. Use the following format for the subject (modify date accordingly):
+  ```
+  [AGENDA] W3C CCG Traceability Call - 2022-11-22
+  ```
+- Confirm in the [CCG mail archives](https://lists.w3.org/Archives/Public/public-credentials/) that the agenda was sent correctly
 
 ### During the Meeting
 - Be sure to click "Start Recording" and then "Stop Subtitles"
