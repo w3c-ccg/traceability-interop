@@ -122,7 +122,7 @@ into an easy to use collection by following the instructions below:
    pasting it into the input box.
 
 You should see something like this in your collections once you have 
-succesffuly imported the spec:
+successfully imported the spec:
 
 <p align="center">
   <a href="./docs/imported-collection.png">
