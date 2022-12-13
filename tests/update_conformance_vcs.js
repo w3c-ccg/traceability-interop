@@ -4,6 +4,7 @@ const { CONTEXT_URL, CONTEXT } = require('credentials-context');
 const jsonld = require('jsonld');
 const { strictDocumentLoader } = require('jsonld-signatures');
 const { klona } = require('klona/json');
+const fs = require('fs');
 
 // If this changes, the `issuer` in `valid-credential.json` must be updated to
 // match. In order for signed credentials to be valid, the controller for a
@@ -49,6 +50,17 @@ const mutatingDocumentLoader = async ({ mutate = noopMutator } = {}) => {
       return {
         contextUrl: null,
         document: mutate(klona(CONTEXT)),
+        documentUrl: url,
+      };
+    }
+
+    if (url && url == 'https://w3id.org/traceability/v1') {
+      let context = fs.readFileSync('./traceability-v1.jsonld', 'utf8');
+      context = JSON.parse(context);
+      return {
+        contextUrl: null,
+        // Don't mutate traceability context
+        document: klona(context),
         documentUrl: url,
       };
     }
