@@ -1,0 +1,336 @@
+{
+  "collection": {
+    "info": {
+      "_postman_id": "5f758c01-00c0-41e7-acb7-d2e6a9b36116",
+      "name": "Test Report Demo",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "id": "e63eef8e-9ffa-4dc8-b86d-fc16d70edf16",
+        "name": "Discover API Configuration",
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "identifiers",
+              "did:web:api.did.actor:api"
+            ],
+            "host": [
+              "api",
+              "did",
+              "actor"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "GET"
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "db89a5be-8c8a-46a0-8f92-8ac24d37bcab",
+              "type": "text/javascript",
+              "exec": [
+                "const jsonResponse = pm.response.json();",
+                "",
+                "pm.test(\"The DID Document MUST contain 'assertionMethod' DID URL\", function () {",
+                "    pm.expect(jsonResponse.didDocument.assertionMethod).to.be.an(\"array\");",
+                "    pm.expect(jsonResponse.didDocument.assertionMethod[0]).to.be.a(\"string\");",
+                "    pm.environment.set(\"issuer_did_url\", jsonResponse.didDocument.assertionMethod[0]);",
+                "});",
+                "",
+                "pm.test(\"The DID Document MUST contain 'authentication' DID URL\", function () {",
+                "    pm.expect(jsonResponse.didDocument.authentication).to.be.an(\"array\");",
+                "    pm.expect(jsonResponse.didDocument.authentication[0]).to.be.a(\"string\");",
+                "    pm.environment.set(\"holder_did_url\", jsonResponse.didDocument.authentication[0]);",
+                "});",
+                "",
+                "pm.test(\"The DID Document MUST contain 'service'\", function () {",
+                "    pm.expect(jsonResponse.didDocument.service).to.be.an(\"array\");",
+                "    pm.environment.set(\"traceability_api_root\", jsonResponse.didDocument.service[0].serviceEndpoint);",
+                "});"
+              ],
+              "_lastExecutionId": "48d6decf-38bb-4830-acde-1ef014e532f6"
+            }
+          }
+        ]
+      },
+      {
+        "id": "1c4b87b9-ddbd-4780-92a3-6702694255cc",
+        "name": "Issue Credential",
+        "request": {
+          "url": {
+            "path": [
+              "credentials",
+              "issue"
+            ],
+            "host": [
+              "{{traceability_api_root}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"credential\": {\n    \"@context\": [\n      \"https://www.w3.org/2018/credentials/v1\"\n    ],\n    \"id\": \"urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded\",\n    \"type\": [\n      \"VerifiableCredential\"\n    ],\n    \"issuer\": \"did:key:z6MktiSzqF9kqwdU8VkdBKx56EYzXfpgnNPUAGznpicNiWfn\",\n    \"issuanceDate\": \"{{$isoTimestamp}}\",\n    \"credentialSubject\": {\n        \"id\": \"did:key:z6MktiSzqF9kqwdU8VkdBKx56EYzXfpgnNPUAGznpicNiWfn\"\n    }\n  },\n  \"options\": {\n    \"type\": \"Ed25519Signature2018\"\n  }\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "prerequest",
+            "script": {
+              "id": "75d6e7f3-9f1f-446f-833b-1215f35d3082",
+              "type": "text/javascript",
+              "exec": [
+                ""
+              ],
+              "_lastExecutionId": "173ba9ba-17bd-4b3d-9729-b2fe695080b1"
+            }
+          },
+          {
+            "listen": "test",
+            "script": {
+              "id": "84d06680-7cab-4a92-ae0c-2d23bc2ed05d",
+              "type": "text/javascript",
+              "exec": [
+                "const verifiableCredential = pm.response.json()",
+                "",
+                "pm.test(\"The Verifiable Credential MUST have a 'proof'\", function () {",
+                "    pm.expect(verifiableCredential.proof).to.be.an(\"object\");",
+                "    pm.environment.set(\"verifiable_credential\", JSON.stringify(verifiableCredential));",
+                "});",
+                ""
+              ],
+              "_lastExecutionId": "2653be66-5d07-4a17-93ed-3512f3e3f5b2"
+            }
+          }
+        ]
+      },
+      {
+        "id": "fb9febb5-91f7-4819-bbd7-e69e7df39770",
+        "name": "Verify Credential",
+        "request": {
+          "url": {
+            "path": [
+              "credentials",
+              "verify"
+            ],
+            "host": [
+              "{{traceability_api_root}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"verifiableCredential\": {{verifiable_credential}}\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "8d97bb1a-b43f-44a2-91cc-0285581c3333",
+              "type": "text/javascript",
+              "exec": [
+                "const verification = pm.response.json()",
+                "",
+                "pm.test(\"The Verifiable Credential MUST have been verified\", function () {",
+                "    pm.expect(verification.verified).to.eql(true);",
+                "});",
+                ""
+              ],
+              "_lastExecutionId": "f095d9e5-4b15-49ff-823e-263a9afed114"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 4,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 5,
+        "pending": 0,
+        "failed": 0
+      },
+      "testScripts": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 2480.6666666666665,
+      "responseMin": 448,
+      "responseMax": 5251,
+      "responseSd": 2029.0090082489914,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1671757485054,
+      "completed": 1671757492603
+    },
+    "executions": [
+      {
+        "id": "e63eef8e-9ffa-4dc8-b86d-fc16d70edf16",
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 3,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "b27713a0-8649-4556-b731-24ffddf7bae4",
+          "httpRequestId": "6b282d80-9197-4e67-9d9a-cfd1ee70704e"
+        },
+        "item": {
+          "id": "e63eef8e-9ffa-4dc8-b86d-fc16d70edf16",
+          "name": "Discover API Configuration"
+        },
+        "response": {
+          "id": "ec980585-d46b-40f3-ba20-50836c2c7fa7",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 5251,
+          "responseSize": 778
+        },
+        "assertions": [
+          {
+            "assertion": "The DID Document MUST contain 'assertionMethod' DID URL",
+            "skipped": false
+          },
+          {
+            "assertion": "The DID Document MUST contain 'authentication' DID URL",
+            "skipped": false
+          },
+          {
+            "assertion": "The DID Document MUST contain 'service'",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "1c4b87b9-ddbd-4780-92a3-6702694255cc",
+        "cursor": {
+          "ref": "039ea74a-f362-40b5-975a-5f9b5d7520b3",
+          "length": 3,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "dfc039d0-486c-416f-9aa5-35b10255e345"
+        },
+        "item": {
+          "id": "1c4b87b9-ddbd-4780-92a3-6702694255cc",
+          "name": "Issue Credential"
+        },
+        "response": {
+          "id": "601e1448-e270-46f8-bb16-aa3e0c433531",
+          "status": "Created",
+          "code": 201,
+          "responseTime": 1743,
+          "responseSize": 724
+        },
+        "assertions": [
+          {
+            "assertion": "The Verifiable Credential MUST have a 'proof'",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "fb9febb5-91f7-4819-bbd7-e69e7df39770",
+        "cursor": {
+          "ref": "57fe79ec-928f-4baf-83a0-f3fb8f639b6b",
+          "length": 3,
+          "cycles": 1,
+          "position": 2,
+          "iteration": 0,
+          "httpRequestId": "deb9be40-5217-42e7-806b-6b65b2e1a590"
+        },
+        "item": {
+          "id": "fb9febb5-91f7-4819-bbd7-e69e7df39770",
+          "name": "Verify Credential"
+        },
+        "response": {
+          "id": "34ef9575-1c96-43e8-baeb-90e3040c6a77",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 448,
+          "responseSize": 17
+        },
+        "assertions": [
+          {
+            "assertion": "The Verifiable Credential MUST have been verified",
+            "skipped": false
+          }
+        ]
+      }
+    ]
+  }
+}
