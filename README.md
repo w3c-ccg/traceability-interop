@@ -136,7 +136,7 @@ To simplify the creation of test vectors for the spec, we intend to provide
 a reference implementation.
 
 This implementation will cover all required AND optional APIs, and will be 
-used to ensure no breaking changes are accidentaly contributed to the spec.
+used to ensure no breaking changes are accidentally contributed to the spec.
 
 ## Postman Test Suites
 
