@@ -1,0 +1,415 @@
+{
+  "collection": {
+    "info": {
+      "_postman_id": "a9ba07e3-8811-4dc1-98d0-c1e6a13f3935",
+      "name": "OAuth Presentations Exchange Tutorial",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "id": "7f6fe770-df40-417c-ac82-6562d4e22a95",
+        "name": "Holder gets Verifier's Token",
+        "request": {
+          "url": {
+            "host": [
+              "{{VERIFIER_TOKEN_ENDPOINT}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "method": "POST",
+          "body": {
+            "mode": "urlencoded",
+            "urlencoded": [
+              {
+                "key": "audience",
+                "value": "{{VERIFIER_TOKEN_AUDIENCE}}"
+              },
+              {
+                "key": "client_id",
+                "value": "{{VERIFIER_CLIENT_ID}}"
+              },
+              {
+                "key": "client_secret",
+                "value": "{{VERIFIER_CLIENT_SECRET}}"
+              },
+              {
+                "key": "grant_type",
+                "value": "client_credentials"
+              },
+              {
+                "key": "scope",
+                "value": "resolve:dids submit:presentations"
+              }
+            ]
+          },
+          "auth": {
+            "type": "noauth",
+            "noauth": []
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "41c8c8a0-67df-4bb3-a7e9-c7007252a5fb",
+              "type": "text/javascript",
+              "exec": [
+                "// Token requests are expected to return a `200 Success` response code. Any",
+                "// other response code should trigger a failure.",
+                "pm.test(\"must return `200 Success` status\", function() {",
+                "    pm.response.to.have.status(200);",
+                "});",
+                "",
+                "// The response should include an `access_token` value - this will be presented",
+                "// to authenticated API endpoints in the `Authentication` header (see the last",
+                "// testing code block for details on how this is persisted).",
+                "pm.test(\"response body must include non-empty access_token\", function () {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.expect(access_token).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// The type of `access_token` returned by the token request is expected to be",
+                "// `Bearer`.",
+                "pm.test(\"response body must represent `Bearer` token\", function() {",
+                "    const { token_type } = pm.response.json()",
+                "    pm.expect(token_type).to.equal(\"Bearer\");",
+                "});",
+                "",
+                "// The returned data includes an `expires_in` field that indicates time until",
+                "// token expiration. Validate that this value is a whole number greater than",
+                "// zero, as anything less than or equal to zero means that the `access_token`",
+                "// is already expired.",
+                "pm.test(\"returned token must expire in the future\", function() {",
+                "    const { expires_in } = pm.response.json()",
+                "    pm.expect(expires_in).to.be.above(0);",
+                "});",
+                "",
+                "// The returned `access_token` value is persisted as a Postman collection",
+                "// variable that can be accessed by other requests in the collection by calling",
+                "// `pm.collectionVariables.get(\"issuer_access_token\")`.",
+                "pm.test(\"`access_token` persisted to collectionVariables\", function() {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.collectionVariables.set(\"verifier_access_token\", access_token);",
+                "});"
+              ],
+              "_lastExecutionId": "c29ee71e-e11a-4a07-9c9a-e66cd36a5570"
+            }
+          }
+        ]
+      },
+      {
+        "id": "465137c6-d185-402c-ac80-1f89b19bac24",
+        "name": "Get Verifier Organization DIDs",
+        "request": {
+          "url": {
+            "path": [
+              "identifiers",
+              "{{VERIFIER_ORGANIZATION_DID_WEB}}"
+            ],
+            "host": [
+              "{{VERIFIER_API_BASE_URL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "GET",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{verifier_access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "695cc4c6-1439-4421-985d-a8e54d5da9e7",
+              "type": "text/javascript",
+              "exec": [
+                "pm.test(\"Status code is 200\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});",
+                "",
+                "pm.test(\"Issuer makes unauthenticated discovery of verifiers exchange endpoint. `verifier_exchange_endpoint` is persisted to collectionVariables\", function() {",
+                "    const { service } = pm.response.json().didDocument;",
+                "    pm.collectionVariables.set(\"verifier_exchange_endpoint\", service[0].serviceEndpoint);",
+                "});",
+                "",
+                ""
+              ],
+              "_lastExecutionId": "be223159-cf1f-4408-80de-59144bd018cf"
+            }
+          }
+        ],
+        "protocolProfileBehavior": {
+          "disabledSystemHeaders": {}
+        }
+      },
+      {
+        "id": "3c4cefd8-6e8e-4afc-8011-ec2821adc840",
+        "name": "Presentation",
+        "request": {
+          "url": {
+            "path": [
+              "presentations"
+            ],
+            "host": [
+              "{{verifier_exchange_endpoint}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"@context\": [\n        \"https://www.w3.org/2018/credentials/v1\",\n        \"https://w3id.org/traceability/v1\"\n    ],\n    \"type\": [\n        \"VerifiablePresentation\",\n        \"TraceablePresentation\"\n    ],\n    \"verifiableCredential\": [\n        {\n            \"@context\": [\n                \"https://www.w3.org/2018/credentials/v1\"\n            ],\n            \"id\": \"urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded\",\n            \"type\": [\n                \"VerifiableCredential\"\n            ],\n            \"issuer\": \"did:key:z6MktiSzqF9kqwdU8VkdBKx56EYzXfpgnNPUAGznpicNiWfn\",\n            \"issuanceDate\": \"2010-01-01T19:23:24Z\",\n            \"credentialSubject\": {\n                \"id\": \"did:key:z6MktiSzqF9kqwdU8VkdBKx56EYzXfpgnNPUAGznpicNiWfn\"\n            },\n            \"proof\": {\n                \"type\": \"Ed25519Signature2018\",\n                \"created\": \"2021-10-30T19:16:30Z\",\n                \"verificationMethod\": \"did:key:z6MktiSzqF9kqwdU8VkdBKx56EYzXfpgnNPUAGznpicNiWfn#z6MktiSzqF9kqwdU8VkdBKx56EYzXfpgnNPUAGznpicNiWfn\",\n                \"proofPurpose\": \"assertionMethod\",\n                \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..puetBYS3pkYlYzAecBiT-WkigYAlVbslrz9wPFnk9JW4AwjrpJvcsSdZJPhZtNy_myMJUNzC_QaYyw3ni1V0BA\"\n            }\n        }\n    ]\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{verifier_access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "989a04dc-bf81-4a76-bda3-ffe64dc7ce45",
+              "type": "text/javascript",
+              "exec": [
+                "",
+                "// The expected response code for a \"Presentations Available\" request is",
+                "// `200 Success`.",
+                "pm.test(\"must return `200 Success` status\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});",
+                "",
+                "pm.test(\"Content-Type header is application/json\", () => {",
+                "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                "});"
+              ],
+              "_lastExecutionId": "c8a7b525-7c13-4fc6-a09b-f6aed4924ce8"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 9,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 9,
+        "pending": 0,
+        "failed": 1
+      },
+      "testScripts": {
+        "total": 6,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 124.66666666666667,
+      "responseMin": 36,
+      "responseMax": 288,
+      "responseSd": 115.6354424713961,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1674349881693,
+      "completed": 1674349882209
+    },
+    "executions": [
+      {
+        "id": "7f6fe770-df40-417c-ac82-6562d4e22a95",
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 3,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "305d0b86-802a-48e5-bc80-c12734da4d67",
+          "httpRequestId": "3d9ad7f5-8133-4dab-938f-403503342420"
+        },
+        "item": {
+          "id": "7f6fe770-df40-417c-ac82-6562d4e22a95",
+          "name": "Holder gets Verifier's Token"
+        },
+        "response": {
+          "id": "28851c3b-b148-4fe4-851b-05143203e824",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 288,
+          "responseSize": 957
+        },
+        "assertions": [
+          {
+            "assertion": "must return `200 Success` status",
+            "skipped": false
+          },
+          {
+            "assertion": "response body must include non-empty access_token",
+            "skipped": false
+          },
+          {
+            "assertion": "response body must represent `Bearer` token",
+            "skipped": false
+          },
+          {
+            "assertion": "returned token must expire in the future",
+            "skipped": false
+          },
+          {
+            "assertion": "`access_token` persisted to collectionVariables",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "465137c6-d185-402c-ac80-1f89b19bac24",
+        "cursor": {
+          "ref": "b94d6e71-5141-4a06-b150-23cbbe9fb6ff",
+          "length": 3,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "40ed28a7-1faa-4161-b170-2817fe26a99d"
+        },
+        "item": {
+          "id": "465137c6-d185-402c-ac80-1f89b19bac24",
+          "name": "Get Verifier Organization DIDs"
+        },
+        "response": {
+          "id": "51639c93-59db-4a16-abac-1e7282ae5b0b",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 50,
+          "responseSize": 1028
+        },
+        "assertions": [
+          {
+            "assertion": "Status code is 200",
+            "skipped": false
+          },
+          {
+            "assertion": "Issuer makes unauthenticated discovery of verifiers exchange endpoint. `verifier_exchange_endpoint` is persisted to collectionVariables",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "3c4cefd8-6e8e-4afc-8011-ec2821adc840",
+        "cursor": {
+          "ref": "5afed098-3815-4b35-b094-b082a9805a9a",
+          "length": 3,
+          "cycles": 1,
+          "position": 2,
+          "iteration": 0,
+          "httpRequestId": "b1f49434-a423-4eb8-b085-a92433ad0342"
+        },
+        "item": {
+          "id": "3c4cefd8-6e8e-4afc-8011-ec2821adc840",
+          "name": "Presentation"
+        },
+        "response": {
+          "id": "89f35a6e-504b-4146-a2da-c815b40a58fd",
+          "status": "Bad Request",
+          "code": 400,
+          "responseTime": 36,
+          "responseSize": 78
+        },
+        "assertions": [
+          {
+            "assertion": "must return `200 Success` status",
+            "skipped": false,
+            "error": {
+              "name": "AssertionError",
+              "index": 0,
+              "test": "must return `200 Success` status",
+              "message": "expected response to have status code 200 but got 400",
+              "stack": "AssertionError: expected response to have status code 200 but got 400\n   at Object.eval sandbox-script.js:1:3)"
+            }
+          },
+          {
+            "assertion": "Content-Type header is application/json",
+            "skipped": false
+          }
+        ]
+      }
+    ]
+  }
+}
