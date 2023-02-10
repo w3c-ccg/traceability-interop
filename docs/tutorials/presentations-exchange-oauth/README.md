@@ -4,7 +4,7 @@ This guide provides instructions on how to set up and run the Traceability Inter
 
 ## Prerequisites
 
-- [Postman](https://www.postman.com/) installed on your computer.
+- [Postman](https://www.postman.com/) must be installed on your computer.
 
 ## Setting Up the Collection
 
