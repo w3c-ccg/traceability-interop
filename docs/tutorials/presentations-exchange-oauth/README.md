@@ -12,7 +12,7 @@ Open Postman and click on the "Import" button in the top left corner of the wind
 
 ![Import Trace-API Postman Collection](./resources/import-button.png)
 
-In the Import modal, select the "Link" tab and enter the url `https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/presentations-exchange-oauth/presentations-exchange-oauth.json`, and click `Continue`.
+In the Import dialog, select the "Link" tab, enter the url `https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/presentations-exchange-oauth/presentations-exchange-oauth.json`, and click `Continue`.
 
 ![Import Trace-API Postman Collection by Link](./resources/import-from-link.png)
 
