@@ -30,9 +30,11 @@ After the collection has been imported, you should see a new collection in your 
 2. Click on the "Add" button to create a new environment.
 3. Give the environment a name, such as "Traceability Interop Environment".
 4. Add the following variables to the environment, replacing the placeholders with your own values:
-   - `base_url`: The base URL for the Traceability Interop API.
-   - `client_id`: The client ID for your OAuth application.
-   - `client_secret`: The client secret for your OAuth application.
+   - `API_BASE_URL`: The base URL for the Traceability Interop API.
+   - `CLIENT_ID`: The client ID obtained from your OAuth service provider.
+   - `CLIENT_SECRET`: The client secret obtained from your OAuth service provider. 🔥 Be especially careful with `CLIENT_SECRET`🔥, If it is stolen it will allow an attacker the ability to perform all api operations supported by your service provider.
+   - `TOKEN_AUDIENCE`: This value is used to identify the service provider API that the token will be used to access. You may need to configure your identity provider and token endpoint to support this value.
+   - `TOKEN_ENDPOINT`:  This is the endpoint used to obtain an access token for Machine to Machine connection secured via <code>CLIENT_ID</code> and <code>CLIENT_SECRET</code>.
 5. Save the environment by clicking on the "Add" button.
 
 ## Running the Collection
