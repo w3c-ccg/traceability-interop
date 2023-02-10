@@ -1,6 +1,6 @@
 # Traceability Interop Postman Collection Setup
 
-This guide provides instructions on how to set up and run the Traceability Interop Postman Collection, which can be found at https://github.com/w3c-ccg/traceability-interop/blob/main/docs/tutorials/presentations-exchange-oauth/presentations-exchange-oauth.json.
+This guide provides instructions on how to set up and run the Traceability Interop Postman Collection, [`presentations-exchange-oauth.json`](https://github.com/w3c-ccg/traceability-interop/blob/main/docs/tutorials/presentations-exchange-oauth/presentations-exchange-oauth.json).
 
 ## Prerequisites
 
