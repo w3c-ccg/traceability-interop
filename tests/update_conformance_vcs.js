@@ -157,16 +157,6 @@ const addNegativeTesting = async (suiteJson) => {
   }
 
   {
-    const description = 'vc:id:missing';
-    const credentialMutator = (credential) => {
-      const doc = klona(credential);
-      delete doc.id;
-      return doc;
-    };
-    sampleVCs.set(description, await addProof({ credentialMutator }));
-  }
-
-  {
     const invalidValues = new Map([
       ['vc:id:array', ['urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded']],
       ['vc:id:boolean', false],
