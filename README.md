@@ -75,6 +75,10 @@ minutes can do the following.
 
 #### During the Meeting
 - Be sure to click **`Start Recording`** and then **`Stop Subtitles`**
+- Read the IPR note
+  
+  > Anyone can participate in these calls. However, all substantive contributors to any CCG Work Items must be members of the CCG with full IPR agreements signed. Information about and links to the required license agreements can be found in the meeting agenda.
+  
 - Make sure to link to the agenda at the beginning of the meeting (`Agenda: ...`)
 - Make sure the scribe is identified (`Scribe: ...` or `scribe+ ...` 
   identifying someone else, or `scribe+` identifying oneself). Scribes, please 
