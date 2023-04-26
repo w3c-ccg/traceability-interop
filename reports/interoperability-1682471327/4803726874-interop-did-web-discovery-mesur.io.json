@@ -1,0 +1,349 @@
+{
+  "collection": {
+    "info": {
+      "_postman_id": "ff0fff7b-56e1-4a32-a638-2b67cfcfad71",
+      "name": "DID Web Discovery Tutorial",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "id": "c797db25-3c21-4f73-9510-07dce4f48a06",
+        "name": "Get Access Token",
+        "request": {
+          "url": {
+            "host": [
+              "{{TOKEN_ENDPOINT}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "method": "POST",
+          "body": {
+            "mode": "urlencoded",
+            "urlencoded": [
+              {
+                "key": "audience",
+                "value": "{{TOKEN_AUDIENCE}}"
+              },
+              {
+                "key": "client_id",
+                "value": "{{CLIENT_ID}}"
+              },
+              {
+                "key": "client_secret",
+                "value": "{{CLIENT_SECRET}}"
+              },
+              {
+                "key": "grant_type",
+                "value": "client_credentials"
+              },
+              {
+                "key": "scope",
+                "value": "resolve:dids"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "fdd42272-1ba3-4bb5-8a69-1ed529de94cd",
+              "type": "text/javascript",
+              "exec": [
+                "// Token requests are expected to return a `200 Success` response code. Any",
+                "// other response code should trigger a failure.",
+                "pm.test(\"must return `200 Success` status\", function() {",
+                "    pm.response.to.have.status(200);",
+                "})",
+                "",
+                "// The response should include an `access_token` value - this will be presented",
+                "// to authenticated API endpoints in the `Authentication` header (see the last",
+                "// testing code block for details on how this is persisted).",
+                "pm.test(\"response body must include non-empty access_token\", function () {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.expect(access_token).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// The type of `access_token` returned by the token request is expected to be",
+                "// `Bearer`.",
+                "pm.test(\"response body must represent `Bearer` token\", function() {",
+                "    const { token_type } = pm.response.json()",
+                "    pm.expect(token_type).to.equal(\"Bearer\");",
+                "});",
+                "",
+                "// The returned data includes an `expires_in` field that indicates time until",
+                "// token expiration. Validate that this value is a whole number greater than",
+                "// zero, as anything less than or equal to zero means that the `access_token`",
+                "// is already expired.",
+                "pm.test(\"returned token must expire in the future\", function() {",
+                "    const { expires_in } = pm.response.json()",
+                "    pm.expect(expires_in).to.be.above(0);",
+                "});",
+                "",
+                "// The returned `access_token` value is persisted as a Postman collection",
+                "// variable that can be accessed by other requests in the collection by calling",
+                "// `pm.collectionVariables.get(\"access_token\")`.",
+                "pm.test(\"`access_token` persisted to collectionVariables\", function() {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.collectionVariables.set(\"access_token\", access_token);",
+                "});"
+              ],
+              "_lastExecutionId": "05bff0c7-2bee-4597-a882-989be3e0f95c"
+            }
+          }
+        ]
+      },
+      {
+        "id": "a07dd7a0-0bad-4a30-af1b-0e09173f1534",
+        "name": "Get Organization DIDs",
+        "request": {
+          "url": {
+            "path": [
+              "identifiers",
+              "{{ORGANIZATION_DID_WEB}}"
+            ],
+            "host": [
+              "{{API_BASE_URL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "GET",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "7fe8ba60-2704-4484-8bbc-8a8f05292903",
+              "type": "text/javascript",
+              "exec": [
+                "pm.test(\"Status code is 200\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});",
+                "",
+                "pm.test(\"must include valid JSON response body\", function() {",
+                "    pm.response.json(); // will throw on parse failure",
+                "});",
+                "",
+                "// The response JSON must include a didDocument property that contains the",
+                "// resolved DID document.",
+                "pm.test(\"didDocument must be present in response body\", function() {",
+                "    const jsonData = pm.response.json();",
+                "    pm.expect(jsonData).to.have.property('didDocument');",
+                "});",
+                "",
+                "// Service array is used to look up traceability API service endpoint",
+                "pm.test(\"Response must include 'service' array\", function() {",
+                "    const { service } = pm.response.json().didDocument;",
+                "    pm.expect(service).to.be.an('array').that.is.not.empty;",
+                "});",
+                "",
+                "// Service array must be correctly defined in DID document",
+                "pm.test(\"'service' array must define Traceability API service endpoint\", function() {",
+                "    const { service } = pm.response.json().didDocument;",
+                "    const entry = service.find((s) => s.type == \"TraceabilityAPI\");",
+                "    pm.expect(entry).to.be.an('object').that.is.not.empty;",
+                "    pm.expect(entry.serviceEndpoint).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// If a verificationMethod property is present, the controller property must",
+                "// match the didDocument.id property.",
+                "pm.test(\"verification method controller must match did subject\", function() {",
+                "    const { didDocument } = pm.response.json();",
+                "    const vm = didDocument.verificationMethod || [];",
+                "    vm.forEach((m) => pm.expect(m.controller).to.equal(didDocument.id));",
+                "});"
+              ],
+              "_lastExecutionId": "fd7f3e4c-c261-4ae3-907b-ea55f821b1a5"
+            }
+          }
+        ],
+        "protocolProfileBehavior": {
+          "disabledSystemHeaders": {}
+        }
+      }
+    ]
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 11,
+        "pending": 0,
+        "failed": 0
+      },
+      "testScripts": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 0,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 421.5,
+      "responseMin": 290,
+      "responseMax": 553,
+      "responseSd": 131.5,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1682470944610,
+      "completed": 1682470945525
+    },
+    "executions": [
+      {
+        "id": "c797db25-3c21-4f73-9510-07dce4f48a06",
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 2,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "d0a1f2be-3be8-455b-beec-831b1bfbc699",
+          "httpRequestId": "47fc2db3-eb27-4760-90a5-efe9ede92d1c"
+        },
+        "item": {
+          "id": "c797db25-3c21-4f73-9510-07dce4f48a06",
+          "name": "Get Access Token"
+        },
+        "response": {
+          "id": "36bb6798-bf66-4a34-bd1f-ab59ea2e9602",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 553,
+          "responseSize": 865
+        },
+        "assertions": [
+          {
+            "assertion": "must return `200 Success` status",
+            "skipped": false
+          },
+          {
+            "assertion": "response body must include non-empty access_token",
+            "skipped": false
+          },
+          {
+            "assertion": "response body must represent `Bearer` token",
+            "skipped": false
+          },
+          {
+            "assertion": "returned token must expire in the future",
+            "skipped": false
+          },
+          {
+            "assertion": "`access_token` persisted to collectionVariables",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "a07dd7a0-0bad-4a30-af1b-0e09173f1534",
+        "cursor": {
+          "ref": "928c1196-4c70-48a9-9891-ad24a8dc07b9",
+          "length": 2,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "a0f2c165-2a54-4e4f-b266-3c4dcd6b23aa"
+        },
+        "item": {
+          "id": "a07dd7a0-0bad-4a30-af1b-0e09173f1534",
+          "name": "Get Organization DIDs"
+        },
+        "response": {
+          "id": "6b49be07-afd4-4725-925f-4099dc777b91",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 290,
+          "responseSize": 1345
+        },
+        "assertions": [
+          {
+            "assertion": "Status code is 200",
+            "skipped": false
+          },
+          {
+            "assertion": "must include valid JSON response body",
+            "skipped": false
+          },
+          {
+            "assertion": "didDocument must be present in response body",
+            "skipped": false
+          },
+          {
+            "assertion": "Response must include 'service' array",
+            "skipped": false
+          },
+          {
+            "assertion": "'service' array must define Traceability API service endpoint",
+            "skipped": false
+          },
+          {
+            "assertion": "verification method controller must match did subject",
+            "skipped": false
+          }
+        ]
+      }
+    ]
+  }
+}
