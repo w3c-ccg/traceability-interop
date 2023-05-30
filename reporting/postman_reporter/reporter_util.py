@@ -1,12 +1,12 @@
 # %% imports
 import glob
-
 import inspect
 import pickle
-
 from typing import List
-from tqdm import tqdm
+
 from postman_reporter.report_config import *
+from tqdm import tqdm
+
 
 # %% methods
 def get_var_name(var):
@@ -48,7 +48,7 @@ def get_html_base():
                     width: 100%;
                     max-width: 100%;
                     min-width: 100%;
-                    min-height: 100%;                    
+                    min-height: 100%;
                 }
                 #page-content {
                     margin-left: 1rem !important;
@@ -79,12 +79,42 @@ def get_html_base():
                     padding: 4px;
                 }
                 .cell-markdown p  {
-                    margin-bottom: 0; 
+                    margin-bottom: 0;
                 }
 
                 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner input:not([type=radio]):not([type=checkbox]){
                     color: #f3f3f3!important;
                 }
+
+                .detail-table thead th {
+                    padding: 6px;
+                    text-align: center;
+                    max-width: 220px;
+                    background-color: rgb(30, 30, 30);
+                    color: white;
+                    border-bottom: none;
+                    border-top: 1px solid rgb(30, 30, 30);
+                    border-left: 1px solid rgb(30, 30, 30);
+                    border-right: 1px solid rgb(30, 30, 30);
+                    overflow-x: hidden;
+                    white-space:nowrap;
+                }
+
+                .detail-table tbody td {
+                    padding: 6px;
+                    text-align: left;
+                    max-width: 220px;
+                    color: white;
+                    border-width: 1px;
+                    border-style: solid;
+                    border-color: rgb(30, 30, 30);
+                    overflow-x: hidden;
+                    padding: 4px;
+                    white-space: nowrap;
+                }
+
+                .detail-table tbody tr:nth-child(odd) {background: rgb(39, 43, 48)}
+                .detail-table tbody tr:nth-child(even) {background: rgb(49, 53, 58)}
             </style>
             {%css%}
         </head>

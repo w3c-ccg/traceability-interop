@@ -57,54 +57,14 @@ def renderTable(df):
               <div class="dt-table-container__row dt-table-container__row-1">
                 <div class="cell cell-1-0"></div>
                 <div class="cell cell-1-1 dash-fixed-content" style="margin-left: -0.5px">
-                  <table class="cell-table" tabindex="-1">
-                    <tbody>
+                  <table class="detail-table cell-table" tabindex="-1">
+                    <thead>
                       <tr>
-                        {% for cell in columns -%}
-                        <th class="dash-header column-0"
-                          style="
-                            padding: 2px;
-                            text-align: center;
-                            max-width: 220px;
-                            background-color: rgb(30, 30, 30);
-                            color: white;
-                            border-bottom: none;
-                            border-top: 1px solid rgb(30, 30, 30);
-                            border-left: 1px solid rgb(30, 30, 30);
-                            border-right: 1px solid rgb(30, 30, 30);
-                            overflow-x: hidden;
-                          "
-                        >
-                          <div>
-                            <span class="column-header-name" style="white-space:nowrap;">{{cell}}</span>
-                          </div>
-                        </th>
-                        {% endfor -%}
+                        {% for cell in columns -%}<th>{{cell}}</th>{% endfor -%}
                       </tr>
-                      {%for row in rows -%}
-                      <tr style="background-color: {{ loop.cycle('rgb(39, 43, 48)', 'rgb(49, 53, 58)') }};">
-                        {% for cell in row -%}
-                        <td
-                          tabindex="-1"
-                          class="dash-cell column-0"
-                          style="
-                            padding: 2px;
-                            text-align: left;
-                            max-width: 220px;
-                            color: white;
-                            border-width: 1px;
-                            border-style: solid;
-                            border-color: rgb(30, 30, 30);
-                            overflow-x: hidden;
-                          "
-                        >
-                          <div class="unfocused dash-cell-value cell-markdown">
-                            <p style="white-space:nowrap;">{{cell}}</p>
-                          </div>
-                        </td>
-                        {% endfor -%}
-                      </tr>
-                      {% endfor -%}
+                    </thead>
+                    <tbody>
+                      {%for row in rows -%}<tr>{% for cell in row -%}<td>{{cell}}</td>{% endfor -%}</tr>{% endfor -%}
                     </tbody>
                   </table>
                 </div>
