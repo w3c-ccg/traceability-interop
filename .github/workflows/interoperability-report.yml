@@ -502,32 +502,21 @@ jobs:
           name: reports
           path: docs/reports/
 
-  interop-workflow-instance-join:
-    name: Workflow Instance Join
+  traceable-presentation-workflow:
+    name: Traceable Presentation Workflow
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
+          - name: "Mavennet"
+            actor: "MAVENNET_STAGING"
+          - name: "mesur.io"
+            actor: "MESUR_IO_PRODUCTION"
           - name: "Transmute"
-            org_1_token_endpoint: TRANSMUTE_PRODUCTION_TOKEN_ENDPOINT
-            org_1_token_audience: TRANSMUTE_PRODUCTION_TOKEN_AUDIENCE
-            org_1_api_base_url: TRANSMUTE_PRODUCTION_API_BASE_URL
-            org_1_did_web: TRANSMUTE_PRODUCTION_ORGANIZATION_DID_WEB
-            org_1_client_id: TRANSMUTE_PRODUCTION_CLIENT_ID
-            org_1_client_secret: TRANSMUTE_PRODUCTION_CLIENT_SECRET
-            org_2_token_endpoint: TRANSMUTE_PRODUCTION_TOKEN_ENDPOINT
-            org_2_token_audience: TRANSMUTE_PRODUCTION_TOKEN_AUDIENCE
-            org_2_api_base_url: TRANSMUTE_PRODUCTION_API_BASE_URL
-            org_2_did_web: TRANSMUTE_PRODUCTION_TENANT_2_ORGANIZATION_DID_WEB
-            org_2_client_id: TRANSMUTE_PRODUCTION_TENANT_2_CLIENT_ID
-            org_2_client_secret: TRANSMUTE_PRODUCTION_TENANT_2_CLIENT_SECRET
-            org_3_token_endpoint: TRANSMUTE_PRODUCTION_TOKEN_ENDPOINT
-            org_3_token_audience: TRANSMUTE_PRODUCTION_TOKEN_AUDIENCE
-            org_3_api_base_url: TRANSMUTE_PRODUCTION_API_BASE_URL
-            org_3_did_web: TRANSMUTE_PRODUCTION_TENANT_3_ORGANIZATION_DID_WEB
-            org_3_client_id: TRANSMUTE_PRODUCTION_TENANT_3_CLIENT_ID
-            org_3_client_secret: TRANSMUTE_PRODUCTION_TENANT_3_CLIENT_SECRET
+            actor: "TRANSMUTE_PRODUCTION"
+          - name: "GS1US"
+            actor: "GS1US"
     steps:
       # Check out repo, setup node, and install dependencies.
       # @see https://github.com/actions/setup-node#usage
@@ -537,46 +526,21 @@ jobs:
           node-version: 16.15.1
           cache: 'npm'
       - run: npm ci
-      - name: Workflow Instance Join
+      - name: Run Tests
         env:
-          org_1_token_endpoint: ${{secrets[matrix.org_1_token_endpoint]}}
-          org_1_token_audience: ${{secrets[matrix.org_1_token_audience]}}
-          org_1_api_base_url: ${{secrets[matrix.org_1_api_base_url]}}
-          org_1_did_web: ${{secrets[matrix.org_1_did_web]}}
-          org_1_client_id: ${{secrets[matrix.org_1_client_id]}}
-          org_1_client_secret: ${{secrets[matrix.org_1_client_secret]}}
-          org_2_token_endpoint: ${{secrets[matrix.org_2_token_endpoint]}}
-          org_2_token_audience: ${{secrets[matrix.org_2_token_audience]}}
-          org_2_api_base_url: ${{secrets[matrix.org_2_api_base_url]}}
-          org_2_did_web: ${{secrets[matrix.org_2_did_web]}}
-          org_2_client_id: ${{secrets[matrix.org_2_client_id]}}
-          org_2_client_secret: ${{secrets[matrix.org_2_client_secret]}}
-          org_3_token_endpoint: ${{secrets[matrix.org_3_token_endpoint]}}
-          org_3_token_audience: ${{secrets[matrix.org_3_token_audience]}}
-          org_3_api_base_url: ${{secrets[matrix.org_3_api_base_url]}}
-          org_3_did_web: ${{secrets[matrix.org_3_did_web]}}
-          org_3_client_id: ${{secrets[matrix.org_3_client_id]}}
-          org_3_client_secret: ${{secrets[matrix.org_3_client_secret]}}
+          organization_did_web: ${{secrets[format('{0}_ORGANIZATION_DID_WEB', matrix.actor)]}}
+          client_id: ${{secrets[format('{0}_CLIENT_ID', matrix.actor)]}}
+          client_secret: ${{secrets[format('{0}_CLIENT_SECRET', matrix.actor)]}}
+          token_audience: ${{secrets[format('{0}_TOKEN_AUDIENCE', matrix.actor)]}}
+          token_endpoint: ${{secrets[format('{0}_TOKEN_ENDPOINT', matrix.actor)]}}
+          api_base_url: ${{secrets[format('{0}_API_BASE_URL', matrix.actor)]}}
         run: |
-          npx newman run ./docs/tutorials/workflow-join/workflow-instance-join.collection.json \
-          --env-var ORG_1_TOKEN_ENDPOINT=$org_1_token_endpoint \
-          --env-var ORG_1_TOKEN_AUDIENCE=$org_1_token_audience \
-          --env-var ORG_1_BASE_URL=$org_1_api_base_url \
-          --env-var ORG_1_DID_WEB=$org_1_did_web \
-          --env-var ORG_1_CLIENT_ID=$org_1_client_id \
-          --env-var ORG_1_CLIENT_SECRET=$org_1_client_secret \
-          --env-var ORG_2_TOKEN_ENDPOINT=$org_2_token_endpoint \
-          --env-var ORG_2_TOKEN_AUDIENCE=$org_2_token_audience \
-          --env-var ORG_2_BASE_URL=$org_2_api_base_url \
-          --env-var ORG_2_DID_WEB=$org_2_did_web \
-          --env-var ORG_2_CLIENT_ID=$org_2_client_id \
-          --env-var ORG_2_CLIENT_SECRET=$org_2_client_secret \
-          --env-var ORG_3_TOKEN_ENDPOINT=$org_3_token_endpoint \
-          --env-var ORG_3_TOKEN_AUDIENCE=$org_3_token_audience \
-          --env-var ORG_3_BASE_URL=$org_3_api_base_url \
-          --env-var ORG_3_DID_WEB=$org_3_did_web \
-          --env-var ORG_3_CLIENT_ID=$org_3_client_id \
-          --env-var ORG_3_CLIENT_SECRET=$org_3_client_secret \
+          npx newman run ./docs/tutorials/traceable-presentation-workflow/traceable-presentation-workflow.postman_collection.json \
+          --env-var ORGANIZATION_DID_WEB=$organization_did_web \
+          --env-var CLIENT_ID=$client_id \
+          --env-var CLIENT_SECRET=$client_secret \
+          --env-var TOKEN_ENDPOINT=$token_endpoint \
+          --env-var API_BASE_URL=$api_base_url \
           --reporters cli,htmlextra,json \
           --reporter-htmlextra-skipSensitiveData \
           --reporter-htmlextra-export "newman/${{format('{0}-{1}-{2}.html', github.run_id, github.job, matrix.name)}}" \
@@ -672,7 +636,7 @@ jobs:
       - interop-presentations-exchange
       - interop-presentations-exchange-oauth
       - interop-presentations-verify
-      - interop-workflow-instance-join
+      - traceable-presentation-workflow
 
     steps:
       # Check out repo, setup node, and install dependencies.
