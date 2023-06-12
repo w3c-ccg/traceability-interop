@@ -43,7 +43,7 @@ Create a new `POST` request called "Revoke Credentials" in the "Credentials Revo
   ```json
   {
     "credentialId": "{{verifiable_credential_id}}",
-    "credentialStatus": [{ "type": "RevocationList2020Status", "status": "1" }]
+    "credentialStatus": [{ "type": "StatusList2021Entry", "statusPurpose": "revocation", "status": "1" }]
   }
   ```
 * In the "Pre-Req." tab:

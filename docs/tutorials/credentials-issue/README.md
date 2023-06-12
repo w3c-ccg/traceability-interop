@@ -245,7 +245,7 @@ Create a new `GET` request called "Issue Credential" in the "Credentials Issue T
           "type": "Ed25519Signature2018",
           "created": "2020-04-02T18:48:36Z",
           "credentialStatus": {
-              "type": "RevocationList2020Status"
+              "type": "StatusList2021Entry"
           }
       }
   }
