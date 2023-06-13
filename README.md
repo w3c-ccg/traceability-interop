@@ -17,7 +17,7 @@ Guidelines](CONTRIBUTING.md). While we prefer the creation of
 [Pull Requests](https://github.com/w3c-ccg/traceability-interop/pulls) in the 
 GitHub repository, discussions often occur on the
 [public-credentials](http://lists.w3.org/Archives/Public/public-credentials/)
-mailing list as well, and at regular public meetings ([see below](./MEETINGS.md)).
+mailing list as well, and at regular public meetings ([see `MEETINGS.md`](./MEETINGS.md)).
 
 ## Latest Spec
 
