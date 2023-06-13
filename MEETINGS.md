@@ -1,7 +1,7 @@
 
 ## Meetings
 
-Meetings are held
+Meetings are held:
 
 - Tuesdays at [13:30 ET/10:30 PT](http://www.timebie.com/std/newyork.php?q=13.5)
 - Via [Jitsi](https://github.com/jitsi) in browser or 
