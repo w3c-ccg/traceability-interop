@@ -1,24 +1,24 @@
 # Credentials Status Update Tutorial
 
-If you wish to bypass this tutorial and simply want to import the postman collection locally, copy the "Raw" [link](https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/credentials-status-update/credentials-status-update.postman_collection.json) to your clipboard and In Postman, Import -> Link -> Paste the "Raw" link. Otherwise, please continue with the rest of the tutorial.
+If you wish to bypass this tutorial and simply want to import the postman collection locally, copy the "Raw" [link](https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/credentials-status-update/credentials-status-update.postman_collection.json) to your clipboard. Then, in Postman, **Import** -> **Link** -> **Paste** the "Raw" link. Otherwise, please continue with the rest of the tutorial.
 
 ---
 
-If you have not done so already, please review and complete the previous tutorials which form the foundation for the material presented in this tutorial.
+If you have not done so already, please review and complete the previous tutorials which provide the foundation for the material presented in this tutorial:
 
-1. [Authentication Tutorial](../authentication/README.md) - Obtain an OAuth2 client credentials grant token
-1. [Did Web Discovery Tutorial](../did-web-discovery/README.md) - Get Organization identifiers and VC-API service endpoint
-1. [Credentials Issue Tutorial](../credentials-issue/README.md) - Issue a verifiable credential
-1. [Credentials Verify Tutorial](../credentials-verify/README.md) - Verify a verifiable credential
+1. [Authentication Tutorial](../authentication/README.md)  Obtain an OAuth2 client credentials grant token
+1. [Did Web Discovery Tutorial](../did-web-discovery/README.md) — Get Organization identifiers and VC-API service endpoint
+1. [Credentials Issue Tutorial](../credentials-issue/README.md) — Issue a verifiable credential
+1. [Credentials Verify Tutorial](../credentials-verify/README.md) — Verify a verifiable credential
 
 In this tutorial, we will be updating the status of (specifically, revoking) a previously issued and verified verifiable credential from the Credentials Issue Tutorial workflow, and then validating that is has been properly updated.
 
 ## Setup and Configuration
 
-This tutorial will be picking up where the Credentials Verify Tutorial left off; the quickest way to get set up to work on this tutorial is to:
+This tutorial picks up where the **Credentials Verify Tutorial** left off. The quickest way to get set up to work on this tutorial is to:
 
-1. Duplicate the Credentials Verify Tutorial and rename it to Credentials Status Update Tutorial.
-1. Duplicate the Credentials Verify Environment and rename it to Credentials Status Update Environment.
+1. Duplicate the **Credentials Verify Tutorial** and rename it to **Credentials Status Update Tutorial**.
+1. Duplicate the **Credentials Verify Environment** and rename it to **Credentials Status Update Environment**.
 
 Be sure to activate the new Credentials Status Update Environment by selecting it in the drop-down menu at the top-right of the Postman interface.
 
@@ -26,11 +26,11 @@ Be sure to activate the new Credentials Status Update Environment by selecting i
 
 ## Update Credential Status
 
-In this tutorial, we will be using the `verifiable_credential_id` and `access_token` from previous steps to update the status of a verifiable credential.
+In this tutorial, we will use the `verifiable_credential_id` and `access_token` from previous steps to update the status of a verifiable credential.
 
 ### Environment
 
-No additional environment variables are needed for this request, all required environment variables were set during the tutorial steps for previous requests.
+No additional environment variables are needed for this request; all required environment variables were set during the tutorial steps for previous requests.
 
 ### Request
 
@@ -104,7 +104,7 @@ In this tutorial, we will be re-running the "Verify Credential" request, but thi
 
 ### Environment
 
-No additional environment variables are needed for this request, all required environment variables were set during the tutorial steps for previous requests.
+No additional environment variables are needed for this request; all required environment variables were set during the tutorial steps for previous requests.
 
 ### Request
 
