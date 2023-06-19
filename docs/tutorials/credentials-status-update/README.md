@@ -59,10 +59,10 @@ Create a new `POST` request called "Update Credential Status" in the "Credential
 
 When you are done, your request should look something like this:
 
-<img src="./resources/credentials-revocation-auth.png"/>
-<img src="./resources/credentials-revocation-headers.png"/>
-<img src="./resources/credentials-revocation-body.png"/>
-<img src="./resources/credentials-revocation-prereq.png"/>
+<img src="./resources/credentials-status-update-auth.png"/>
+<img src="./resources/credentials-status-update-headers.png"/>
+<img src="./resources/credentials-status-update-body.png"/>
+<img src="./resources/credentials-status-update-prereq.png"/>
 
 ### Testing
 
@@ -96,7 +96,7 @@ You can now click the blue "Send" button to make the "Update Credential Status" 
 
 If you switch the "Body" dropdown to "Test Results", you should see all tests passing. If any of your tests are failing (like in the following example), you will need to address the underlying issues before moving forward.
 
-<img src="./resources/credentials-revocation-tests-fail.png"/>
+<img src="./resources/credentials-status-update-tests-fail.png"/>
 
 ## Verify Status Update
 
