@@ -385,6 +385,9 @@ const addPositiveTesting = async (suiteJson) => {
 };
 
 (async () => {
+
+  console.warn('🔥 TODO: update conformance tests to use vc+ld+jwt');
+  
   const suite = require('./conformance_suite.postman_collection.json');
 
   await addNegativeTesting(suite);
