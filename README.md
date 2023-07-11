@@ -36,7 +36,7 @@ The current version of the specification can be found at [specification](https:/
 
 
 - [To generate a report](./reporting/README.md)
-- [To import the OpenAPI specification into Postman](./OPENAPI.MD)
+- [To import the OpenAPI specification into Postman](./OPENAPI.md)
 - For local development of the specification you will need to run the following: 
   ```
   git clone git@github.com:w3c-ccg/traceability-interop.git
