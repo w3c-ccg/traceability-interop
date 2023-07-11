@@ -1,0 +1,408 @@
+{
+  "collection": {
+    "info": {
+      "_postman_id": "a9ba07e3-8811-4dc1-98d0-c1e6a13f3935",
+      "name": "OAuth Presentations Exchange Tutorial",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "id": "4e5e99f4-2c03-4bd4-8b47-dbf8f48b6cdc",
+        "name": "Holder gets Verifier's Token",
+        "request": {
+          "url": {
+            "host": [
+              "{{VERIFIER_TOKEN_ENDPOINT}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "method": "POST",
+          "body": {
+            "mode": "urlencoded",
+            "urlencoded": [
+              {
+                "key": "audience",
+                "value": "{{VERIFIER_TOKEN_AUDIENCE}}"
+              },
+              {
+                "key": "client_id",
+                "value": "{{VERIFIER_CLIENT_ID}}"
+              },
+              {
+                "key": "client_secret",
+                "value": "{{VERIFIER_CLIENT_SECRET}}"
+              },
+              {
+                "key": "grant_type",
+                "value": "client_credentials"
+              },
+              {
+                "key": "scope",
+                "value": "resolve:dids submit:presentations"
+              }
+            ]
+          },
+          "auth": {
+            "type": "noauth",
+            "noauth": []
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "3f491ab2-ea71-4a0f-9c8e-b7b9f173c73c",
+              "type": "text/javascript",
+              "exec": [
+                "// Token requests are expected to return a `200 Success` response code. Any",
+                "// other response code should trigger a failure.",
+                "pm.test(\"must return `200 Success` status\", function() {",
+                "    pm.response.to.have.status(200);",
+                "});",
+                "",
+                "// The response should include an `access_token` value - this will be presented",
+                "// to authenticated API endpoints in the `Authentication` header (see the last",
+                "// testing code block for details on how this is persisted).",
+                "pm.test(\"response body must include non-empty access_token\", function () {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.expect(access_token).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// The type of `access_token` returned by the token request is expected to be",
+                "// `Bearer`.",
+                "pm.test(\"response body must represent `Bearer` token\", function() {",
+                "    const { token_type } = pm.response.json()",
+                "    pm.expect(token_type).to.equal(\"Bearer\");",
+                "});",
+                "",
+                "// The returned data includes an `expires_in` field that indicates time until",
+                "// token expiration. Validate that this value is a whole number greater than",
+                "// zero, as anything less than or equal to zero means that the `access_token`",
+                "// is already expired.",
+                "pm.test(\"returned token must expire in the future\", function() {",
+                "    const { expires_in } = pm.response.json()",
+                "    pm.expect(expires_in).to.be.above(0);",
+                "});",
+                "",
+                "// The returned `access_token` value is persisted as a Postman collection",
+                "// variable that can be accessed by other requests in the collection by calling",
+                "// `pm.collectionVariables.get(\"issuer_access_token\")`.",
+                "pm.test(\"`access_token` persisted to collectionVariables\", function() {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.collectionVariables.set(\"verifier_access_token\", access_token);",
+                "});"
+              ],
+              "_lastExecutionId": "6e468113-4b07-47b6-ba0f-b7f09a5f1756"
+            }
+          }
+        ]
+      },
+      {
+        "id": "c3b3dfbe-a1a7-41e6-a39a-dafb326d8c94",
+        "name": "Get Verifier Organization DIDs",
+        "request": {
+          "url": {
+            "path": [
+              "identifiers",
+              "{{VERIFIER_ORGANIZATION_DID_WEB}}"
+            ],
+            "host": [
+              "{{VERIFIER_API_BASE_URL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "GET",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{verifier_access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "21ba03bb-1695-4d5d-9689-0644e37a4b8e",
+              "type": "text/javascript",
+              "exec": [
+                "pm.test(\"Status code is 200\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});",
+                "",
+                "pm.test(\"Issuer makes unauthenticated discovery of verifiers exchange endpoint. `verifier_exchange_endpoint` is persisted to collectionVariables\", function() {",
+                "    const { service } = pm.response.json().didDocument;",
+                "    pm.collectionVariables.set(\"verifier_exchange_endpoint\", service[0].serviceEndpoint);",
+                "});",
+                "",
+                ""
+              ],
+              "_lastExecutionId": "ab93564f-bcbd-428a-93af-6487ff6d898c"
+            }
+          }
+        ],
+        "protocolProfileBehavior": {
+          "disabledSystemHeaders": {}
+        }
+      },
+      {
+        "id": "d1aa9e00-2700-4983-a31e-23dc52b78f71",
+        "name": "Presentation",
+        "request": {
+          "url": {
+            "path": [
+              "presentations"
+            ],
+            "host": [
+              "{{verifier_exchange_endpoint}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"@context\": [\n        \"https://www.w3.org/2018/credentials/v1\",\n        \"https://w3id.org/traceability/v1\"\n    ],\n    \"type\": [\n        \"VerifiablePresentation\",\n        \"TraceablePresentation\"\n    ],\n    \"verifiableCredential\": [\n        {\n            \"@context\": [\n                \"https://www.w3.org/2018/credentials/v1\"\n            ],\n            \"id\": \"urn:uuid:07aa969e-b40d-4c1b-ab46-ded252003ded\",\n            \"type\": [\n                \"VerifiableCredential\"\n            ],\n            \"issuer\": \"did:key:z6MktiSzqF9kqwdU8VkdBKx56EYzXfpgnNPUAGznpicNiWfn\",\n            \"issuanceDate\": \"2010-01-01T19:23:24Z\",\n            \"credentialSubject\": {\n                \"id\": \"did:key:z6MktiSzqF9kqwdU8VkdBKx56EYzXfpgnNPUAGznpicNiWfn\"\n            },\n            \"proof\": {\n                \"type\": \"Ed25519Signature2018\",\n                \"created\": \"2021-10-30T19:16:30Z\",\n                \"verificationMethod\": \"did:key:z6MktiSzqF9kqwdU8VkdBKx56EYzXfpgnNPUAGznpicNiWfn#z6MktiSzqF9kqwdU8VkdBKx56EYzXfpgnNPUAGznpicNiWfn\",\n                \"proofPurpose\": \"assertionMethod\",\n                \"jws\": \"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..puetBYS3pkYlYzAecBiT-WkigYAlVbslrz9wPFnk9JW4AwjrpJvcsSdZJPhZtNy_myMJUNzC_QaYyw3ni1V0BA\"\n            }\n        }\n    ]\n}",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{verifier_access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "ad29310d-2eec-46cd-a37f-c7c63e346d59",
+              "type": "text/javascript",
+              "exec": [
+                "",
+                "// The expected response code for a \"Presentations Available\" request is",
+                "// `200 Success`.",
+                "pm.test(\"must return `200 Success` status\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});",
+                "",
+                "pm.test(\"Content-Type header is application/json\", () => {",
+                "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                "});"
+              ],
+              "_lastExecutionId": "7a860eb5-37b4-4ac0-854a-4c082e816df0"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 9,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 9,
+        "pending": 0,
+        "failed": 0
+      },
+      "testScripts": {
+        "total": 6,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 205,
+      "responseMin": 32,
+      "responseMax": 310,
+      "responseSd": 123.25853587750694,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1689038056911,
+      "completed": 1689038057658
+    },
+    "executions": [
+      {
+        "id": "4e5e99f4-2c03-4bd4-8b47-dbf8f48b6cdc",
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 3,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "1aacced7-f39f-4342-a893-3cf3bd241d91",
+          "httpRequestId": "443c7bd8-efce-41ab-8d99-6a7f68a9b1f1"
+        },
+        "item": {
+          "id": "4e5e99f4-2c03-4bd4-8b47-dbf8f48b6cdc",
+          "name": "Holder gets Verifier's Token"
+        },
+        "response": {
+          "id": "8a22ad71-4de8-4272-818a-681908a07b8b",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 273,
+          "responseSize": 1180
+        },
+        "assertions": [
+          {
+            "assertion": "must return `200 Success` status",
+            "skipped": false
+          },
+          {
+            "assertion": "response body must include non-empty access_token",
+            "skipped": false
+          },
+          {
+            "assertion": "response body must represent `Bearer` token",
+            "skipped": false
+          },
+          {
+            "assertion": "returned token must expire in the future",
+            "skipped": false
+          },
+          {
+            "assertion": "`access_token` persisted to collectionVariables",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "c3b3dfbe-a1a7-41e6-a39a-dafb326d8c94",
+        "cursor": {
+          "ref": "1f26031b-2aa8-4169-a4c2-931e642d3f18",
+          "length": 3,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "5342310b-06b7-4907-8cc0-707afd6156a7"
+        },
+        "item": {
+          "id": "c3b3dfbe-a1a7-41e6-a39a-dafb326d8c94",
+          "name": "Get Verifier Organization DIDs"
+        },
+        "response": {
+          "id": "ea5de7ed-51d7-4631-9ab9-ce046fb8f9de",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 310,
+          "responseSize": 1345
+        },
+        "assertions": [
+          {
+            "assertion": "Status code is 200",
+            "skipped": false
+          },
+          {
+            "assertion": "Issuer makes unauthenticated discovery of verifiers exchange endpoint. `verifier_exchange_endpoint` is persisted to collectionVariables",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "id": "d1aa9e00-2700-4983-a31e-23dc52b78f71",
+        "cursor": {
+          "ref": "539194bd-2d76-4778-aa6c-eadd279abe42",
+          "length": 3,
+          "cycles": 1,
+          "position": 2,
+          "iteration": 0,
+          "httpRequestId": "28fe90fd-caf6-4718-b3df-7c5bedff1e0f"
+        },
+        "item": {
+          "id": "d1aa9e00-2700-4983-a31e-23dc52b78f71",
+          "name": "Presentation"
+        },
+        "response": {
+          "id": "3cc28bea-101a-4583-b5fb-98d54953ad24",
+          "status": "OK",
+          "code": 200,
+          "responseTime": 32,
+          "responseSize": 3
+        },
+        "assertions": [
+          {
+            "assertion": "must return `200 Success` status",
+            "skipped": false
+          },
+          {
+            "assertion": "Content-Type header is application/json",
+            "skipped": false
+          }
+        ]
+      }
+    ]
+  }
+}
