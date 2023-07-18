@@ -28,6 +28,10 @@ For this tutorial, you will need to have the following environment variables con
 <dl>
   <dt><code>CLIENT_ID</code></dt>
   <dd>The client ID obtained from your OAuth service provider.</dd>
+  <dt><code>CLIENT_SCOPE</code></dt>
+  <dd>
+    The names of the scopes to request from your OAuth service provider. If your OAuth service provider requires that you name the specific scopes that should be included in the auth token, you should provide a value for this variable.
+  </dd>
   <dt><code>CLIENT_SECRET</code></dt>
   <dd>
     The client secret obtained from your OAuth service provider. 🔥 Be especially careful with `CLIENT_SECRET`🔥, If it is stolen it will allow an attacker the ability to perform all api operations supported by your service provider.
@@ -52,7 +56,8 @@ Set the request URL to `{{TOKEN_ENDPOINT}}`, and the request body to the followi
     "audience": "{{TOKEN_AUDIENCE}}",
     "client_id": "{{CLIENT_ID}}",
     "client_secret": "{{CLIENT_SECRET}}",
-    "grant_type": "client_credentials"
+    "grant_type": "client_credentials",
+    "scope": "{{CLIENT_SCOPE}}"
 }
 ```
 
@@ -307,6 +312,7 @@ source .env && \
 npx newman run ./credentials-issue.postman_collection.json \
 --env-var ORGANIZATION_DID_WEB=$ORGANIZATION_DID_WEB \
 --env-var CLIENT_ID=$CLIENT_ID \
+--env-var CLIENT_SCOPE=$CLIENT_SCOPE \
 --env-var CLIENT_SECRET=$CLIENT_SECRET \
 --env-var TOKEN_AUDIENCE=$TOKEN_AUDIENCE \
 --env-var TOKEN_ENDPOINT=$TOKEN_ENDPOINT \

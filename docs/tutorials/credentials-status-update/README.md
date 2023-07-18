@@ -147,6 +147,7 @@ source .env && \
 npx newman run ./credentials-status-update.postman_collection.json \
 --env-var ORGANIZATION_DID_WEB=$ORGANIZATION_DID_WEB \
 --env-var CLIENT_ID=$CLIENT_ID \
+--env-var CLIENT_SCOPE=$CLIENT_SCOPE \
 --env-var CLIENT_SECRET=$CLIENT_SECRET \
 --env-var TOKEN_AUDIENCE=$TOKEN_AUDIENCE \
 --env-var TOKEN_ENDPOINT=$TOKEN_ENDPOINT \
