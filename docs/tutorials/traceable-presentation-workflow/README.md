@@ -24,6 +24,7 @@ After the collection has been imported, you should see a new collection in your 
 4. Add the following variables to the environment, replacing the placeholders with your own values. These should reflect the Machine to Machine OAuth Application configured on the Verifier's platform, used for the Holder to make the Traceable Presentation which includes Workflow details:
    - `API_BASE_URL`: Verifier platform's base URL. 
    - `CLIENT_ID`: The client ID for the M2M application, to be used by the Holder.
+   - `CLIENT_SCOPE`: The names of the scopes to request from your OAuth service provider. If your OAuth service provider requires that you name the specific scopes that should be included in the auth token, you should provide a value for this variable.
    - `CLIENT_SECRET`: The client secret provided from the Verifier to the Holder. 🔥 Be especially careful with `CLIENT_SECRET`🔥.
    - `TOKEN_ENDPOINT`:  This is the endpoint used to obtain an access token for M2M connection secured via <code>CLIENT_ID</code> and <code>CLIENT_SECRET</code>.
    - `ORGANIZATION_DID_WEB`: Verifier's `did:web` used for service endpoint discovery, on which the presentation is made.
