@@ -7,10 +7,10 @@ Meetings are held:
 - Via [Jitsi](https://github.com/jitsi) in browser or 
   [standalone app](https://github.com/jitsi/jitsi-meet-electron/releases) 
 - using this link: [meet.w3c-ccg.org/traceability](https://meet.w3c-ccg.org/traceability)
-- With standing agenda to review open Pull Requests 
-  ([trace-interop](https://github.com/w3c-ccg/traceability-interop/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-asc), 
-  [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-asc)),
-  then open Issues 
+- With standing agenda to review open Pull Requests, oldest first 
+  ([trace-interop](https://github.com/w3c-ccg/traceability-interop/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc), 
+  [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc)),
+  then open Issues, least recentlyl updated first 
   ([trace-interop](https://github.com/w3c-ccg/traceability-interop/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-asc), 
   [trace-vocab](https://github.com/w3c-ccg/traceability-vocab/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-asc)), 
   unless otherwise noted on the [mailing list](https://lists.w3.org/Archives/Public/public-credentials/)
