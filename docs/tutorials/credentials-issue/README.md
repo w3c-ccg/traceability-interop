@@ -30,7 +30,7 @@ For this tutorial, you will need to have the following environment variables con
   <dd>The client ID obtained from your OAuth service provider.</dd>
   <dt><code>CLIENT_SCOPE</code></dt>
   <dd>
-    The names of the scopes to request from your OAuth service provider. If your OAuth service provider requires that you name the specific scopes that should be included in the auth token, you should provide a value for this variable.
+    Optional. The names of the scopes to request from your OAuth service provider. If your OAuth service provider requires that you name the specific scopes that should be included in the <code>access_token</code> (as Azure does), you should provide a value for this variable.
   </dd>
   <dt><code>CLIENT_SECRET</code></dt>
   <dd>
