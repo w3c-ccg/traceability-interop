@@ -26,7 +26,7 @@ The current version of the specification can be found at [specification](https:/
 ## Traceability Interoperability
 
 - [Getting Started](#getting-started)
-- [Meetings and Hosting Instructions]('./MEETINGS.md')
+- [Meetings and Hosting Instructions](./MEETINGS.md)
 - [Latest conformance test suite results](https://w3id.org/traceability/interoperability/reports/conformance)
 - [Latest interoperability test suite results](https://w3id.org/traceability/interoperability/reports/interoperability)
 - [Historical test suite result archive](https://w3id.org/traceability/interoperability/reports/archive)
