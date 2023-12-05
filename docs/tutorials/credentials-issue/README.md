@@ -228,7 +228,7 @@ Create a new `GET` request called "Issue Credential" in the "Credentials Issue T
 
 * Set the request URL to `{{API_BASE_URL}}/credentials/issue`.
 * In the "Auth" tab, add `{{access_token}}` as the "Token" value.
-* In the "Headers" tab, dd an `Accept` header with the value `application/json`.
+* In the "Headers" tab, dd an `Accept` header with the value `application/vc+ld+json`.
 * In the body tab, add the following JSON:
   ```json
   {
