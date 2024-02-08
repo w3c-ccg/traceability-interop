@@ -76,7 +76,6 @@ cat secrets.env.gpg | base64 > secrets.env.gpg.b64
 Attach the encrypted and base64-encoded secrets file to an email and send it to one of the maintainers listed here:
 
 - [Chris Abernethy](mailto:cabernet@mesur.io?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
-- [Orie Steele](mailto:orie@transmute.industries?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
 - [Michael Prorock](mailto:mprorock@mesur.io?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
 - [Mahmoud Alkhraishi](mailto:mahmoud@mavennet.com?subject=[GitHub]%20Traceability%20Interop%20Test%20Registration)
 
@@ -144,11 +143,11 @@ The following example outlines what you would need to do to add an organization 
         include:
 
           # Existing
-          - name: "mesur.io-Transmute"
+          - name: "mesur.io-Example"
             issuer: MESUR_IO_PRODUCTION
-            verifier: TRANSMUTE_PRODUCTION
-          - name: "Transmute-mesur.io"
-            issuer: TRANSMUTE_PRODUCTION
+            verifier: EXAMPLE_PRODUCTION
+          - name: "Existing-mesur.io"
+            issuer: EXAMPLE_PRODUCTION
             verifier: MESUR_IO_PRODUCTION
 
           # You would add
@@ -158,12 +157,6 @@ The following example outlines what you would need to do to add an organization 
           - name: "Acme-mesur.io"
             issuer: ACME_PRODUCTION
             verifier: MESUR_IO_PRODUCTION
-          - name: "Transmute-Acme"
-            issuer: TRANSMUTE_PRODUCTION
-            verifier: ACME_PRODUCTION
-          - name: "Acme-Transmute"
-            issuer: ACME_PRODUCTION
-            verifier: TRANSMUTE_PRODUCTION
 ```
 
 Similar, but less complex, is this example with a single-actor matrix:
@@ -175,8 +168,6 @@ Similar, but less complex, is this example with a single-actor matrix:
           # Existing
           - name: "mesur.io"
             actor: "MESUR_IO_PRODUCTION"
-          - name: "Transmute"
-            actor: "TRANSMUTE_PRODUCTION"
 
           # You would add
           - name: "Acme"
