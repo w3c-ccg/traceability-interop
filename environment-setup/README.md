@@ -143,11 +143,11 @@ The following example outlines what you would need to do to add an organization 
         include:
 
           # Existing
-          - name: "mesur.io-Example"
+          - name: "mesur.io-Mavennet"
             issuer: MESUR_IO_PRODUCTION
-            verifier: EXAMPLE_PRODUCTION
-          - name: "Existing-mesur.io"
-            issuer: EXAMPLE_PRODUCTION
+            verifier: MAVENNET_STAGING
+          - name: "Mavennet-mesur.io"
+            issuer: MAVENNET_STAGING
             verifier: MESUR_IO_PRODUCTION
 
           # You would add
