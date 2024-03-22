@@ -26,7 +26,7 @@ This test suite contains several different collections to import (repeat the ste
 - [DID Web Discovery Tutorial](https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/did-web-discovery/did-web-discovery.postman_collection.json)
 - [Credentials Issue Tutorial](https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/credentials-issue/credentials-issue.postman_collection.json)
 - [Credentials Verify Tutorial](https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/credentials-verify/credentials-verify.postman_collection.json)
-- [Credentials Revocation Tutorial](https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/credentials-revocation/credentials-revocation.postman_collection.json)
+- [Credentials Status Tutorial](https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/credentials-status-update/credentials-status-update.postman_collection.json)
 - [Presentations Exchange Tutorial](https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/presentations-exchange/presentations-exchange.postman_collection.json)
 - [Presentations Verify Tutorial](https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/presentations-verify/presentations-verify.postman_collection.json)
 - [OAuth Presentations Exchange Tutorial](https://raw.githubusercontent.com/w3c-ccg/traceability-interop/main/docs/tutorials/presentations-exchange-oauth/presentations-exchange-oauth.json)
