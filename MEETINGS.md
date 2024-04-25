@@ -3,7 +3,7 @@
 
 Meetings are held:
 
-- Tuesdays at [13:30 ET/10:30 PT](http://www.timebie.com/std/newyork.php?q=13.5)
+- Thursdays at 15:00 ET ([other timezones, accurate at time of viewing, which may vary with Daylight Saving changes](http://www.timebie.com/std/newyork.php?q=15))
 - Via [Jitsi](https://github.com/jitsi) in browser or 
   [standalone app](https://github.com/jitsi/jitsi-meet-electron/releases) 
 - using this link: [meet.w3c-ccg.org/traceability](https://meet.w3c-ccg.org/traceability)
