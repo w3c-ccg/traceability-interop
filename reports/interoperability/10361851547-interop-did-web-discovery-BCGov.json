@@ -1,0 +1,414 @@
+{
+  "collection": {
+    "info": {
+      "_postman_id": "7573cc79-8d9a-4dfd-8b2e-1c4079752653",
+      "name": "DID Web Discovery Tutorial",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "id": "93674ef0-1d9b-4dcb-968d-3731de5e5f5e",
+        "name": "Get Access Token",
+        "request": {
+          "url": {
+            "host": [
+              "{{TOKEN_ENDPOINT}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "method": "POST",
+          "body": {
+            "mode": "urlencoded",
+            "urlencoded": [
+              {
+                "key": "audience",
+                "value": "{{TOKEN_AUDIENCE}}"
+              },
+              {
+                "key": "client_id",
+                "value": "{{CLIENT_ID}}"
+              },
+              {
+                "key": "client_secret",
+                "value": "{{CLIENT_SECRET}}"
+              },
+              {
+                "key": "grant_type",
+                "value": "client_credentials"
+              },
+              {
+                "key": "scope",
+                "value": "{{CLIENT_SCOPE}}"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "c5f4372f-e654-438a-a232-b2e1a585d0cc",
+              "type": "text/javascript",
+              "exec": [
+                "// Token requests are expected to return a `200 Success` response code. Any",
+                "// other response code should trigger a failure.",
+                "pm.test(\"must return `200 Success` status\", function() {",
+                "    pm.response.to.have.status(200);",
+                "})",
+                "",
+                "// The response should include an `access_token` value - this will be presented",
+                "// to authenticated API endpoints in the `Authentication` header (see the last",
+                "// testing code block for details on how this is persisted).",
+                "pm.test(\"response body must include non-empty access_token\", function () {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.expect(access_token).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// The type of `access_token` returned by the token request is expected to be",
+                "// `Bearer`.",
+                "pm.test(\"response body must represent `Bearer` token\", function() {",
+                "    const { token_type } = pm.response.json()",
+                "    pm.expect(token_type).to.equal(\"Bearer\");",
+                "});",
+                "",
+                "// The returned data includes an `expires_in` field that indicates time until",
+                "// token expiration. Validate that this value is a whole number greater than",
+                "// zero, as anything less than or equal to zero means that the `access_token`",
+                "// is already expired.",
+                "pm.test(\"returned token must expire in the future\", function() {",
+                "    const { expires_in } = pm.response.json()",
+                "    pm.expect(expires_in).to.be.above(0);",
+                "});",
+                "",
+                "// The returned `access_token` value is persisted as a Postman collection",
+                "// variable that can be accessed by other requests in the collection by calling",
+                "// `pm.collectionVariables.get(\"access_token\")`.",
+                "pm.test(\"`access_token` persisted to collectionVariables\", function() {",
+                "    const { access_token } = pm.response.json()",
+                "    pm.collectionVariables.set(\"access_token\", access_token);",
+                "});"
+              ],
+              "_lastExecutionId": "2050be36-1ddc-477c-941d-a9636f89a037"
+            }
+          }
+        ]
+      },
+      {
+        "id": "ec1a2486-60d9-414d-a8bc-b3461759c9a2",
+        "name": "Get Organization DIDs",
+        "request": {
+          "url": {
+            "path": [
+              "identifiers",
+              "{{ORGANIZATION_DID_WEB}}"
+            ],
+            "host": [
+              "{{API_BASE_URL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "method": "GET",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "{{access_token}}",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "2cc45450-84bb-4954-8425-87dd440672b3",
+              "type": "text/javascript",
+              "exec": [
+                "pm.test(\"Status code is 200\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});",
+                "",
+                "pm.test(\"must include valid JSON response body\", function() {",
+                "    pm.response.json(); // will throw on parse failure",
+                "});",
+                "",
+                "// The response JSON must include a didDocument property that contains the",
+                "// resolved DID document.",
+                "pm.test(\"didDocument must be present in response body\", function() {",
+                "    const jsonData = pm.response.json();",
+                "    pm.expect(jsonData).to.have.property('didDocument');",
+                "});",
+                "",
+                "// Service array is used to look up traceability API service endpoint",
+                "pm.test(\"Response must include 'service' array\", function() {",
+                "    const { service } = pm.response.json().didDocument;",
+                "    pm.expect(service).to.be.an('array').that.is.not.empty;",
+                "});",
+                "",
+                "// Service array must be correctly defined in DID document",
+                "pm.test(\"'service' array must define Traceability API service endpoint\", function() {",
+                "    const { service } = pm.response.json().didDocument;",
+                "    const entry = service.find((s) => s.type == \"TraceabilityAPI\");",
+                "    pm.expect(entry).to.be.an('object').that.is.not.empty;",
+                "    pm.expect(entry.serviceEndpoint).to.be.a('string').that.is.not.empty;",
+                "});",
+                "",
+                "// If a verificationMethod property is present, the controller property must",
+                "// match the didDocument.id property.",
+                "pm.test(\"verification method controller must match did subject\", function() {",
+                "    const { didDocument } = pm.response.json();",
+                "    const vm = didDocument.verificationMethod || [];",
+                "    vm.forEach((m) => pm.expect(m.controller).to.equal(didDocument.id));",
+                "});"
+              ],
+              "_lastExecutionId": "27079740-e8a0-4d02-b99d-3e0604d09900"
+            }
+          }
+        ],
+        "protocolProfileBehavior": {
+          "disabledSystemHeaders": {}
+        }
+      }
+    ]
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 6,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 2,
+        "pending": 0,
+        "failed": 2
+      },
+      "tests": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 11,
+        "pending": 0,
+        "failed": 11
+      },
+      "testScripts": {
+        "total": 4,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 0,
+      "responseMin": 0,
+      "responseMax": 0,
+      "responseSd": 0,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1723511185166,
+      "completed": 1723511185721
+    },
+    "executions": [
+      {
+        "id": "93674ef0-1d9b-4dcb-968d-3731de5e5f5e",
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 2,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "6e73f6f1-3d02-4eae-a663-315a69522739",
+          "httpRequestId": "512abf82-5f56-49cd-aef1-9fc4f3c83ad1"
+        },
+        "item": {
+          "id": "93674ef0-1d9b-4dcb-968d-3731de5e5f5e",
+          "name": "Get Access Token"
+        },
+        "response": {},
+        "assertions": [
+          {
+            "assertion": "must return `200 Success` status",
+            "skipped": false,
+            "error": {
+              "name": "AssertionError",
+              "index": 0,
+              "test": "must return `200 Success` status",
+              "message": "expected { Object (id, _details, ...) } to have property 'code'",
+              "stack": "AssertionError: expected { Object (id, _details, ...) } to have property 'code'\n   at Object.eval sandbox-script.js:1:1)"
+            }
+          },
+          {
+            "assertion": "response body must include non-empty access_token",
+            "skipped": false,
+            "error": {
+              "name": "JSONError",
+              "index": 1,
+              "test": "response body must include non-empty access_token",
+              "message": "Unexpected token u in JSON at position 0",
+              "stack": "JSONError: Unexpected token u in JSON at position 0\n   at Object.eval sandbox-script.js:2:1)"
+            }
+          },
+          {
+            "assertion": "response body must represent `Bearer` token",
+            "skipped": false,
+            "error": {
+              "name": "JSONError",
+              "index": 2,
+              "test": "response body must represent `Bearer` token",
+              "message": "Unexpected token u in JSON at position 0",
+              "stack": "JSONError: Unexpected token u in JSON at position 0\n   at Object.eval sandbox-script.js:3:1)"
+            }
+          },
+          {
+            "assertion": "returned token must expire in the future",
+            "skipped": false,
+            "error": {
+              "name": "JSONError",
+              "index": 3,
+              "test": "returned token must expire in the future",
+              "message": "Unexpected token u in JSON at position 0",
+              "stack": "JSONError: Unexpected token u in JSON at position 0\n   at Object.eval sandbox-script.js:4:1)"
+            }
+          },
+          {
+            "assertion": "`access_token` persisted to collectionVariables",
+            "skipped": false,
+            "error": {
+              "name": "JSONError",
+              "index": 4,
+              "test": "`access_token` persisted to collectionVariables",
+              "message": "Unexpected token u in JSON at position 0",
+              "stack": "JSONError: Unexpected token u in JSON at position 0\n   at Object.eval sandbox-script.js:5:1)"
+            }
+          }
+        ]
+      },
+      {
+        "id": "ec1a2486-60d9-414d-a8bc-b3461759c9a2",
+        "cursor": {
+          "ref": "17ff310a-a8d4-409c-b08a-3417b35a4e21",
+          "length": 2,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "c35cbf48-25c1-42aa-b834-4a71b0004b20"
+        },
+        "item": {
+          "id": "ec1a2486-60d9-414d-a8bc-b3461759c9a2",
+          "name": "Get Organization DIDs"
+        },
+        "response": {},
+        "assertions": [
+          {
+            "assertion": "Status code is 200",
+            "skipped": false,
+            "error": {
+              "name": "AssertionError",
+              "index": 0,
+              "test": "Status code is 200",
+              "message": "expected { Object (id, _details, ...) } to have property 'code'",
+              "stack": "AssertionError: expected { Object (id, _details, ...) } to have property 'code'\n   at Object.eval sandbox-script.js:1:2)"
+            }
+          },
+          {
+            "assertion": "must include valid JSON response body",
+            "skipped": false,
+            "error": {
+              "name": "JSONError",
+              "index": 1,
+              "test": "must include valid JSON response body",
+              "message": "Unexpected token u in JSON at position 0",
+              "stack": "JSONError: Unexpected token u in JSON at position 0\n   at Object.eval sandbox-script.js:2:2)"
+            }
+          },
+          {
+            "assertion": "didDocument must be present in response body",
+            "skipped": false,
+            "error": {
+              "name": "JSONError",
+              "index": 2,
+              "test": "didDocument must be present in response body",
+              "message": "Unexpected token u in JSON at position 0",
+              "stack": "JSONError: Unexpected token u in JSON at position 0\n   at Object.eval sandbox-script.js:3:2)"
+            }
+          },
+          {
+            "assertion": "Response must include 'service' array",
+            "skipped": false,
+            "error": {
+              "name": "JSONError",
+              "index": 3,
+              "test": "Response must include 'service' array",
+              "message": "Unexpected token u in JSON at position 0",
+              "stack": "JSONError: Unexpected token u in JSON at position 0\n   at Object.eval sandbox-script.js:4:2)"
+            }
+          },
+          {
+            "assertion": "'service' array must define Traceability API service endpoint",
+            "skipped": false,
+            "error": {
+              "name": "JSONError",
+              "index": 4,
+              "test": "'service' array must define Traceability API service endpoint",
+              "message": "Unexpected token u in JSON at position 0",
+              "stack": "JSONError: Unexpected token u in JSON at position 0\n   at Object.eval sandbox-script.js:5:2)"
+            }
+          },
+          {
+            "assertion": "verification method controller must match did subject",
+            "skipped": false,
+            "error": {
+              "name": "JSONError",
+              "index": 5,
+              "test": "verification method controller must match did subject",
+              "message": "Unexpected token u in JSON at position 0",
+              "stack": "JSONError: Unexpected token u in JSON at position 0\n   at Object.eval sandbox-script.js:6:2)"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
