@@ -1,0 +1,51 @@
+<html>
+
+<body>
+    <script>
+        (async () => {
+            async function list_directory(user, repo, directory) {
+                const url = `https://api.github.com/repos/${user}/${repo}/git/trees/gh-pages`;
+                directory = directory.split('/').filter(Boolean);
+                const dir = await directory.reduce(async (acc, dir) => {
+                    const { url } = await acc;
+                    const list = await fetch(url).then(res => res.json());
+                    return list.tree.find(node => node.path === dir);
+                }, { url });
+                if (dir) {
+                    const list = await fetch(dir.url).then(res => res.json());
+                    return list.tree.map(node => node.path);
+                }
+            }
+
+            function generate_list(title, suite, folders) {
+                const re = new RegExp(`(?<suite>${suite})\-(?<unixtime>\\d+)`)
+                let htmlString = `<h2>${title}</h2>` + '<ul>';
+
+                for (let folder of folders) {
+                    const match = folder.match(re);
+                    if (!match) {
+                        console.log("no match " + folder);
+                        continue;
+                    }
+                    const { suite, unixtime } = match.groups;
+                    const datestring = new Date(unixtime * 1000).toLocaleString();
+                    htmlString += `<li><a href="https://w3id.org/traceability/interoperability/reports/${folder}">${suite} - ${datestring}</a></li>`;
+                }
+
+                return htmlString + '</ul>';
+            }
+
+            const folders = await list_directory('w3c-ccg', 'traceability-interop', 'reports');
+            folders.reverse();
+
+            let markup = '';
+            markup += generate_list("Conformance Report Archive", 'conformance', folders);
+            markup += generate_list('Interoperability Report Archive', 'interoperability', folders);
+
+            document.getElementsByTagName('body')[0].innerHTML = markup;
+        })()
+    </script>
+
+</body>
+
+</html>
