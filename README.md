@@ -1,7 +1,7 @@
 # Traceability Interoperability Specification
 
-[![Interoperability Report](https://github.com/w3c-ccg/traceability-interop/actions/workflows/interoperability-report.yml/badge.svg)](https://github.com/w3c-ccg/traceability-interop/actions/workflows/interoperability-report.yml)
-[![Conformance Report](https://github.com/w3c-ccg/traceability-interop/actions/workflows/conformance-run.yml/badge.svg)](https://github.com/w3c-ccg/traceability-interop/actions/workflows/conformance-run.yml)
+[![](https://github.com/w3c-ccg/traceability-interop/actions/workflows/publish-editors-draft.yml/badge.svg)](https://github.com/w3c-ccg/traceability-interop/actions/workflows/publish-editors-draft.yml)
+[![](https://github.com/w3c-ccg/traceability-interop/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/w3c-ccg/traceability-interop/actions/workflows/pages/pages-build-deployment)
 
 ## About
 
